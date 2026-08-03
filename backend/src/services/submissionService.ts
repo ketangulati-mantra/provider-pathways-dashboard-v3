@@ -14,6 +14,7 @@ export interface GetSubmissionsQuery {
   page?: number;
   limit?: number;
   status?: string;
+  reviewedBy?: string;
   lessonId?: string;
   submissionType?: string;
   search?: string;
@@ -22,7 +23,8 @@ export interface GetSubmissionsQuery {
 }
 
 export interface ReviewSubmissionInput {
-  status: 'pending' | 'approved' | 'rejected' | string;
+  status?: string;
+  reviewedBy?: string;
   reviewNotes?: string;
 }
 
@@ -51,6 +53,7 @@ export const submissionService = {
         form_data,
         submission_data,
         status,
+        reviewed_by,
         created_at,
         updated_at
       )
@@ -63,6 +66,7 @@ export const submissionService = {
         ${jsonFormData}::jsonb,
         ${jsonSubmissionData}::jsonb,
         'pending',
+        'Unassigned',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
       )
@@ -78,6 +82,7 @@ export const submissionService = {
     const offset = (page - 1) * limit;
 
     const status = options.status?.trim();
+    const reviewedBy = options.reviewedBy?.trim();
     const lessonId = options.lessonId?.trim();
     const submissionType = options.submissionType?.trim();
     const search = options.search?.trim();
@@ -88,7 +93,15 @@ export const submissionService = {
     `;
 
     if (status) {
-      submissions = submissions.filter((s: any) => s.status?.toLowerCase() === status.toLowerCase());
+      submissions = submissions.filter((s: any) => (s.status || 'pending').toLowerCase() === status.toLowerCase());
+    }
+
+    if (reviewedBy) {
+      if (reviewedBy === 'Unassigned') {
+        submissions = submissions.filter((s: any) => !s.reviewed_by || s.reviewed_by === 'Unassigned');
+      } else {
+        submissions = submissions.filter((s: any) => s.reviewed_by?.toLowerCase() === reviewedBy.toLowerCase());
+      }
     }
 
     if (lessonId) {
@@ -105,6 +118,7 @@ export const submissionService = {
         s.activity_title?.toLowerCase().includes(q) ||
         s.user_id?.toLowerCase().includes(q) ||
         s.lesson_id?.toLowerCase().includes(q) ||
+        (s.reviewed_by || '').toLowerCase().includes(q) ||
         JSON.stringify(s.form_data || {}).toLowerCase().includes(q) ||
         JSON.stringify(s.submission_data || {}).toLowerCase().includes(q)
       );
@@ -135,8 +149,6 @@ export const submissionService = {
         totalPages,
         currentPage: page,
         limit,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1,
       },
     };
   },
@@ -158,23 +170,45 @@ export const submissionService = {
   },
 
   async reviewSubmission(id: string, input: ReviewSubmissionInput) {
-    const { status, reviewNotes } = input;
-    const normalizedStatus = String(status || '').toLowerCase().trim();
-    const validStatuses = ['pending', 'approved', 'rejected'];
+    const { status, reviewedBy, reviewNotes } = input;
 
-    if (!validStatuses.includes(normalizedStatus)) {
-      throw new Error(`Invalid status '${status}'. Must be one of: pending, approved, rejected`);
+    const cleanStatus = status ? String(status).toLowerCase().trim() : null;
+    const cleanReviewer = reviewedBy !== undefined ? String(reviewedBy).trim() : null;
+    const cleanNotes = reviewNotes !== undefined ? String(reviewNotes).trim() : null;
+    const stringId = String(id).trim();
+
+    let rows;
+    if (cleanStatus && cleanReviewer !== null) {
+      rows = await sql`
+        UPDATE activity_submissions
+        SET status = ${cleanStatus}, reviewed_by = ${cleanReviewer}, updated_at = CURRENT_TIMESTAMP
+        WHERE id::text = ${stringId}
+        RETURNING *;
+      `;
+    } else if (cleanStatus) {
+      rows = await sql`
+        UPDATE activity_submissions
+        SET status = ${cleanStatus}, updated_at = CURRENT_TIMESTAMP
+        WHERE id::text = ${stringId}
+        RETURNING *;
+      `;
+    } else if (cleanReviewer !== null) {
+      rows = await sql`
+        UPDATE activity_submissions
+        SET reviewed_by = ${cleanReviewer}, updated_at = CURRENT_TIMESTAMP
+        WHERE id::text = ${stringId}
+        RETURNING *;
+      `;
+    } else if (cleanNotes !== null) {
+      rows = await sql`
+        UPDATE activity_submissions
+        SET review_notes = ${cleanNotes}, updated_at = CURRENT_TIMESTAMP
+        WHERE id::text = ${stringId}
+        RETURNING *;
+      `;
+    } else {
+      rows = await sql`SELECT * FROM activity_submissions WHERE id::text = ${stringId};`;
     }
-
-    const rows = await sql`
-      UPDATE activity_submissions
-      SET 
-        status = ${normalizedStatus},
-        review_notes = ${reviewNotes !== undefined ? reviewNotes : null},
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id::text = ${id}
-      RETURNING *;
-    `;
 
     return rows[0] || null;
   }

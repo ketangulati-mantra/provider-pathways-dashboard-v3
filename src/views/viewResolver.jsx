@@ -112,6 +112,7 @@ const ROUTE_VIEW_REGISTRY = {
   '/task/mantra-assessments': { default: MantraAssessmentsLessonPage },
   '/task/support-hotline': { default: SupportHotlineLessonPage },
   '/task/corporate-eap': { default: CorporateEapLessonPage },
+  '/task/corporate-growth-partner': { default: CorporateEapLessonPage },
   '/task/community-management': { default: CommunityManagementLessonPage },
   '/task/content-creation': { default: ContentCreationLessonPage },
   '/task/campus-awareness': { default: CampusAwarenessLessonPage },

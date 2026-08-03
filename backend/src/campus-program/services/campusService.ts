@@ -481,7 +481,7 @@ export class CampusService {
 
   /**
    * Complete an onboarding learning module.
-   * Gives 20 credits OVERALL only after completing all 3 modules!
+   * Grants 50 points to the provider and marks task as APPROVED after completing all 3 modules!
    */
   async completeModule(userId: string, moduleId: string, quizAnswers?: Record<string, any>): Promise<CampusProgramStatusResponse> {
     await this.repo.upsertModuleProgress(userId, 'campus_awareness', moduleId, 'completed', quizAnswers);
@@ -497,16 +497,15 @@ export class CampusService {
         await this.repo.addCredits(
           userId,
           'campus_awareness',
-          20,
+          50,
           'earned',
-          'Completed All 3 Orientation Modules (20 Credits Bonus)',
-          'mod_all_bonus'
+          'Completed All 3 Orientation Modules (50 Points Granted)',
+          'mod_all_bonus_50'
         );
       }
 
-      if (statusBefore.journeyStage === JourneyStage.LEARNING) {
-        await this.repo.updateStage(userId, JourneyStage.APPLICATION_SUBMITTED, 7);
-      }
+      // Mark task as completed (APPROVED)
+      await this.repo.updateStage(userId, JourneyStage.APPROVED, 7, 'approved');
     }
 
     return await this.getUserStatus(userId);

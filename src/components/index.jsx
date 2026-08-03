@@ -748,11 +748,14 @@ export const QuizCard = ({
    ========================================================================== */
 export const CompletionScreen = ({
   points = 50,
-  title = t('completion.title'),
-  subtitle = t('completion.subtitle'),
+  title,
+  subtitle,
   onClose
 }) => {
   const { t } = useTranslation('shared');
+
+  const displayTitle = title || t('completion.title') || 'Task Complete!';
+  const displaySubtitle = subtitle || t('completion.subtitle') || 'You have successfully finished this task.';
 
   // Generate random confetti pieces positions
   const confettiCount = 30;
@@ -797,8 +800,8 @@ export const CompletionScreen = ({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <h2 className="completion-title">{title}</h2>
-          <p className="completion-desc">{subtitle}</p>
+          <h2 className="completion-title">{displayTitle}</h2>
+          <p className="completion-desc">{displaySubtitle}</p>
         </div>
 
         <div className="completion-points-badge animate-scale-in">

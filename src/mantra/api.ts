@@ -224,13 +224,17 @@ export const fetchAllSubmissions = async ({ page = 1, limit = 20, status = '', s
 /**
  * Reviews (approves/rejects) an activity submission.
  */
-export const reviewSubmissionStatus = async (id: string, status: string, reviewNotes: string = '') => {
+export const reviewSubmissionStatus = async (id: string, status?: string, reviewNotes: string = '', reviewedBy?: string) => {
   const backendUrl = MANTRA_CONFIG.apiBaseUrl;
   try {
     const res = await fetch(`${backendUrl}/api/activity-submissions/${id}/review`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, reviewNotes })
+      body: JSON.stringify({ 
+        ...(status ? { status } : {}), 
+        ...(reviewedBy !== undefined ? { reviewedBy } : {}),
+        reviewNotes 
+      })
     });
     return await res.json();
   } catch (error) {

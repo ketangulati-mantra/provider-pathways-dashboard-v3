@@ -93,10 +93,21 @@ export async function setupDb() {
         form_data JSONB DEFAULT '{}'::jsonb,
         submission_data JSONB DEFAULT '{}'::jsonb,
         status VARCHAR(50) DEFAULT 'pending',
+        reviewed_by VARCHAR(255) DEFAULT 'Unassigned',
         review_notes TEXT,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+    `;
+
+    await sql`
+      ALTER TABLE activity_submissions 
+      ADD COLUMN IF NOT EXISTS reviewed_by VARCHAR(255) DEFAULT 'Unassigned';
+    `;
+
+    await sql`
+      ALTER TABLE activity_submissions 
+      DROP CONSTRAINT IF EXISTS activity_submissions_status_check;
     `;
 
     // 8. Ambassador Profiles Table
@@ -224,6 +235,53 @@ export async function setupDb() {
     await sql`
       ALTER TABLE campus_program_applications 
       ADD COLUMN IF NOT EXISTS country_code VARCHAR(20) DEFAULT '+1';
+    `;
+
+    // 15. Corporate Growth Partner Applications Table
+    await sql`
+      CREATE TABLE IF NOT EXISTS corporate_partner_applications (
+        id BIGSERIAL PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL,
+        full_name VARCHAR(255),
+        email VARCHAR(255),
+        country_code VARCHAR(20) DEFAULT '+1',
+        phone VARCHAR(50),
+        city VARCHAR(255) NOT NULL,
+        company_connections TEXT,
+        industries TEXT,
+        linkedin_url TEXT,
+        previous_experience TEXT,
+        motivation TEXT NOT NULL,
+        availability VARCHAR(100) NOT NULL,
+        terms_accepted BOOLEAN DEFAULT TRUE,
+        application_status VARCHAR(50) DEFAULT 'submitted',
+        review_status VARCHAR(50) DEFAULT 'pending',
+        version INT DEFAULT 1,
+        submitted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        reviewed_at TIMESTAMP WITH TIME ZONE,
+        reviewed_by VARCHAR(255) DEFAULT 'Unassigned',
+        admin_notes TEXT,
+        audit_history JSONB DEFAULT '[]'::jsonb,
+        CONSTRAINT unique_user_corporate_app UNIQUE (user_id)
+      );
+    `;
+
+    // 16. Corporate Learning Progress Table
+    await sql`
+      CREATE TABLE IF NOT EXISTS corporate_learning_progress (
+        id BIGSERIAL PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL,
+        program_id VARCHAR(100) DEFAULT 'corporate_growth_partner',
+        current_module_id VARCHAR(100) DEFAULT 'corp_mod_1',
+        completed_module_ids JSONB DEFAULT '[]'::jsonb,
+        progress_percent INT DEFAULT 0,
+        time_spent_seconds INT DEFAULT 0,
+        last_accessed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_user_corporate_learning UNIQUE (user_id, program_id)
+      );
     `;
 
     console.log('✅ Neon DB migrations completed successfully!');

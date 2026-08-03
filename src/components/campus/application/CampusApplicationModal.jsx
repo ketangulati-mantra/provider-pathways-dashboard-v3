@@ -278,7 +278,7 @@ export default function CampusApplicationModal({ isOpen, onClose, onSubmitSucces
           padding: '24px 30px',
           borderBottom: '1px solid #e2e8f0',
           display: 'flex',
-          justify: 'space-between',
+          justifyContent: 'space-between',
           alignItems: 'flex-start',
           background: '#ffffff',
           zIndex: 10,

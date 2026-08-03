@@ -46,7 +46,7 @@ export default function ApplicationSuccessModal({ isOpen, onContinue, onReturnDa
           color: '#043263',
           display: 'flex',
           alignItems: 'center',
-          justify: 'center'
+          justifyContent: 'center'
         }}>
           <CheckCircle2 size={26} />
         </div>
@@ -59,12 +59,12 @@ export default function ApplicationSuccessModal({ isOpen, onContinue, onReturnDa
             Application Submitted
           </h2>
           <p style={{ fontSize: '0.84rem', color: '#64748b', lineHeight: 1.5, margin: 0, width: '100%', textAlign: 'center' }}>
-            Thank you for joining the Campus Initiative. Your application has been received successfully and +50 Credits have been added to your account.
+            Thank you for joining the Campus Initiative. Your application has been submitted successfully.
           </p>
         </div>
 
         <div style={{ width: '100%', background: '#f8fafc', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#475569', lineHeight: 1.45, textAlign: 'center' }}>
-          You will receive your full Ambassador Dashboard and custom referral link after institutional review.
+          Please proceed to complete the 3 orientation learning modules to finish your activity.
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', marginTop: '4px' }}>
@@ -88,7 +88,7 @@ export default function ApplicationSuccessModal({ isOpen, onContinue, onReturnDa
               boxShadow: '0 4px 12px rgba(4, 50, 99, 0.25)'
             }}
           >
-            Continue Journey <ArrowRight size={15} />
+            Proceed to Orientation Learning <ArrowRight size={15} />
           </button>
 
           <button

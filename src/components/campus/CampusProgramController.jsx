@@ -268,8 +268,11 @@ export default function CampusProgramController({ onBack }) {
       case 'APPROVED':
       case 'ACTIVE':
         return (
-          <AmbassadorDashboard
+          <LearningScreen
             statusData={statusData}
+            onCompleteModule={handleCompleteModule}
+            onSubmitApp={() => setShowAppModal(true)}
+            isUpdating={isUpdating}
             onBack={onBack}
           />
         );

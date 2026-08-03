@@ -3,6 +3,7 @@ import { Search, Eye, Filter, CheckCircle2, XCircle, Clock, GraduationCap, Calen
 import CampusApplicationDetailsDrawer from './CampusApplicationDetailsDrawer';
 import RejectReasonModal from './RejectReasonModal';
 import RequestMoreInfoModal from './RequestMoreInfoModal';
+import ManageReviewersModal from './ManageReviewersModal';
 import { MANTRA_CONFIG } from '../../mantra';
 
 const API_BASE = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null ? MANTRA_CONFIG.apiBaseUrl : (import.meta.env.PROD ? '' : 'http://localhost:5000');
@@ -24,6 +25,7 @@ export default function CampusAdminDashboard() {
   const [reviewerOptions, setReviewerOptions] = useState(DEFAULT_REVIEWERS);
   const [customReviewerApp, setCustomReviewerApp] = useState(null);
   const [customNameInput, setCustomNameInput] = useState('');
+  const [isManagingReviewers, setIsManagingReviewers] = useState(false);
 
   // Modal & Drawer Controls
   const [selectedAppId, setSelectedAppId] = useState(null);
@@ -73,10 +75,22 @@ export default function CampusAdminDashboard() {
     setIsDrawerOpen(true);
   };
 
+  const handleAddReviewer = (name) => {
+    if (!reviewerOptions.includes(name)) {
+      setReviewerOptions(prev => [...prev, name]);
+    }
+  };
+
+  const handleDeleteReviewer = (name) => {
+    setReviewerOptions(prev => prev.filter(r => r !== name));
+    if (reviewerFilter === name) {
+      setReviewerFilter('all');
+    }
+  };
+
   const handleReviewerChange = async (app, newReviewer) => {
-    if (newReviewer === '__ADD_CUSTOM__') {
-      setCustomReviewerApp(app);
-      setCustomNameInput('');
+    if (newReviewer === '__MANAGE__' || newReviewer === '__ADD_CUSTOM__') {
+      setIsManagingReviewers(true);
       return;
     }
 
@@ -184,26 +198,78 @@ export default function CampusAdminDashboard() {
     }
   };
 
+  // Custom Date Range State
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+
   const statusCounts = applicationsData?.statusCounts || { all: 0, submitted: 0, under_review: 0, approved: 0, rejected: 0, more_info_required: 0 };
   let rawApplications = applicationsData?.applications || [];
 
   // Filter applications by Date Applied
   if (dateFilter !== 'all') {
     const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
     rawApplications = rawApplications.filter(app => {
       const appDate = new Date(app.submitted_at || app.updated_at || Date.now());
-      if (dateFilter === 'today') {
-        return appDate.toDateString() === now.toDateString();
-      } else if (dateFilter === '7days') {
-        const diffMs = now.getTime() - appDate.getTime();
-        return diffMs <= 7 * 24 * 60 * 60 * 1000;
-      } else if (dateFilter === '30days') {
-        const diffMs = now.getTime() - appDate.getTime();
-        return diffMs <= 30 * 24 * 60 * 60 * 1000;
-      } else if (dateFilter === 'this_month') {
-        return appDate.getMonth() === now.getMonth() && appDate.getFullYear() === now.getFullYear();
+      
+      switch (dateFilter) {
+        case 'today':
+          return appDate >= todayStart;
+
+        case 'yesterday': {
+          const yesterdayStart = new Date(todayStart);
+          yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+          return appDate >= yesterdayStart && appDate < todayStart;
+        }
+
+        case 'this_week': {
+          const dayOfWeek = now.getDay();
+          const weekStart = new Date(todayStart);
+          weekStart.setDate(weekStart.getDate() - dayOfWeek);
+          return appDate >= weekStart;
+        }
+
+        case 'this_month': {
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          return appDate >= monthStart;
+        }
+
+        case 'last_month': {
+          const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+          return appDate >= lastMonthStart && appDate <= lastMonthEnd;
+        }
+
+        case 'last_3_months': {
+          const start3M = new Date(now);
+          start3M.setMonth(start3M.getMonth() - 3);
+          return appDate >= start3M;
+        }
+
+        case 'last_6_months': {
+          const start6M = new Date(now);
+          start6M.setMonth(start6M.getMonth() - 6);
+          return appDate >= start6M;
+        }
+
+        case 'last_12_months': {
+          const start12M = new Date(now);
+          start12M.setFullYear(start12M.getFullYear() - 1);
+          return appDate >= start12M;
+        }
+
+        case 'custom': {
+          if (!customStartDate && !customEndDate) return true;
+          const appTime = appDate.getTime();
+          const start = customStartDate ? new Date(customStartDate).getTime() : 0;
+          const end = customEndDate ? new Date(customEndDate + 'T23:59:59').getTime() : Infinity;
+          return appTime >= start && appTime <= end;
+        }
+
+        default:
+          return true;
       }
-      return true;
     });
   }
 
@@ -218,168 +284,191 @@ export default function CampusAdminDashboard() {
   }
 
   return (
-    <div style={{ padding: '0 0 60px', display: 'flex', flexDirection: 'column', gap: '24px' }} className="animate-fade-in">
+    <div style={{ padding: '0 0 40px', display: 'flex', flexDirection: 'column', gap: '12px' }} className="animate-fade-in">
       
-      {/* Header Banner - Lighter Blue Gradient Tone */}
+      {/* Header Banner - Compact Lighter Blue Tone */}
       <div style={{
-        background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
-        borderRadius: '24px',
-        padding: '32px 36px',
+        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+        borderRadius: '12px',
+        padding: '12px 18px',
         color: '#ffffff',
         display: 'flex',
-        justify: 'space-between',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        boxShadow: '0 15px 35px -10px rgba(59, 130, 246, 0.3)',
+        boxShadow: '0 6px 16px -4px rgba(37, 99, 235, 0.25)',
         flexWrap: 'wrap',
-        gap: '20px'
+        gap: '12px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ width: '56px', height: '56px', borderRadius: '20px', background: 'rgba(255, 255, 255, 0.18)', border: '1px solid rgba(255, 255, 255, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)' }}>
-            <GraduationCap size={30} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255, 255, 255, 0.2)', border: '1px solid rgba(255, 255, 255, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', flexShrink: 0 }}>
+            <GraduationCap size={16} />
           </div>
           <div>
-            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#bfdbfe', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: '0.66rem', fontWeight: 800, color: '#dbeafe', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Institutional Management
             </span>
-            <h1 style={{ margin: '2px 0 0', fontSize: '1.6rem', fontWeight: 900, color: '#ffffff' }}>
+            <h1 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 900, color: '#ffffff' }}>
               Campus Program
             </h1>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-          <div style={{ background: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.25)', padding: '10px 18px', borderRadius: '14px', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.72rem', color: '#dbeafe', fontWeight: 800 }}>Total Applicants</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#ffffff' }}>{analyticsData?.totalApplications || statusCounts.all}</div>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ background: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.25)', padding: '4px 10px', borderRadius: '8px', textAlign: 'center', minWidth: '90px' }}>
+            <div style={{ fontSize: '0.64rem', color: '#dbeafe', fontWeight: 800 }}>Total Applicants</div>
+            <div style={{ fontSize: '0.96rem', fontWeight: 900, color: '#ffffff', lineHeight: 1.2 }}>{analyticsData?.totalApplications || statusCounts.all}</div>
           </div>
-          <div style={{ background: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.25)', padding: '10px 18px', borderRadius: '14px', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.72rem', color: '#dbeafe', fontWeight: 800 }}>Pending Review</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#fef08a' }}>{analyticsData?.pendingCount || (statusCounts.submitted + statusCounts.under_review)}</div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.25)', padding: '4px 10px', borderRadius: '8px', textAlign: 'center', minWidth: '90px' }}>
+            <div style={{ fontSize: '0.64rem', color: '#dbeafe', fontWeight: 800 }}>Pending Review</div>
+            <div style={{ fontSize: '0.96rem', fontWeight: 900, color: '#fef08a', lineHeight: 1.2 }}>{analyticsData?.pendingCount || (statusCounts.submitted + statusCounts.under_review)}</div>
           </div>
-          <div style={{ background: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.25)', padding: '10px 18px', borderRadius: '14px', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.72rem', color: '#dbeafe', fontWeight: 800 }}>Activation Rate</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#86efac' }}>{analyticsData?.activationRate || '0%'}</div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.25)', padding: '4px 10px', borderRadius: '8px', textAlign: 'center', minWidth: '90px' }}>
+            <div style={{ fontSize: '0.64rem', color: '#dbeafe', fontWeight: 800 }}>Activation Rate</div>
+            <div style={{ fontSize: '0.96rem', fontWeight: 900, color: '#86efac', lineHeight: 1.2 }}>{analyticsData?.activationRate || '0%'}</div>
           </div>
         </div>
       </div>
 
-      {/* Admin Section Tabs & Date Filter Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', background: '#ffffff', padding: '16px 20px', borderRadius: '18px', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {[
-            { id: 'all', label: `All Applications (${statusCounts.all})` },
-            { id: 'submitted', label: `Pending Review (${statusCounts.submitted + statusCounts.under_review})` },
-            { id: 'approved', label: `Approved Members (${statusCounts.approved})` },
-            { id: 'rejected', label: `Rejected (${statusCounts.rejected})` },
-            { id: 'more_info_required', label: `Info Requested (${statusCounts.more_info_required})` }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                padding: '9px 16px',
-                borderRadius: '10px',
-                border: activeTab === tab.id ? 'none' : '1px solid #e2e8f0',
-                background: activeTab === tab.id ? '#2563eb' : '#ffffff',
-                color: activeTab === tab.id ? '#ffffff' : '#64748b',
-                fontWeight: 800,
-                fontSize: '0.82rem',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Explicit Filter Dropdowns: Date Applied, Current Status, Reviewer & Search */}
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-          
-          {/* 1. Date Applied Filter */}
+      {/* Admin Action Control Bar - Single Clean Toolbar */}
+      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', flexWrap: 'wrap', gap: '8px', background: '#ffffff', padding: '8px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.01)' }}>
+        
+        {/* 1. Date Applied Filter */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
           <div style={{ position: 'relative' }}>
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
               style={{
-                padding: '8px 28px 8px 12px',
-                borderRadius: '10px',
+                padding: '4px 22px 4px 8px',
+                borderRadius: '8px',
                 border: '1px solid #cbd5e1',
                 background: '#ffffff',
-                fontSize: '0.8rem',
+                fontSize: '0.72rem',
                 fontWeight: 700,
                 color: '#1e293b',
                 outline: 'none',
                 cursor: 'pointer',
-                appearance: 'none'
+                appearance: 'none',
+                height: '28px'
               }}
             >
-              <option value="all">Date Applied: All Time</option>
-              <option value="today">Date Applied: Today</option>
-              <option value="7days">Date Applied: Last 7 Days</option>
-              <option value="30days">Date Applied: Last 30 Days</option>
-              <option value="this_month">Date Applied: This Month</option>
+              <option value="all">All Dates</option>
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="this_week">This Week</option>
+              <option value="this_month">This Month</option>
+              <option value="last_month">Last Month</option>
+              <option value="last_3_months">Last 3 Months</option>
+              <option value="last_6_months">Last 6 Months</option>
+              <option value="last_12_months">Last 12 Months</option>
+              <option value="custom">Custom Range...</option>
             </select>
-            <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           </div>
 
-          {/* 2. Current Status Filter */}
-          <div style={{ position: 'relative' }}>
-            <select
-              value={activeTab}
-              onChange={(e) => setActiveTab(e.target.value)}
-              style={{
-                padding: '8px 28px 8px 12px',
-                borderRadius: '10px',
-                border: '1px solid #cbd5e1',
-                background: '#ffffff',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                color: '#1e293b',
-                outline: 'none',
-                cursor: 'pointer',
-                appearance: 'none'
-              }}
-            >
-              <option value="all">Status: All Statuses</option>
-              <option value="submitted">Status: Pending Review</option>
-              <option value="approved">Status: Approved Members</option>
-              <option value="rejected">Status: Rejected</option>
-              <option value="more_info_required">Status: Info Requested</option>
-            </select>
-            <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-          </div>
+          {/* Custom Date Range Inputs */}
+          {dateFilter === 'custom' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <input
+                type="date"
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                placeholder="From"
+                style={{
+                  height: '28px',
+                  padding: '0 6px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.72rem',
+                  color: '#0f172a',
+                  outline: 'none'
+                }}
+              />
+              <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>to</span>
+              <input
+                type="date"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                placeholder="To"
+                style={{
+                  height: '28px',
+                  padding: '0 6px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.72rem',
+                  color: '#0f172a',
+                  outline: 'none'
+                }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* 2. Single Consolidated Status Filter */}
+        <div style={{ position: 'relative' }}>
+          <select
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value)}
+            style={{
+              padding: '4px 22px 4px 8px',
+              borderRadius: '8px',
+              border: '1px solid #cbd5e1',
+              background: '#ffffff',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              color: '#1e293b',
+              outline: 'none',
+              cursor: 'pointer',
+              appearance: 'none',
+              height: '28px'
+            }}
+          >
+            <option value="all">All Statuses ({statusCounts.all})</option>
+            <option value="submitted">Pending Review ({statusCounts.submitted + statusCounts.under_review})</option>
+            <option value="approved">Approved Members ({statusCounts.approved})</option>
+            <option value="rejected">Rejected ({statusCounts.rejected})</option>
+            <option value="more_info_required">Info Requested ({statusCounts.more_info_required})</option>
+          </select>
+          <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+        </div>
 
           {/* 3. Reviewer Filter */}
           <div style={{ position: 'relative' }}>
             <select
               value={reviewerFilter}
-              onChange={(e) => setReviewerFilter(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value === '__MANAGE__') {
+                  setIsManagingReviewers(true);
+                } else {
+                  setReviewerFilter(e.target.value);
+                }
+              }}
               style={{
-                padding: '8px 28px 8px 12px',
-                borderRadius: '10px',
+                padding: '4px 22px 4px 8px',
+                borderRadius: '8px',
                 border: '1px solid #cbd5e1',
                 background: '#ffffff',
-                fontSize: '0.8rem',
+                fontSize: '0.72rem',
                 fontWeight: 700,
                 color: '#1e293b',
                 outline: 'none',
                 cursor: 'pointer',
-                appearance: 'none'
+                appearance: 'none',
+                height: '28px'
               }}
             >
-              <option value="all">Reviewer: All Reviewers</option>
+              <option value="all">All Reviewers</option>
               {reviewerOptions.map(rev => (
-                <option key={rev} value={rev}>Reviewer: {rev}</option>
+                <option key={rev} value={rev}>{rev}</option>
               ))}
+              <option value="__MANAGE__">⚙️ Manage Reviewers...</option>
             </select>
-            <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           </div>
 
           {/* Search Input */}
-          <div style={{ position: 'relative', width: '210px' }}>
-            <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+          <div style={{ position: 'relative', width: '180px' }}>
+            <Search size={12} color="#94a3b8" style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="text"
               placeholder="Search name, college..."
@@ -387,45 +476,44 @@ export default function CampusAdminDashboard() {
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
                 width: '100%',
-                padding: '8px 10px 8px 30px',
-                borderRadius: '10px',
+                height: '28px',
+                padding: '0 8px 0 26px',
+                borderRadius: '8px',
                 border: '1px solid #cbd5e1',
-                fontSize: '0.8rem',
+                fontSize: '0.72rem',
                 color: '#0f172a',
                 outline: 'none',
                 boxSizing: 'border-box'
               }}
             />
           </div>
-
         </div>
-      </div>
 
-      {/* Main Applications Table - Compact Single-View Layout */}
-      <div style={{ background: '#ffffff', borderRadius: '18px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.03)' }}>
-        <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.82rem' }}>
+      {/* Main Applications Table - Ultra-Compact Layout */}
+      <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+        <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.76rem' }}>
           <thead>
-            <tr style={{ background: '#043263', borderBottom: '1px solid #03254c', color: '#ffffff', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              <th style={{ padding: '12px 14px', width: '18%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Applicant Name</th>
-              <th style={{ padding: '12px 14px', width: '15%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>University / College</th>
-              <th style={{ padding: '12px 14px', width: '14%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Course / Year</th>
-              <th style={{ padding: '12px 14px', width: '11%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Date Applied</th>
-              <th style={{ padding: '12px 14px', width: '11%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Submissions</th>
-              <th style={{ padding: '12px 14px', width: '11%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Current Status</th>
-              <th style={{ padding: '12px 14px', width: '12%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Reviewer</th>
-              <th style={{ padding: '12px 14px', width: '8%', textAlign: 'right', whiteSpace: 'nowrap' }}>Actions</th>
+            <tr style={{ background: '#043263', borderBottom: '1px solid #03254c', color: '#ffffff', fontWeight: 800, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <th style={{ padding: '7px 10px', width: '18%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Applicant Name</th>
+              <th style={{ padding: '7px 10px', width: '15%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>University / College</th>
+              <th style={{ padding: '7px 10px', width: '14%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Course / Year</th>
+              <th style={{ padding: '7px 10px', width: '11%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Date Applied</th>
+              <th style={{ padding: '7px 10px', width: '11%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Submissions</th>
+              <th style={{ padding: '7px 10px', width: '11%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Current Status</th>
+              <th style={{ padding: '7px 10px', width: '12%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Reviewer</th>
+              <th style={{ padding: '7px 10px', width: '8%', textAlign: 'right', whiteSpace: 'nowrap' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} style={{ padding: '30px', textAlign: 'center', color: '#64748b', fontWeight: 700 }}>
+                <td colSpan={8} style={{ padding: '20px', textAlign: 'center', color: '#64748b', fontWeight: 700 }}>
                   Loading campus applications...
                 </td>
               </tr>
             ) : rawApplications.length === 0 ? (
               <tr>
-                <td colSpan={8} style={{ padding: '30px', textAlign: 'center', color: '#64748b', fontWeight: 700 }}>
+                <td colSpan={8} style={{ padding: '20px', textAlign: 'center', color: '#64748b', fontWeight: 700 }}>
                   No campus applications found matching current criteria.
                 </td>
               </tr>
@@ -434,49 +522,49 @@ export default function CampusAdminDashboard() {
                 <tr key={app.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s ease' }}>
                   
                   {/* Applicant Name with Ellipsis & Hover Tooltip */}
-                  <td style={{ padding: '11px 12px', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${app.full_name || 'Applicant'} (${app.email})`}>
-                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{app.full_name || 'Applicant'}</div>
-                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>{app.email}</div>
+                  <td style={{ padding: '6px 10px', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${app.full_name || 'Applicant'} (${app.email})`}>
+                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.78rem' }}>{app.full_name || 'Applicant'}</div>
+                    <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>{app.email}</div>
                   </td>
 
                   {/* University / College with Ellipsis & Hover Tooltip */}
-                  <td style={{ padding: '11px 12px', color: '#334155', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={app.college}>
+                  <td style={{ padding: '6px 10px', color: '#334155', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.76rem' }} title={app.college}>
                     {app.college}
                   </td>
 
                   {/* Course / Year with Ellipsis & Hover Tooltip */}
-                  <td style={{ padding: '11px 12px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${app.course} (${app.year})`}>
+                  <td style={{ padding: '6px 10px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.74rem' }} title={`${app.course} (${app.year})`}>
                     {app.course} ({app.year})
                   </td>
 
                   {/* Date Applied */}
-                  <td style={{ padding: '11px 12px', color: '#64748b', fontSize: '0.78rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <td style={{ padding: '6px 10px', color: '#64748b', fontSize: '0.74rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {new Date(app.submitted_at || app.updated_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </td>
 
                   {/* Submissions Count Column */}
-                  <td style={{ padding: '11px 12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '6px', fontSize: '0.74rem', fontWeight: 800 }}>
+                  <td style={{ padding: '6px 10px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '1px 6px', borderRadius: '5px', fontSize: '0.7rem', fontWeight: 800 }}>
                       {app.version || 1} {(app.version || 1) === 1 ? 'Submission' : 'Submissions'}
                     </span>
                   </td>
 
                   {/* Current Status */}
-                  <td style={{ padding: '11px 12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <td style={{ padding: '6px 10px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {getStatusBadge(app.application_status)}
                   </td>
 
                   {/* Reviewer Dropdown with Custom Name Option */}
-                  <td style={{ padding: '11px 12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <td style={{ padding: '6px 10px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     <select
                       value={app.reviewed_by || 'Unassigned'}
                       onChange={(e) => handleReviewerChange(app, e.target.value)}
                       style={{
-                        padding: '4px 6px',
+                        padding: '2px 6px',
                         borderRadius: '6px',
                         border: '1px solid #cbd5e1',
                         background: '#ffffff',
-                        fontSize: '0.75rem',
+                        fontSize: '0.72rem',
                         fontWeight: 700,
                         color: app.reviewed_by ? '#0f172a' : '#64748b',
                         outline: 'none',
@@ -488,32 +576,31 @@ export default function CampusAdminDashboard() {
                       {reviewerOptions.map(rev => (
                         <option key={rev} value={rev}>{rev}</option>
                       ))}
-                      <option value="__ADD_CUSTOM__">+ Add Custom...</option>
+                      <option value="__MANAGE__">⚙️ Manage Reviewers...</option>
                     </select>
                   </td>
 
                   {/* Actions */}
-                  <td style={{ padding: '10px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  <td style={{ padding: '6px 10px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                     <button
                       onClick={() => handleOpenDrawer(app.id)}
                       style={{
-                        padding: '5px 10px',
-                        borderRadius: '6px',
+                        padding: '3px 8px',
+                        borderRadius: '5px',
                         border: '1px solid #cbd5e1',
                         background: '#ffffff',
                         color: '#1e293b',
                         fontWeight: 800,
-                        fontSize: '0.78rem',
+                        fontSize: '0.72rem',
                         cursor: 'pointer',
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '4px'
+                        gap: '3px'
                       }}
                     >
-                      <Eye size={13} color="#2563eb" /> View
+                      <Eye size={12} /> View
                     </button>
                   </td>
-
                 </tr>
               ))
             )}
@@ -541,54 +628,65 @@ export default function CampusAdminDashboard() {
             background: '#ffffff',
             borderRadius: '20px',
             padding: '24px 28px',
-            maxWidth: '420px',
             width: '100%',
-            boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
-            border: '1px solid #e2e8f0'
+            maxWidth: '420px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
           }}>
-            <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 900, color: '#0f172a' }}>
-              Assign Custom Reviewer Name
+            <h3 style={{ margin: '0 0 8px', fontSize: '1.1rem', fontWeight: 900, color: '#0f172a' }}>
+              Add New Reviewer
             </h3>
-            <p style={{ margin: '0 0 16px', fontSize: '0.82rem', color: '#64748b' }}>
-              Applicant: <strong>{customReviewerApp.full_name}</strong>
+            <p style={{ margin: '0 0 16px', fontSize: '0.8rem', color: '#64748b' }}>
+              Assign a new reviewer name for {customReviewerApp.full_name || 'Applicant'}.
             </p>
-
-            <form onSubmit={handleCustomReviewerSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, color: '#0f172a', marginBottom: '6px' }}>
-                  Reviewer Full Name:
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Dr. Michael Vance"
-                  value={customNameInput}
-                  onChange={(e) => setCustomNameInput(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '10px',
-                    border: '1.5px solid #cbd5e1',
-                    fontSize: '0.88rem',
-                    color: '#0f172a',
-                    outline: 'none',
-                    boxSizing: 'border-box'
-                  }}
-                  autoFocus
-                  required
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '6px' }}>
+            <form onSubmit={handleCustomReviewerSubmit}>
+              <input
+                type="text"
+                placeholder="Enter reviewer full name..."
+                value={customNameInput}
+                onChange={(e) => setCustomNameInput(e.target.value)}
+                autoFocus
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.84rem',
+                  color: '#0f172a',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  marginBottom: '20px'
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                 <button
                   type="button"
                   onClick={() => setCustomReviewerApp(null)}
-                  style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#475569', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '10px',
+                    border: '1px solid #cbd5e1',
+                    background: '#ffffff',
+                    color: '#475569',
+                    fontWeight: 700,
+                    fontSize: '0.8rem',
+                    cursor: 'pointer'
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  style={{ padding: '8px 18px', borderRadius: '8px', border: 'none', background: '#2563eb', color: '#ffffff', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}
+                  disabled={!customNameInput.trim()}
+                  style={{
+                    padding: '8px 18px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: customNameInput.trim() ? '#2563eb' : '#94a3b8',
+                    color: '#ffffff',
+                    fontWeight: 800,
+                    fontSize: '0.8rem',
+                    cursor: customNameInput.trim() ? 'pointer' : 'not-allowed'
+                  }}
                 >
                   Save & Assign
                 </button>
@@ -597,6 +695,15 @@ export default function CampusAdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* Reusable Manage Reviewers Modal */}
+      <ManageReviewersModal
+        isOpen={isManagingReviewers}
+        onClose={() => setIsManagingReviewers(false)}
+        reviewerOptions={reviewerOptions}
+        onAddReviewer={handleAddReviewer}
+        onDeleteReviewer={handleDeleteReviewer}
+      />
 
       {/* Right-Side Slide-Over Detail Drawer / Centered Modal */}
       <CampusApplicationDetailsDrawer

@@ -200,7 +200,7 @@ export const submissionController = {
   async reviewSubmission(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const { status, reviewNotes, review_notes } = req.body;
+      const { status, reviewedBy, reviewed_by, reviewNotes, review_notes } = req.body;
 
       if (!id) {
         return res.status(400).json({
@@ -209,18 +209,13 @@ export const submissionController = {
         });
       }
 
-      if (!status) {
-        return res.status(400).json({
-          success: false,
-          error: 'status field is required (must be pending, approved, or rejected)',
-        });
-      }
-
       const finalNotes = reviewNotes !== undefined ? reviewNotes : review_notes;
+      const finalReviewer = reviewedBy !== undefined ? reviewedBy : reviewed_by;
 
       const updatedSubmission = await submissionService.reviewSubmission(id, {
-        status,
-        reviewNotes: finalNotes,
+        ...(status ? { status } : {}),
+        ...(finalReviewer !== undefined ? { reviewedBy: finalReviewer } : {}),
+        ...(finalNotes !== undefined ? { reviewNotes: finalNotes } : {})
       });
 
       if (!updatedSubmission) {
@@ -235,15 +230,12 @@ export const submissionController = {
         message: `Submission status successfully updated to '${updatedSubmission.status}'`,
         data: updatedSubmission,
       });
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('Invalid status')) {
-        return res.status(400).json({
-          success: false,
-          error: error.message,
-        });
-      }
+    } catch (error: any) {
       console.error('❌ Error reviewing submission:', error);
-      next(error);
+      return res.status(500).json({
+        success: false,
+        error: error?.message || 'Internal Server Error while reviewing submission',
+      });
     }
   },
 };

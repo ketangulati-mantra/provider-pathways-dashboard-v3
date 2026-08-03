@@ -1,7 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { Upload, X, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Upload, X, ShieldCheck, CheckCircle2, User, Mail, Phone, FileText } from 'lucide-react';
 import { useToast, Button } from '../index';
 import { useActivitySubmission } from '../../hooks/useActivitySubmission';
+import { isValidEmail, isValidPhoneNumber } from '../../mantra/validation';
+import PhoneInputWithCountry from './PhoneInputWithCountry';
 
 export default function SubmissionForm({ 
   onSuccess, 
@@ -11,13 +13,16 @@ export default function SubmissionForm({
   title = "Submit Your Proof",
   successTitle = "Submission received successfully.",
   successMessage = "Our team will review your proof shortly.",
-  buttonText = "Submit",
+  buttonText = "Submit Proof",
   successButtonText = "Mark Lesson as Complete"
 }) {
   const { showToast } = useToast();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [countryCode, setCountryCode] = useState('+91');
   const [phone, setPhone] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
@@ -77,17 +82,36 @@ export default function SubmissionForm({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Clear errors
+    setEmailError('');
+    setPhoneError('');
+
+    if (email.trim() && !isValidEmail(email)) {
+      setEmailError('Please enter a valid, active email address.');
+      showToast('Please enter a valid, non-disposable email address.', 'warning');
+      return;
+    }
+
+    if (phone.trim() && !isValidPhoneNumber(phone, countryCode)) {
+      setPhoneError('Invalid phone number for the selected country.');
+      showToast('Please enter a valid phone number.', 'warning');
+      return;
+    }
+
     if (!file) {
       showToast('Please upload a screenshot or file.', 'warning');
       return;
     }
+
+    const fullPhone = phone.trim() ? `${countryCode} ${phone.trim()}` : '';
 
     await submit({
       file,
       formData: {
         ...(fullName.trim() ? { fullName: fullName.trim() } : {}),
         ...(email.trim() ? { email: email.trim() } : {}),
-        ...(phone.trim() ? { phone: phone.trim() } : {}),
+        ...(fullPhone ? { phone: fullPhone } : {}),
         submittedAt: new Date().toISOString()
       }
     });
@@ -100,19 +124,44 @@ export default function SubmissionForm({
   };
 
   return (
-    <div style={{ width: '100%', marginTop: '16px' }}>
+    <div style={{
+      width: '100%',
+      marginTop: '16px',
+      background: '#ffffff',
+      borderRadius: '16px',
+      border: '1px solid #e2e8f0',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+      padding: '28px 24px',
+      boxSizing: 'border-box'
+    }}>
       {!isSuccess ? (
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           
-          <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>
-            {title}
+          {/* Card Title & Subtitle */}
+          <div style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '14px' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0 0 4px' }}>
+              {title}
+            </h3>
+            <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
+              Fill in your contact details and attach your activity proof document.
+            </p>
           </div>
 
           {/* Contact Input Fields */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {/* Full Name */}
             <div>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px', display: 'block' }}>
-                Full Name
+              <label style={{
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: '#334155',
+                marginBottom: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                textAlign: 'left'
+              }}>
+                <User size={14} color="#0284c7" /> Full Name
               </label>
               <input
                 type="text"
@@ -121,65 +170,99 @@ export default function SubmissionForm({
                 onChange={(e) => setFullName(e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '10px 14px',
-                  borderRadius: '8px',
+                  padding: '11px 14px',
+                  borderRadius: '10px',
                   border: '1px solid #cbd5e1',
                   fontSize: '0.88rem',
                   outline: 'none',
-                  background: '#ffffff'
+                  background: '#f8fafc',
+                  color: '#0f172a',
+                  boxSizing: 'border-box'
                 }}
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px', display: 'block' }}>
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 14px',
-                    borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.88rem',
-                    outline: 'none',
-                    background: '#ffffff'
-                  }}
-                />
-              </div>
+            {/* Email Address */}
+            <div>
+              <label style={{
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: '#334155',
+                marginBottom: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                textAlign: 'left'
+              }}>
+                <Mail size={14} color="#0284c7" /> Email Address
+              </label>
+              <input
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (emailError) setEmailError('');
+                }}
+                style={{
+                  width: '100%',
+                  padding: '11px 14px',
+                  borderRadius: '10px',
+                  border: emailError ? '1.5px solid #ef4444' : '1px solid #cbd5e1',
+                  fontSize: '0.88rem',
+                  outline: 'none',
+                  background: '#f8fafc',
+                  color: '#0f172a',
+                  boxSizing: 'border-box'
+                }}
+              />
+              {emailError && (
+                <span style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: 600, marginTop: '4px', display: 'block' }}>
+                  {emailError}
+                </span>
+              )}
+            </div>
 
-              <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px', display: 'block' }}>
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  placeholder="+91 9876543210"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 14px',
-                    borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.88rem',
-                    outline: 'none',
-                    background: '#ffffff'
-                  }}
-                />
-              </div>
+            {/* Phone Number with Country Selector */}
+            <div>
+              <label style={{
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: '#334155',
+                marginBottom: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                textAlign: 'left'
+              }}>
+                <Phone size={14} color="#0284c7" /> Phone Number
+              </label>
+              <PhoneInputWithCountry
+                countryCode={countryCode}
+                setCountryCode={setCountryCode}
+                phoneNumber={phone}
+                setPhoneNumber={(val) => {
+                  setPhone(val);
+                  if (phoneError) setPhoneError('');
+                }}
+                error={phoneError}
+              />
             </div>
           </div>
 
-          {/* File Drag & Drop Upload */}
+          {/* File Drag & Drop Upload Container */}
           <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px', display: 'block' }}>
-              Upload Proof Screenshot / Document
+            <label style={{
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              color: '#334155',
+              marginBottom: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              textAlign: 'left'
+            }}>
+              <FileText size={14} color="#0284c7" /> Upload Proof Screenshot / Document
             </label>
 
             <div 
@@ -188,16 +271,16 @@ export default function SubmissionForm({
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               style={{ 
-                border: file ? '1px solid #10b981' : isDragging ? '1px dashed var(--color-primary)' : '1px dashed #d1d5db',
-                borderRadius: '8px',
-                background: file ? '#ecfdf5' : isDragging ? '#f0f9ff' : '#fafafa',
-                padding: file ? '12px 16px' : '20px 16px',
+                border: file ? '2px solid #10b981' : isDragging ? '2px dashed #0284c7' : '2px dashed #cbd5e1',
+                borderRadius: '12px',
+                background: file ? '#f0fdf4' : isDragging ? '#f0f9ff' : '#f8fafc',
+                padding: file ? '14px 18px' : '22px 18px',
                 display: 'flex',
                 alignItems: 'center',
-                justify: file ? 'space-between' : 'center',
+                justifyContent: file ? 'space-between' : 'center',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                minHeight: '64px'
+                minHeight: '68px'
               }}
             >
               <input 
@@ -210,41 +293,59 @@ export default function SubmissionForm({
               
               {!file ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <Upload size={18} color="var(--color-primary)" />
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>Click to upload</span> or drag and drop
+                  <div style={{ background: '#eff6ff', padding: '8px', borderRadius: '50%', display: 'flex' }}>
+                    <Upload size={18} color="#0284c7" />
+                  </div>
+                  <span style={{ fontSize: '0.86rem', color: '#64748b' }}>
+                    <span style={{ fontWeight: 700, color: '#0f172a' }}>Click to upload</span> or drag and drop PNG, JPG, PDF (Max 20MB)
                   </span>
                 </div>
               ) : (
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
-                    <CheckCircle2 size={18} color="#10b981" style={{ flexShrink: 0 }} />
-                    <span style={{ fontSize: '0.85rem', fontWeight: 500, color: '#065f46', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <CheckCircle2 size={20} color="#10b981" style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#065f46', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {file.name}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                    <button type="button" onClick={clearFile} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', color: '#6b7280' }}>
-                      <X size={16} />
-                    </button>
-                  </div>
+                  <button type="button" onClick={clearFile} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', color: '#6b7280' }}>
+                    <X size={18} />
+                  </button>
                 </>
               )}
             </div>
           </div>
 
-          <Button variant="primary" type="submit" disabled={isSubmitting || !file} style={{ padding: '12px', fontSize: '0.95rem', borderRadius: '8px', marginTop: '4px' }}>
+          {/* Primary Submit Button */}
+          <button
+            type="submit"
+            disabled={isSubmitting || !file}
+            style={{
+              width: '100%',
+              padding: '14px',
+              borderRadius: '10px',
+              border: 'none',
+              background: (isSubmitting || !file) ? '#cbd5e1' : 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)',
+              color: '#ffffff',
+              fontWeight: 800,
+              fontSize: '0.95rem',
+              cursor: (isSubmitting || !file) ? 'not-allowed' : 'pointer',
+              boxShadow: (isSubmitting || !file) ? 'none' : '0 4px 14px rgba(37, 99, 235, 0.25)',
+              transition: 'all 0.15s ease',
+              marginTop: '4px'
+            }}
+          >
             {isSubmitting ? 'Uploading & Submitting...' : buttonText}
-          </Button>
+          </button>
         </form>
       ) : (
         <div style={{ textAlign: 'center', padding: '24px 0', background: '#f8fafc', borderRadius: '12px', border: '1px solid #eef0f3' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#d1fae5', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <ShieldCheck size={20} color="#059669" />
+          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#d1fae5', margin: '0 auto 14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ShieldCheck size={24} color="#059669" />
           </div>
-          <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '6px', color: 'var(--text-main)' }}>{successTitle}</h3>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>{successMessage}</p>
-          <Button variant="primary" onClick={handleCompleteClick} style={{ padding: '8px 20px', fontSize: '0.85rem' }}>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 800, marginBottom: '6px', color: '#0f172a' }}>{successTitle}</h3>
+          <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '20px' }}>{successMessage}</p>
+          <Button variant="primary" onClick={handleCompleteClick} style={{ padding: '10px 24px', fontSize: '0.88rem' }}>
             {successButtonText}
           </Button>
         </div>

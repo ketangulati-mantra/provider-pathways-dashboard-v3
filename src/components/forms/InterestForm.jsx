@@ -4,6 +4,7 @@ import { useToast } from '../index';
 import { isValidEmail, isValidPhoneNumber } from '../../mantra/validation';
 import { Button } from '../index';
 import { useActivitySubmission } from '../../hooks/useActivitySubmission';
+import PhoneInputWithCountry from './PhoneInputWithCountry';
 
 export default function InterestForm({ 
   initiative,
@@ -21,7 +22,9 @@ export default function InterestForm({
   const { showToast } = useToast();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [countryCode, setCountryCode] = useState('+91');
   const [phone, setPhone] = useState('');
+  const [phoneError, setPhoneError] = useState('');
 
   const { submit, isSubmitting, isSuccess } = useActivitySubmission({
     lessonId: lessonId || 'interest-form',
@@ -34,7 +37,7 @@ export default function InterestForm({
   const validateEmail = () => {
     if (!email) return true;
     if (!isValidEmail(email)) {
-      showToast('Please enter a valid email address.', 'warning');
+      showToast('Please enter a valid, active email address.', 'warning');
       return false;
     }
     return true;
@@ -42,10 +45,12 @@ export default function InterestForm({
 
   const validatePhone = () => {
     if (!phone) return true;
-    if (!isValidPhoneNumber(phone)) {
+    if (!isValidPhoneNumber(phone, countryCode)) {
+      setPhoneError('Invalid phone number for selected country.');
       showToast('Please enter a valid phone number.', 'warning');
       return false;
     }
+    setPhoneError('');
     return true;
   };
 
@@ -58,12 +63,14 @@ export default function InterestForm({
     if (!validateEmail()) return;
     if (!validatePhone()) return;
 
+    const fullPhone = phone.trim() ? `${countryCode} ${phone.trim()}` : '';
+
     await submit({
       formData: {
         initiative,
         fullName,
         email,
-        phone,
+        phone: fullPhone,
         submittedAt: new Date().toISOString()
       }
     });
@@ -76,51 +83,35 @@ export default function InterestForm({
   };
 
   return (
-    <div style={{
-      background: '#ffffff', borderRadius: '20px', padding: '24px',
-      border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-      width: '100%', boxSizing: 'border-box'
-    }}>
+    <div style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '32px 28px', width: '100%', boxSizing: 'border-box' }}>
       {!isSuccess ? (
         <>
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.35rem', margin: '0 0 8px', color: '#0f172a' }}>{title}</h2>
-          <p style={{ color: '#64748b', marginBottom: '24px', fontSize: '0.9rem', lineHeight: '1.5' }}>{description}</p>
-          
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px', width: '100%', boxSizing: 'border-box' }}>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '0.88rem', fontWeight: 600, color: '#334155' }}>Initiative</label>
-              <input 
-                type="text" 
-                value={initiative} 
-                disabled 
-                style={{ 
-                  padding: '12px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', 
-                  outline: 'none', background: '#f1f5f9', fontSize: '0.9rem', color: '#475569',
-                  cursor: 'not-allowed', width: '100%', boxSizing: 'border-box' 
-                }} 
-              />
-            </div>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 6px', color: '#0f172a' }}>{title}</h3>
+            <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0, lineHeight: 1.5 }}>{description}</p>
+          </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '14px', width: '100%', boxSizing: 'border-box' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '0.88rem', fontWeight: 600, color: '#334155' }}>Full Name</label>
                 <input 
                   type="text" 
                   required 
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Your Full Name" 
+                  value={fullName} 
+                  onChange={(e) => setFullName(e.target.value)} 
+                  placeholder="Full Name" 
                   style={{ padding: '12px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', outline: 'none', background: '#f8fafc', fontSize: '0.9rem', color: '#0f172a', width: '100%', boxSizing: 'border-box' }} 
                 />
               </div>
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '0.88rem', fontWeight: 600, color: '#334155' }}>Email Address</label>
                 <input 
                   type="email" 
                   required 
                   value={email} 
-                  onChange={(e) => setEmail(e.target.value.replace(/\s/g, ''))} 
+                  onChange={(e) => setEmail(e.target.value)} 
                   onBlur={validateEmail} 
                   placeholder="Email Address" 
                   style={{ padding: '12px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', outline: 'none', background: '#f8fafc', fontSize: '0.9rem', color: '#0f172a', width: '100%', boxSizing: 'border-box' }} 
@@ -130,16 +121,16 @@ export default function InterestForm({
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '0.88rem', fontWeight: 600, color: '#334155' }}>Phone Number</label>
-              <input 
-                type="tel" 
-                inputMode="tel" 
-                required
-                maxLength={20} 
-                value={phone} 
-                onChange={(e) => setPhone(e.target.value.replace(/[^\d\s\+\-\(\)]/g, ''))} 
-                onBlur={validatePhone} 
-                placeholder="Phone Number (e.g. +1 555-555-5555)" 
-                style={{ padding: '12px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', outline: 'none', background: '#f8fafc', fontSize: '0.9rem', color: '#0f172a', width: '100%', boxSizing: 'border-box' }} 
+              <PhoneInputWithCountry
+                countryCode={countryCode}
+                setCountryCode={setCountryCode}
+                phoneNumber={phone}
+                setPhoneNumber={(val) => {
+                  setPhone(val);
+                  if (phoneError) setPhoneError('');
+                }}
+                onBlur={validatePhone}
+                error={phoneError}
               />
             </div>
 

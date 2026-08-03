@@ -9,6 +9,7 @@ import submissionRoutes from './routes/submissionRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import certificateRoutes from './routes/certificateRoutes.js';
 import campusRoutes from './campus-program/routes/campusRoutes.js';
+import corporateRoutes from './corporate-program/routes/corporateRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -37,6 +38,7 @@ apiPrefixes.forEach((prefix) => {
   app.use(`${prefix}/users`, userRoutes);
   app.use(`${prefix}/activities`, activityRoutes);
   app.use(`${prefix}/campus-program`, campusRoutes);
+  app.use(`${prefix}/corporate-program`, corporateRoutes);
 });
 
 // Serve Frontend Static Assets in Production (supporting root and subpaths)

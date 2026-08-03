@@ -46,7 +46,7 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
     if (isInitialMount.current) {
       isInitialMount.current = false;
       if (completedSteps.celebrationShown) {
-        showToast("🎉 Welcome back! This activity has already been completed. You can review the lesson whenever you'd like.", "success", 4000);
+        showToast("Welcome back! This activity has already been completed. You can review the lesson whenever you'd like.", "success", 4000);
       }
     }
   }, [completedSteps.celebrationShown, showToast]);
