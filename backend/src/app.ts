@@ -45,12 +45,19 @@ apiPrefixes.forEach((prefix) => {
 // Serve Frontend Static Assets in Production (supporting root and subpaths)
 const distPath = path.join(__dirname, '../../dist');
 app.use(express.static(distPath));
-app.use('/provider_pathways_dashboard_v3', express.static(distPath));
-app.use('/provider_pathways_dashboard_v2', express.static(distPath));
-app.use('/provider_dashboard_v1', express.static(distPath));
-app.use('/provider_pathways_dashboard_v1', express.static(distPath));
-app.use('/provider_pathways_v2_testing', express.static(distPath));
-app.use('/provider_pathways', express.static(distPath));
+
+const subpaths = [
+  '/provider_pathways_dashboard_v3',
+  '/provider_pathways_dashboard_v2',
+  '/provider_dashboard_v1',
+  '/provider_pathways_dashboard_v1',
+  '/provider_pathways_v2_testing',
+  '/provider_pathways'
+];
+
+subpaths.forEach((subpath) => {
+  app.use(subpath, express.static(distPath));
+});
 
 app.get('*', (req, res, next) => {
   if (req.path.includes('/api/')) return next();
