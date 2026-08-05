@@ -10,18 +10,26 @@ export const preserveQueryParams = (targetPath: string): string => {
     return targetPath;
   }
 
-  const currentSearch = window.location.search;
-  if (!currentSearch) {
-    return targetPath;
-  }
-
   const [pathname, targetQuery] = targetPath.split('?');
-  const currentParams = new URLSearchParams(targetQuery);
+  const currentParams = new URLSearchParams(window.location.search || '');
+
+  // Normalize legacy 'source' param to 'service'
+  if (currentParams.has('source')) {
+    const val = currentParams.get('source');
+    if (val && !currentParams.has('service')) {
+      currentParams.set('service', val);
+    }
+    currentParams.delete('source');
+  }
 
   if (targetQuery) {
     const targetParams = new URLSearchParams(targetQuery);
     targetParams.forEach((value, key) => {
-      currentParams.set(key, value);
+      if (key === 'source') {
+        currentParams.set('service', value);
+      } else {
+        currentParams.set(key, value);
+      }
     });
   }
 

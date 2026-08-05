@@ -44,7 +44,7 @@ export const activityController = {
 
   async saveProgress(req: Request, res: Response, next: NextFunction) {
     try {
-      const { userId, lessonId, progressPercent, videoWatched, quizDone, checklistDone, scenarioAttempted, actionDone } = req.body;
+      const { userId, lessonId, currentStep, totalSteps, stepIndex, actionDone } = req.body;
       if (!userId || !lessonId) {
         return res.status(400).json({ success: false, message: 'userId and lessonId are required' });
       }
@@ -52,11 +52,8 @@ export const activityController = {
       const progress = await activityService.saveProgress({
         userId,
         lessonId,
-        progressPercent: progressPercent || 0,
-        videoWatched,
-        quizDone,
-        checklistDone,
-        scenarioAttempted,
+        currentStep: currentStep !== undefined ? Number(currentStep) : Number(stepIndex || 0),
+        totalSteps: totalSteps !== undefined ? Number(totalSteps) : 0,
         actionDone
       });
 

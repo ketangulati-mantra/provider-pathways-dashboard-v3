@@ -14,8 +14,22 @@ export default function SubmissionForm({
   successTitle = "Submission received successfully.",
   successMessage = "Our team will review your proof shortly.",
   buttonText = "Submit Proof",
-  successButtonText = "Mark Lesson as Complete"
+  successButtonText = "Mark Lesson as Complete",
+  isCompleted: isCompletedProp
 }) {
+  // Check if activity is already completed in localStorage if prop is omitted
+  const isAlreadyCompleted = isCompletedProp !== undefined 
+    ? isCompletedProp 
+    : (() => {
+        try {
+          const saved = localStorage.getItem(`lesson_progress_${lessonId}`);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            return !!parsed.celebrationShown || !!parsed.actionDone;
+          }
+        } catch (e) {}
+        return false;
+      })();
   const { showToast } = useToast();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -134,10 +148,22 @@ export default function SubmissionForm({
       padding: '28px 24px',
       boxSizing: 'border-box'
     }}>
-      {!isSuccess ? (
+      {isAlreadyCompleted ? (
+        <div style={{ textAlign: 'center', padding: '24px 16px', background: '#ecfdf5', borderRadius: '12px', border: '1px solid #a7f3d0' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#d1fae5', margin: '0 auto 14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CheckCircle2 size={26} color="#059669" />
+          </div>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 800, marginBottom: '6px', color: '#065f46' }}>Activity Completed</h3>
+          <p style={{ fontSize: '0.85rem', color: '#047857', margin: '0 0 16px', lineHeight: '1.4' }}>
+            You have already submitted your proof for this activity. Resubmission is disabled to prevent duplicate entries.
+          </p>
+          <Button variant="secondary" onClick={handleCompleteClick} style={{ padding: '8px 20px', fontSize: '0.82rem' }}>
+            Return to Dashboard
+          </Button>
+        </div>
+      ) : !isSuccess ? (
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           
-          {/* Card Title & Subtitle */}
           <div style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '14px' }}>
             <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0 0 4px' }}>
               {title}
@@ -147,20 +173,9 @@ export default function SubmissionForm({
             </p>
           </div>
 
-          {/* Contact Input Fields */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {/* Full Name */}
             <div>
-              <label style={{
-                fontSize: '0.82rem',
-                fontWeight: 700,
-                color: '#334155',
-                marginBottom: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                textAlign: 'left'
-              }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left' }}>
                 <User size={14} color="#0284c7" /> Full Name
               </label>
               <input
@@ -168,47 +183,24 @@ export default function SubmissionForm({
                 placeholder="Enter your full name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '11px 14px',
-                  borderRadius: '10px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.88rem',
-                  outline: 'none',
-                  background: '#f8fafc',
-                  color: '#0f172a',
-                  boxSizing: 'border-box'
-                }}
+                style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', outline: 'none', background: '#f8fafc', color: '#0f172a', boxSizing: 'border-box' }}
               />
             </div>
 
-            {/* Email Address */}
             <div>
-              <label style={{
-                fontSize: '0.82rem',
-                fontWeight: 700,
-                color: '#334155',
-                marginBottom: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                textAlign: 'left'
-              }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left' }}>
                 <Mail size={14} color="#0284c7" /> Email Address
               </label>
               <input
                 type="email"
                 placeholder="name@example.com"
                 value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (emailError) setEmailError('');
-                }}
+                onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(''); }}
                 style={{
                   width: '100%',
                   padding: '11px 14px',
                   borderRadius: '10px',
-                  border: emailError ? '1.5px solid #ef4444' : '1px solid #cbd5e1',
+                  border: emailError ? '1px solid #ef4444' : '1px solid #cbd5e1',
                   fontSize: '0.88rem',
                   outline: 'none',
                   background: '#f8fafc',
@@ -217,24 +209,14 @@ export default function SubmissionForm({
                 }}
               />
               {emailError && (
-                <span style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: 600, marginTop: '4px', display: 'block' }}>
+                <div style={{ fontSize: '0.74rem', color: '#ef4444', marginTop: '4px', textAlign: 'left', fontWeight: 600 }}>
                   {emailError}
-                </span>
+                </div>
               )}
             </div>
 
-            {/* Phone Number with Country Selector */}
             <div>
-              <label style={{
-                fontSize: '0.82rem',
-                fontWeight: 700,
-                color: '#334155',
-                marginBottom: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                textAlign: 'left'
-              }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left' }}>
                 <Phone size={14} color="#0284c7" /> Phone Number
               </label>
               <PhoneInputWithCountry
@@ -247,56 +229,52 @@ export default function SubmissionForm({
                 }}
                 error={phoneError}
               />
+              {phoneError && (
+                <div style={{ fontSize: '0.74rem', color: '#ef4444', marginTop: '4px', textAlign: 'left', fontWeight: 600 }}>
+                  {phoneError}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* File Drag & Drop Upload Container */}
-          <div>
-            <label style={{
-              fontSize: '0.82rem',
-              fontWeight: 700,
-              color: '#334155',
-              marginBottom: '6px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              textAlign: 'left'
-            }}>
+          <div style={{ textAlign: 'left' }}>
+            <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <FileText size={14} color="#0284c7" /> Upload Proof Screenshot / Document
             </label>
 
-            <div 
-              onClick={triggerFileSelect}
+            <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              style={{ 
-                border: file ? '2px solid #10b981' : isDragging ? '2px dashed #0284c7' : '2px dashed #cbd5e1',
+              onClick={triggerFileInput}
+              style={{
+                border: isDragging ? '2px dashed #0284c7' : '2px dashed #cbd5e1',
                 borderRadius: '12px',
-                background: file ? '#f0fdf4' : isDragging ? '#f0f9ff' : '#f8fafc',
-                padding: file ? '14px 18px' : '22px 18px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: file ? 'space-between' : 'center',
+                padding: '24px 16px',
+                background: isDragging ? '#f0f9ff' : '#f8fafc',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                minHeight: '68px'
+                transition: 'all 0.15s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '110px'
               }}
             >
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileSelect} 
-                accept=".png,.jpg,.jpeg,.pdf" 
-                style={{ display: 'none' }} 
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,application/pdf"
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
               />
-              
+
               {!file ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ background: '#eff6ff', padding: '8px', borderRadius: '50%', display: 'flex' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Upload size={18} color="#0284c7" />
                   </div>
-                  <span style={{ fontSize: '0.86rem', color: '#64748b' }}>
+                  <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
                     <span style={{ fontWeight: 700, color: '#0f172a' }}>Click to upload</span> or drag and drop PNG, JPG, PDF (Max 20MB)
                   </span>
                 </div>

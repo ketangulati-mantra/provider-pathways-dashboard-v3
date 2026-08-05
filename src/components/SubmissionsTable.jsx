@@ -362,7 +362,7 @@ export default function SubmissionsTable() {
   const uniqueActivities = Array.from(new Set(submissions.map(s => JSON.stringify({ lessonId: s.lesson_id, title: s.activity_title }))))
     .map(str => JSON.parse(str));
 
-  // Exclude redundant user info & technical file upload metadata keys from main table
+  // Exclude redundant user info, P/V links & technical file upload metadata keys from main table
   const REDUNDANT_KEYS = [
     'fullName', 'name', 'email', 'phone', 'phoneNumber', 'phone_number', 'mobile', 'contact',
     'submittedAt', 'submitted_at', 'uploadedAt', 'uploaded_at', 'submitted_date', 'created_at', 'updated_at', 'service',
@@ -370,7 +370,9 @@ export default function SubmissionsTable() {
     'fileSize', 'file_size', 'bytes',
     'fileType', 'file_type', 'format',
     'publicId', 'public_id',
-    'screenshotUrl', 'imageUrl', 'url'
+    'screenshotUrl', 'imageUrl', 'url',
+    'videoPublicId', 'country', 'countryCode', 'consent',
+    'profileUrl', 'profile_url', 'videoUrl'
   ];
 
   const PROOF_KEYS = ['screenshotUrl', 'imageUrl', 'url', 'file', 'proof'];
@@ -395,6 +397,9 @@ export default function SubmissionsTable() {
   const dynamicKeys = getDynamicFormKeys();
 
   const formatHeaderLabel = (key) => {
+    if (key.toLowerCase() === 'city') return 'Country';
+    if (key.toLowerCase() === 'country') return 'Country';
+    if (key === 'videoUrl') return 'Video';
     if (PROOF_KEYS.includes(key)) return 'Uploaded Proof';
     return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
   };
@@ -688,34 +693,35 @@ export default function SubmissionsTable() {
         <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.76rem' }}>
           <thead>
             <tr style={{ background: '#043263', borderBottom: '1px solid #03254c', color: '#ffffff', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: '0.04em' }}>
-              <th style={{ padding: '8px 10px', width: '20%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>User / Email</th>
-              <th style={{ padding: '8px 10px', width: '10%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Service</th>
+              <th style={{ padding: '10px 14px', width: '18%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>User / Email</th>
+              <th style={{ padding: '10px 14px', width: '10%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Service</th>
+              <th style={{ padding: '10px 14px', width: '12%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Country</th>
               
               {/* Dynamically Generated Form Data Columns */}
               {dynamicKeys.map(key => (
-                <th key={key} style={{ padding: '8px 10px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <th key={key} style={{ padding: '10px 14px', width: `${Math.floor(18 / Math.max(1, dynamicKeys.length))}%`, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {formatHeaderLabel(key)}
                 </th>
               ))}
 
-              <th style={{ padding: '8px 10px', width: '18%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Activity</th>
-              <th style={{ padding: '8px 10px', width: '13%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Submitted At</th>
-              <th style={{ padding: '8px 10px', width: '14%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Status</th>
-              <th style={{ padding: '8px 10px', width: '14%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Reviewed By</th>
-              <th style={{ padding: '8px 10px', width: '7%', whiteSpace: 'nowrap', textAlign: 'right' }}>Action</th>
+              <th style={{ padding: '10px 14px', width: '16%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Activity</th>
+              <th style={{ padding: '10px 14px', width: '14%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Submitted At</th>
+              <th style={{ padding: '10px 14px', width: '10%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Status</th>
+              <th style={{ padding: '10px 14px', width: '12%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Reviewed By</th>
+              <th style={{ padding: '10px 14px', width: '10%', whiteSpace: 'nowrap', textAlign: 'right' }}>Action</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6 + dynamicKeys.length} style={{ textAlign: 'center', padding: '24px 12px', color: '#64748b' }}>
+                <td colSpan={7 + dynamicKeys.length} style={{ textAlign: 'center', padding: '24px 12px', color: '#64748b' }}>
                   <RefreshCw size={18} style={{ margin: '0 auto 6px', color: '#2563eb' }} className="animate-spin" />
                   <div style={{ fontWeight: 600, fontSize: '0.76rem' }}>Loading operations data...</div>
                 </td>
               </tr>
             ) : filteredSubmissions.length === 0 ? (
               <tr>
-                <td colSpan={6 + dynamicKeys.length} style={{ textAlign: 'center', padding: '28px 12px', color: '#64748b' }}>
+                <td colSpan={7 + dynamicKeys.length} style={{ textAlign: 'center', padding: '28px 12px', color: '#64748b' }}>
                   <FileSpreadsheet size={26} style={{ margin: '0 auto 6px', color: '#cbd5e1' }} />
                   <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.82rem' }}>No Submissions Found</div>
                   <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '2px' }}>Try adjusting your filters or search terms</div>
@@ -726,6 +732,7 @@ export default function SubmissionsTable() {
                 const data = item.form_data || item.submission_data || {};
                 const fullName = data.fullName || data.name || item.user_id;
                 const email = data.email;
+                const country = data.country || data.countryName || data.city || 'United States';
                 const currentStatus = (item.status || 'pending').toLowerCase();
                 const statusStyle = STATUS_CONFIG[currentStatus] || STATUS_CONFIG.pending;
                 const currentReviewer = item.reviewed_by || 'Unassigned';
@@ -739,13 +746,13 @@ export default function SubmissionsTable() {
                   >
                     
                     {/* Column 1: User / Email */}
-                    <td style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${fullName} (${email || ''})`}>
+                    <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${fullName} (${email || ''})`}>
                       <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.78rem', overflow: 'hidden', textOverflow: 'ellipsis' }}>{fullName}</div>
                       {email && <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '0px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</div>}
                     </td>
 
                     {/* Column 2: Service Context Badge */}
-                    <td style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {item.service ? (
                         <span style={{ 
                           padding: '1px 6px', 
@@ -765,38 +772,70 @@ export default function SubmissionsTable() {
                       )}
                     </td>
 
+                    {/* Column 3: Country */}
+                    <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#334155' }}>
+                        {country}
+                      </span>
+                    </td>
+
                     {/* Dynamic Form Field Columns */}
                     {dynamicKeys.map(key => {
                       const val = data[key];
                       const isImage = PROOF_KEYS.includes(key);
 
                       if (isImage && val) {
+                        const isVideo = key === 'videoUrl' || (typeof val === 'string' && (val.includes('/video/') || val.endsWith('.mp4') || val.endsWith('.webm')));
                         return (
-                          <td key={key} style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
-                            <button
-                              onClick={() => setPreviewImage(val)}
-                              style={{
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                border: '1px solid #e9d5ff',
-                                background: '#faf5ff',
-                                color: '#7e22ce',
-                                fontSize: '0.68rem',
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '3px'
-                              }}
-                            >
-                              <Image size={11} /> Proof
-                            </button>
+                          <td key={key} style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                            {isVideo ? (
+                              <a
+                                href={val}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  padding: '2px 6px',
+                                  borderRadius: '4px',
+                                  border: '1px solid #bfdbfe',
+                                  background: '#eff6ff',
+                                  color: '#2563eb',
+                                  fontSize: '0.68rem',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '3px',
+                                  textDecoration: 'none'
+                                }}
+                              >
+                                <ExternalLink size={11} /> Video
+                              </a>
+                            ) : (
+                              <button
+                                onClick={() => setPreviewImage(val)}
+                                style={{
+                                  padding: '2px 6px',
+                                  borderRadius: '4px',
+                                  border: '1px solid #e9d5ff',
+                                  background: '#faf5ff',
+                                  color: '#7e22ce',
+                                  fontSize: '0.68rem',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '3px'
+                                }}
+                              >
+                                <Image size={11} /> Proof
+                              </button>
+                            )}
                           </td>
                         );
                       }
 
                       return (
-                        <td key={key} style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={String(val || '')}>
+                        <td key={key} style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={String(val || '')}>
                           {val !== undefined && val !== null && val !== '' ? (
                             <span style={{ color: '#334155', fontWeight: 600 }}>{String(val)}</span>
                           ) : (
@@ -807,19 +846,28 @@ export default function SubmissionsTable() {
                     })}
 
                     {/* Activity Name */}
-                    <td style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.activity_title}>
+                    <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.activity_title}>
                       <div style={{ fontSize: '0.74rem', fontWeight: 600, color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {item.activity_title}
+                        {(item.activity_title === 'TherapyMantra' || item.lesson_id === 'grow-your-practice' || item.lesson_id === 'market-yourself' || item.activity_title?.toLowerCase().includes('therapymantra')) ? (
+                          <a 
+                            href={`/task/market-yourself/${encodeURIComponent(item.service || 'therapy')}`} 
+                            style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 700 }}
+                          >
+                            Marketing(TM)
+                          </a>
+                        ) : (
+                          item.activity_title
+                        )}
                       </div>
                     </td>
 
                     {/* Submitted At */}
-                    <td style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: '0.74rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: '0.74rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {formatDate(item.created_at || data.submittedAt || data.uploadedAt)}
                     </td>
 
                     {/* Status Column with Interactive Selector */}
-                    <td style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
                       <select
                         value={currentStatus === 'approved' ? 'reviewed' : currentStatus}
                         onChange={(e) => handleStatusChange(item.id, e.target.value)}
@@ -1105,6 +1153,58 @@ export default function SubmissionsTable() {
                   </div>
                 </div>
               )}
+
+              {/* Card 5: Uploaded Video Attachment (Always visible) */}
+              {(() => {
+                const fd = selectedSubmission.form_data || selectedSubmission.submission_data || {};
+                const vUrl = selectedSubmission.videoUrl || selectedSubmission.video_url || selectedSubmission.video || fd.videoUrl || fd.video_url || fd.videoLink || fd.url || fd.file || '';
+                return (
+                  <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '14px 16px' }}>
+                    <h4 style={{ margin: '0 0 10px', fontSize: '0.76rem', color: '#0f172a', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Uploaded Video
+                    </h4>
+                    {vUrl ? (
+                      <>
+                        <div style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid #e2e8f0', background: '#000000' }}>
+                          <video
+                            src={vUrl}
+                            controls
+                            preload="metadata"
+                            style={{ width: '100%', maxHeight: '260px', display: 'block' }}
+                          />
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px', background: '#eff6ff', padding: '8px 12px', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#dbeafe', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Eye size={14} />
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '0.74rem', fontWeight: 700, color: '#1d4ed8' }}>Provider Introduction Video</div>
+                              <div style={{ fontSize: '0.66rem', color: '#64748b', marginTop: '1px' }}>Hosted on Cloudinary</div>
+                            </div>
+                          </div>
+                          <a
+                            href={vUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid #bfdbfe', background: '#ffffff', color: '#2563eb', fontWeight: 700, fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none', cursor: 'pointer' }}
+                          >
+                            <ExternalLink size={11} /> Open in New Tab
+                          </a>
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '10px', border: '1px dashed #cbd5e1', textAlign: 'center' }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#f1f5f9', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
+                          <Eye size={18} />
+                        </div>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b' }}>No Video Uploaded</div>
+                        <div style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '2px' }}>Provider has not submitted an introduction video yet</div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
             </div>
 

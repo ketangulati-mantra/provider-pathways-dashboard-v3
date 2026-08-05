@@ -223,3 +223,139 @@ CREATE TABLE IF NOT EXISTS campus_application_audit_history (
     metadata JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 16. Provider Growth Toolkit Checklist Table (Phase 2 Toolkit Persistence)
+CREATE TABLE IF NOT EXISTS provider_growth_checklist (
+    id BIGSERIAL PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    item_key VARCHAR(100) NOT NULL,
+    is_completed BOOLEAN DEFAULT FALSE,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_user_growth_item UNIQUE (user_id, item_key)
+);
+
+-- 17. Provider Growth Missions Submissions & Progress Table (Phase 3 Engine)
+CREATE TABLE IF NOT EXISTS provider_growth_missions (
+    id BIGSERIAL PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    mission_id VARCHAR(100) NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    status VARCHAR(50) DEFAULT 'assigned', -- 'assigned', 'in_progress', 'pending_review', 'approved', 'rejected'
+    verification_type VARCHAR(50) DEFAULT 'proof_url', -- 'proof_url', 'screenshot', 'text_explanation', 'manual'
+    proof_url TEXT,
+    proof_text TEXT,
+    xp_reward INT DEFAULT 50,
+    credit_reward INT DEFAULT 10,
+    rejection_reason TEXT,
+    reviewed_by VARCHAR(255),
+    reviewed_at TIMESTAMP WITH TIME ZONE,
+    submitted_at TIMESTAMP WITH TIME ZONE,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_user_growth_mission UNIQUE (user_id, mission_id)
+);
+
+-- 18. Provider Growth User Stats Table (XP, Level, Credits)
+CREATE TABLE IF NOT EXISTS provider_growth_stats (
+    user_id VARCHAR(255) PRIMARY KEY,
+    xp INT DEFAULT 0,
+    credits INT DEFAULT 0,
+    level VARCHAR(50) DEFAULT 'Starter',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 19. Provider Growth Analytics Cache Table (Phase 4 Analytics & Metrics)
+CREATE TABLE IF NOT EXISTS provider_growth_analytics_cache (
+    user_id VARCHAR(255) PRIMARY KEY,
+    growth_score INT DEFAULT 82,
+    profile_views INT DEFAULT 1420,
+    bookings_count INT DEFAULT 48,
+    reviews_count INT DEFAULT 12,
+    backlinks_count INT DEFAULT 8,
+    traffic_sources JSONB DEFAULT '{"LinkedIn":35, "Google":28, "Instagram":18, "Website":12, "Direct":7}'::jsonb,
+    channel_progress JSONB DEFAULT '{"LinkedIn":100, "Instagram":75, "Website":50, "SEO":40, "Reviews":60}'::jsonb,
+    monthly_trends JSONB DEFAULT '[{"month":"May","views":820,"bookings":24},{"month":"Jun","views":1100,"bookings":35},{"month":"Jul","views":1420,"bookings":48}]'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 20. Provider Growth Activity Timeline Table (Phase 4 Real-time Event Feed)
+CREATE TABLE IF NOT EXISTS provider_growth_activities (
+    id BIGSERIAL PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    activity_type VARCHAR(50) DEFAULT 'mission_completed',
+    icon_type VARCHAR(50) DEFAULT 'trophy',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 21. Provider Growth Hub Configurable Programs Table (Phase 5 Unified Engine)
+CREATE TABLE IF NOT EXISTS provider_growth_hub_programs (
+    program_id VARCHAR(100) PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    description TEXT,
+    icon_name VARCHAR(50) DEFAULT 'book-open',
+    status VARCHAR(50) DEFAULT 'active',
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 22. Provider Growth Hub Central Resource Library Table (Phase 5 Unified Engine)
+CREATE TABLE IF NOT EXISTS provider_growth_hub_resources (
+    resource_id VARCHAR(100) PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    description TEXT,
+    resource_type VARCHAR(50) DEFAULT 'document',
+    download_url TEXT,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 23. Provider XP Ledger Table (Phase 6 Ledger - Never overwrite XP)
+CREATE TABLE IF NOT EXISTS provider_xp_ledger (
+    id BIGSERIAL PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    amount INT NOT NULL,
+    source VARCHAR(100) NOT NULL, -- 'mission', 'learning', 'referral', 'review', 'profile'
+    description TEXT,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 24. Provider Achievements & Badges Unlocked Table (Phase 6 Engine)
+CREATE TABLE IF NOT EXISTS provider_achievements_unlocked (
+    id BIGSERIAL PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    badge_id VARCHAR(100) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(50) DEFAULT 'Growth',
+    rarity VARCHAR(50) DEFAULT 'Common', -- 'Common', 'Rare', 'Epic', 'Legendary'
+    xp_earned INT DEFAULT 50,
+    unlocked_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_user_badge UNIQUE (user_id, badge_id)
+);
+
+-- 25. Provider Reputation History Table (Phase 6 Reputation Engine)
+CREATE TABLE IF NOT EXISTS provider_reputation_history (
+    id BIGSERIAL PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    reputation_score INT DEFAULT 850,
+    learning_score INT DEFAULT 90,
+    professionalism_score INT DEFAULT 95,
+    reviews_score INT DEFAULT 80,
+    activity_score INT DEFAULT 85,
+    calculated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
+
+

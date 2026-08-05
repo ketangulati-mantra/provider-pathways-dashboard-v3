@@ -3,7 +3,8 @@ import { getCurrentUserId, MANTRA_CONFIG, goToDashboard } from '../../mantra';
 import CorporateLandingPage from './CorporateLandingPage';
 import CorporateApplicationModal from './CorporateApplicationModal';
 import CorporateApplicationSuccessModal from './CorporateApplicationSuccessModal';
-import CorporateUnderReviewScreen from './CorporateUnderReviewScreen';
+import CorporateLearningAcademy from './CorporateLearningAcademy';
+import CorporateOutreachLearningModule from './CorporateOutreachLearningModule';
 
 const API_BASE = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null ? MANTRA_CONFIG.apiBaseUrl : (import.meta.env.PROD ? '' : 'http://localhost:5000');
 
@@ -16,6 +17,10 @@ export default function CorporateProgramController({ onBack }) {
   // Modal Controls
   const [showAppModal, setShowAppModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  // Outreach Learning Module State
+  const [showOutreachModule, setShowOutreachModule] = useState(false);
+  // Full Learning Academy Mode
+  const [showLearningMode, setShowLearningMode] = useState(false);
 
   const userId = getCurrentUserId();
 
@@ -57,7 +62,7 @@ export default function CorporateProgramController({ onBack }) {
     setShowAppModal(true);
   };
 
-  // Handle "NOT RIGHT NOW" -> Return to Tasks Dashboard without marking complete
+  // Handle "NOT RIGHT NOW" -> Return to Tasks Dashboard
   const handleOptOut = () => {
     if (onBack) {
       onBack();
@@ -96,22 +101,43 @@ export default function CorporateProgramController({ onBack }) {
     );
   }
 
-  // If application is submitted & under review (and success modal is closed), show Under Review screen
   const appStatus = statusData?.applicationStatus;
-  const isUnderReview = appStatus === 'submitted' || appStatus === 'under_review';
+  const isAppliedOrSubmitted = appStatus === 'submitted' || appStatus === 'approved' || appStatus === 'under_review' || Boolean(statusData?.application);
 
-  if (isUnderReview && !showSuccessModal) {
+  // ── Show Outreach Learning Module (Immediately After Application OR if already applied) ──
+  if (showOutreachModule || isAppliedOrSubmitted) {
     return (
-      <CorporateUnderReviewScreen 
-        onBack={onBack || goToDashboard} 
-        application={statusData?.application} 
+      <CorporateOutreachLearningModule
+        onBack={() => {
+          setShowOutreachModule(false);
+          if (onBack) onBack();
+          else goToDashboard();
+        }}
+        onComplete={() => {
+          setShowOutreachModule(false);
+          loadStatus();
+        }}
       />
     );
   }
 
+  // ── Full Learning Academy: Show for approved partners if toggled ──
+  if (showLearningMode) {
+    return (
+      <CorporateLearningAcademy
+        onBack={() => {
+          setShowLearningMode(false);
+          if (onBack) onBack();
+          else goToDashboard();
+        }}
+      />
+    );
+  }
+
+  // ── Landing Page & Application Modals ──
   return (
     <>
-      <CorporateLandingPage 
+      <CorporateLandingPage
         onExpressInterest={handleExpressInterest}
         onOptOut={handleOptOut}
         onBack={onBack}
@@ -129,7 +155,11 @@ export default function CorporateProgramController({ onBack }) {
         isOpen={showSuccessModal}
         onClose={() => {
           setShowSuccessModal(false);
-          loadStatus();
+          setShowOutreachModule(true);
+        }}
+        onStartOutreachModule={() => {
+          setShowSuccessModal(false);
+          setShowOutreachModule(true);
         }}
       />
     </>

@@ -826,12 +826,13 @@ export default function LearningScreen({ statusData, onCompleteModule, onSubmitA
           points={50}
           title="Campus Initiative Completed!"
           subtitle="You have completed all orientation modules. 50 points have been added to your profile."
-          onClose={() => {
+          onClose={async () => {
             setShowTaskCompletionModal(false);
-            // Trigger webhook in background without blocking navigation
-            completeLesson('campus-awareness').catch(err => {
+            try {
+              await completeLesson('campus-awareness');
+            } catch (err) {
               console.error('[Campus] Webhook complete error:', err);
-            });
+            }
             if (onBack) {
               onBack();
             }

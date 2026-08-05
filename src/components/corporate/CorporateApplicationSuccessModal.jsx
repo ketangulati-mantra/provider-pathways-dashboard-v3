@@ -1,9 +1,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { CheckCircle2, Building2, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Sparkles, ArrowRight } from 'lucide-react';
 
-export default function CorporateApplicationSuccessModal({ isOpen, onClose }) {
+export default function CorporateApplicationSuccessModal({ isOpen, onClose, onStartOutreachModule }) {
   if (!isOpen) return null;
+
+  const handleStartModule = () => {
+    if (onStartOutreachModule) {
+      onStartOutreachModule();
+    } else if (onClose) {
+      onClose();
+    }
+  };
 
   return ReactDOM.createPortal(
     <div 
@@ -46,31 +54,35 @@ export default function CorporateApplicationSuccessModal({ isOpen, onClose }) {
             Application Submitted
           </div>
           <h3 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 900, color: '#0f172a' }}>
-            Thank You for Applying!
+            Welcome to Corporate Partnerships!
           </h3>
         </div>
 
         <p style={{ margin: 0, fontSize: '0.84rem', color: '#475569', lineHeight: 1.6 }}>
-          Your application for the <strong>Corporate Growth Partner Program</strong> has been successfully submitted and is under review by our executive partnerships team. We will contact you shortly with next steps.
+          Your application has been received. Before submitting your first introduction, take a 2-minute quick walkthrough on <strong>Getting Started with Corporate Introductions</strong>.
         </p>
 
         <button
-          onClick={onClose}
+          onClick={handleStartModule}
           style={{
             marginTop: '8px',
             width: '100%',
-            padding: '10px',
+            padding: '12px 16px',
             borderRadius: '10px',
             border: 'none',
             background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
             color: '#ffffff',
             fontWeight: 800,
-            fontSize: '0.84rem',
+            fontSize: '0.86rem',
             cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)'
+            boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px'
           }}
         >
-          Return to Dashboard
+          <Sparkles size={16} /> Start Outreach Guide <ArrowRight size={16} />
         </button>
       </div>
     </div>,

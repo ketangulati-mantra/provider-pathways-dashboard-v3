@@ -64,6 +64,8 @@ import DoctorVideoConsultLessonPage from './DoctorVideoConsultLessonPage';
 import DoctorFollowUpNudgingLessonPage from './DoctorFollowUpNudgingLessonPage';
 import DoctorCertificatePage from './DoctorCertificatePage';
 
+import GrowYourPracticeAcademy from '../components/corporate/GrowYourPracticeAcademy';
+
 /**
  * Route-to-Component registry.
  * Maps route paths to lesson component implementations.
@@ -99,7 +101,12 @@ const ROUTE_VIEW_REGISTRY = {
   '/task/profile-verification': { default: ProfileVerificationLessonPage },
   '/task/premium-provider': { default: PremiumProviderLessonPage },
   '/task/getting-clients': { default: GettingClientsLessonPage },
-  '/task/market-yourself': { default: MarketYourselfLessonPage, yoga: YogaMarketProfileLessonPage },
+  '/task/market-yourself': { default: GrowYourPracticeAcademy },
+  '/task/market-yourself/therapy': { default: GrowYourPracticeAcademy },
+  '/task/market-yourself/listener': { default: GrowYourPracticeAcademy },
+  '/task/market-yourself/yoga': { default: GrowYourPracticeAcademy },
+  '/task/market-yourself/diet': { default: GrowYourPracticeAcademy },
+  '/task/grow-your-practice': { default: GrowYourPracticeAcademy },
   '/task/share-linkedin': { default: ShareLinkedinLessonPage },
   '/task/show-achievements': { default: ShowAchievementsLessonPage },
   '/task/getting-paid': { default: GettingPaidLessonPage },
@@ -146,6 +153,11 @@ export const resolveLessonView = ({ currentPath, currentService, onBack, activit
   if (routeMapping) {
     const Component = routeMapping[currentService] || routeMapping.default;
     return <Component onBack={onBack} />;
+  }
+
+  // Dynamic path matching for /task/market-yourself/*
+  if (currentPath.startsWith('/task/market-yourself')) {
+    return <GrowYourPracticeAcademy onBack={onBack} />;
   }
 
   // Generic fallback if route matches a registered activity in activities config

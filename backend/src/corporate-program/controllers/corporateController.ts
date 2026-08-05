@@ -87,3 +87,46 @@ export async function getAdminCorporateApplications(req: Request, res: Response)
     res.status(500).json({ success: false, error: 'Failed to fetch applications' });
   }
 }
+
+// ── Learning Academy Endpoints ──
+
+export async function getLearningProgress(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = (req.query.userId as string) || 'default_user';
+    const data = await corporateService.getLearningProgress(userId);
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error('[getLearningProgress] Error:', err);
+    res.status(500).json({ success: false, error: 'Failed to fetch learning progress' });
+  }
+}
+
+export async function postCompleteModule(req: Request, res: Response): Promise<void> {
+  try {
+    const { userId, moduleId, timeSpentSeconds } = req.body;
+    if (!userId || !moduleId) {
+      res.status(400).json({ success: false, error: 'userId and moduleId are required' });
+      return;
+    }
+    const data = await corporateService.completeModule(userId, moduleId, timeSpentSeconds || 0);
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error('[postCompleteModule] Error:', err);
+    res.status(500).json({ success: false, error: 'Failed to complete module' });
+  }
+}
+
+export async function postNavigateModule(req: Request, res: Response): Promise<void> {
+  try {
+    const { userId, moduleId, timeSpentSeconds } = req.body;
+    if (!userId || !moduleId) {
+      res.status(400).json({ success: false, error: 'userId and moduleId are required' });
+      return;
+    }
+    const data = await corporateService.updateCurrentModule(userId, moduleId, timeSpentSeconds || 0);
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error('[postNavigateModule] Error:', err);
+    res.status(500).json({ success: false, error: 'Failed to navigate module' });
+  }
+}

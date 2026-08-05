@@ -1,68 +1,92 @@
-import { sql } from '../db/client.js';
-
-export interface CompleteActivityInput {
-  userId: string;
-  service: string;
-  lessonId: string;
-  rewardPoints?: number;
-}
-
-export interface ProgressInput {
-  userId: string;
-  lessonId: string;
-  progressPercent: number;
-  videoWatched?: boolean;
-  quizDone?: boolean;
-  checklistDone?: boolean;
-  scenarioAttempted?: boolean;
-  actionDone?: boolean;
-}
+import { sql } from '../db/index.js';
 
 export const activityService = {
-  async completeActivity(input: CompleteActivityInput) {
-    const { userId, service, lessonId, rewardPoints = 0 } = input;
-    const result = await sql`
-      INSERT INTO lesson_completions (user_id, service, lesson_id, reward_points, completed_at, updated_at)
-      VALUES (${userId}, ${service}, ${lessonId}, ${rewardPoints}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-      ON CONFLICT (user_id, lesson_id)
+  async completeActivity(input: {
+    userId: string;
+    service: string;
+    lessonId: string;
+    rewardPoints?: number;
+    metadata?: any;
+  }) {
+    const { userId, service, lessonId, rewardPoints = 0, metadata = {} } = input;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS user_activity_completions (
+        id BIGSERIAL PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL,
+        service VARCHAR(100) NOT NULL,
+        lesson_id VARCHAR(255) NOT NULL,
+        reward_points INT DEFAULT 0,
+        metadata JSONB DEFAULT '{}'::jsonb,
+        completed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_user_service_lesson UNIQUE (user_id, service, lesson_id)
+      );
+    `;
+
+    const completion = await sql`
+      INSERT INTO user_activity_completions (user_id, service, lesson_id, reward_points, metadata, completed_at)
+      VALUES (${userId}, ${service}, ${lessonId}, ${rewardPoints}, ${JSON.stringify(metadata)}, CURRENT_TIMESTAMP)
+      ON CONFLICT (user_id, service, lesson_id)
       DO UPDATE SET
-        service = EXCLUDED.service,
         reward_points = EXCLUDED.reward_points,
-        updated_at = CURRENT_TIMESTAMP
+        metadata = EXCLUDED.metadata,
+        completed_at = CURRENT_TIMESTAMP
       RETURNING *;
     `;
-    return result[0];
+
+    return completion[0];
   },
 
   async getUserCompletions(userId: string) {
+    await sql`
+      CREATE TABLE IF NOT EXISTS user_activity_completions (
+        id BIGSERIAL PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL,
+        service VARCHAR(100) NOT NULL,
+        lesson_id VARCHAR(255) NOT NULL,
+        reward_points INT DEFAULT 0,
+        metadata JSONB DEFAULT '{}'::jsonb,
+        completed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_user_service_lesson UNIQUE (user_id, service, lesson_id)
+      );
+    `;
+
     return await sql`
-      SELECT * FROM lesson_completions WHERE user_id = ${userId};
+      SELECT * FROM user_activity_completions WHERE user_id = ${userId} ORDER BY completed_at DESC;
     `;
   },
 
-  async saveProgress(input: ProgressInput) {
-    const { 
-      userId, lessonId, progressPercent, 
-      videoWatched = false, quizDone = false, 
-      checklistDone = false, scenarioAttempted = false, actionDone = false 
-    } = input;
+  async saveProgress(input: {
+    userId: string;
+    lessonId: string;
+    currentStep: number;
+    totalSteps: number;
+    actionDone?: string;
+  }) {
+    const { userId, lessonId, currentStep, totalSteps, actionDone } = input;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS user_progress (
+        id BIGSERIAL PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL,
+        lesson_id VARCHAR(255) NOT NULL,
+        current_step INT DEFAULT 0,
+        total_steps INT DEFAULT 0,
+        action_done VARCHAR(255),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_user_lesson_progress UNIQUE (user_id, lesson_id)
+      );
+    `;
 
     const result = await sql`
-      INSERT INTO user_progress (
-        user_id, lesson_id, progress_percent, 
-        video_watched, quiz_done, checklist_done, scenario_attempted, action_done, updated_at
-      )
-      VALUES (
-        ${userId}, ${lessonId}, ${progressPercent}, 
-        ${videoWatched}, ${quizDone}, ${checklistDone}, ${scenarioAttempted}, ${actionDone}, CURRENT_TIMESTAMP
-      )
+      INSERT INTO user_progress (user_id, lesson_id, current_step, total_steps, action_done, updated_at)
+      VALUES (${userId}, ${lessonId}, ${currentStep}, ${totalSteps}, ${actionDone || null}, CURRENT_TIMESTAMP)
       ON CONFLICT (user_id, lesson_id)
       DO UPDATE SET
-        progress_percent = EXCLUDED.progress_percent,
-        video_watched = EXCLUDED.video_watched,
-        quiz_done = EXCLUDED.quiz_done,
-        checklist_done = EXCLUDED.checklist_done,
-        scenario_attempted = EXCLUDED.scenario_attempted,
+        current_step = EXCLUDED.current_step,
+        total_steps = EXCLUDED.total_steps,
         action_done = EXCLUDED.action_done,
         updated_at = CURRENT_TIMESTAMP
       RETURNING *;

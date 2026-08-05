@@ -34,6 +34,21 @@ function App() {
   // Current service context extracted once at startup via URL parameter (e.g. ?service=therapy)
   const currentService = getCurrentService();
 
+  // Clean up legacy 'source=' query parameter to standard 'service=' on startup
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.search.includes('source=')) {
+      const params = new URLSearchParams(window.location.search);
+      const sourceVal = params.get('source');
+      if (sourceVal && !params.has('service')) {
+        params.set('service', sourceVal);
+      }
+      params.delete('source');
+      const cleanSearch = params.toString();
+      const newUrl = window.location.pathname + (cleanSearch ? `?${cleanSearch}` : '') + window.location.hash;
+      window.history.replaceState(null, '', newUrl);
+    }
+  }, []);
+
   // Custom router state listener
   useEffect(() => {
     const handlePopState = () => {

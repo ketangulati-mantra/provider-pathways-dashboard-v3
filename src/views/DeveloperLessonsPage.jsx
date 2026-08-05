@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, BookOpen, Database, Menu, GraduationCap, Clock, ArrowRight, Filter, X, ChevronRight } from 'lucide-react';
+import { Search, BookOpen, Database, Menu, GraduationCap, Building2, Clock, ArrowRight, Filter, X, ChevronRight } from 'lucide-react';
 import SubmissionsTable from '../components/SubmissionsTable';
 import CampusAdminDashboard from '../components/admin/CampusAdminDashboard';
+import CorporateAdminDashboard from '../components/admin/CorporateAdminDashboard';
 import { activities as mantraActivities, getCurrentService, setServiceContext, preserveQueryParams, SUPPORTED_SERVICES } from '../mantra';
 
 const MANTRA_LOGO_URL = 'https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg';
@@ -9,12 +10,11 @@ const MANTRA_LOGO_URL = 'https://res.cloudinary.com/hxbamdqf/image/upload/v17846
 export default function DeveloperLessonsPage({ onNavigate }) {
   const [selectedService, setSelectedService] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('submissions'); // Default to 'submissions'
+  const [activeTab, setActiveTab] = useState('submissions');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const searchInputRef = useRef(null);
 
   useEffect(() => {
-    // Keep 'all' as default for Pathways tab so all 50+ pathways display
     const current = getCurrentService();
     if (current && current !== 'all') {
       setSelectedService(current);
@@ -42,10 +42,8 @@ export default function DeveloperLessonsPage({ onNavigate }) {
     }
   };
 
-  // Service filter options
   const serviceOptions = ['all', ...(SUPPORTED_SERVICES || ['therapy', 'listener', 'yoga', 'diet', 'physiotherapy', 'coaching', 'women_wellness'])];
 
-  // Filter activities list by selected service and search query
   const filteredActivities = (mantraActivities || []).filter(act => {
     if (!act) return false;
     const actServices = Array.isArray(act.services) ? act.services : (act.services ? [act.services] : ['*']);
@@ -256,6 +254,31 @@ export default function DeveloperLessonsPage({ onNavigate }) {
               </button>
 
               <button
+                onClick={() => { setActiveTab('corporate_admin'); setIsSidebarOpen(false); }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justify: 'space-between',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: activeTab === 'corporate_admin' ? '#043263' : '#f8fafc',
+                  color: activeTab === 'corporate_admin' ? '#ffffff' : '#334155',
+                  fontWeight: 800,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  boxShadow: activeTab === 'corporate_admin' ? '0 4px 14px rgba(4, 50, 99, 0.25)' : 'none',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Building2 size={18} color={activeTab === 'corporate_admin' ? '#ffffff' : '#043263'} />
+                  <span>EAP Interests</span>
+                </div>
+                <ChevronRight size={16} opacity={0.6} />
+              </button>
+
+              <button
                 onClick={() => { setActiveTab('lessons'); setIsSidebarOpen(false); }}
                 style={{
                   display: 'flex',
@@ -294,7 +317,14 @@ export default function DeveloperLessonsPage({ onNavigate }) {
           </div>
         )}
 
-        {/* TAB 2: FORM SUBMISSIONS TABLE DATA */}
+        {/* TAB 2: CORPORATE EAP SUBMISSIONS ADMIN */}
+        {activeTab === 'corporate_admin' && (
+          <div className="animate-fade-in">
+            <CorporateAdminDashboard />
+          </div>
+        )}
+
+        {/* TAB 3: FORM SUBMISSIONS TABLE DATA */}
         {activeTab === 'submissions' && (
           <div className="animate-fade-in">
             <SubmissionsTable />

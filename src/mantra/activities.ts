@@ -76,11 +76,12 @@ export const activities: Activity[] = [
     lessonId: 'market-yourself',
     activityId: '',
     services: ['therapy'],
-    title: 'Market Yourself & Grow Faster',
-    rewardPoints: 5,
-    estimatedDuration: '5 min',
-    route: '/task/market-yourself'
+    title: 'grow your practice (therapymantra)',
+    rewardPoints: 50,
+    estimatedDuration: '10 min',
+    route: '/task/market-yourself/therapy'
   },
+
   {
     lessonId: 'share-linkedin',
     activityId: '',
@@ -175,9 +176,9 @@ export const activities: Activity[] = [
     lessonId: 'corporate-eap',
     activityId: '',
     services: ['*'],
-    title: 'Corporate EAP Program Support',
-    rewardPoints: 5,
-    estimatedDuration: '2 min',
+    title: 'Corporate Growth Partner Program',
+    rewardPoints: 50,
+    estimatedDuration: '5 min',
     route: '/task/corporate-eap'
   },
   {

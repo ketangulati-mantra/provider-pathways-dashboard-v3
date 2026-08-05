@@ -22,5 +22,9 @@ export const config = {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME || 'hxbamdqf',
     apiKey: process.env.CLOUDINARY_API_KEY || '945291215694863',
     apiSecret: process.env.CLOUDINARY_API_SECRET || 'bf4nrUef-ITYjztuN3vZecq_KWI',
+  },
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY || '',
+    modelName: process.env.MODEL_NAME || 'gemini-2.5-flash'
   }
 };

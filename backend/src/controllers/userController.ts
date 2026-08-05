@@ -4,12 +4,12 @@ import { userService } from '../services/userService.js';
 export const userController = {
   async upsertUser(req: Request, res: Response, next: NextFunction) {
     try {
-      const { userId, name, email, service } = req.body;
+      const { userId, name, email, service, promotionToolkitData } = req.body;
       if (!userId) {
         return res.status(400).json({ success: false, message: 'userId is required' });
       }
 
-      const user = await userService.upsertUser({ userId, name, email, service });
+      const user = await userService.upsertUser({ userId, name, email, service, promotionToolkitData });
       return res.status(200).json({ success: true, data: user });
     } catch (error) {
       next(error);

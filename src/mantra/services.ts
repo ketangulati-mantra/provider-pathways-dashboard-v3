@@ -63,7 +63,15 @@ export const getCurrentService = (): string => {
 
   if (typeof window !== 'undefined' && window.location) {
     const params = new URLSearchParams(window.location.search);
-    const serviceParam = params.get('service');
+    let serviceParam = params.get('service') || params.get('source');
+
+    if (!serviceParam) {
+      const match = window.location.pathname.match(/\/task\/market-yourself\/([a-zA-Z0-9_\-]+)/);
+      if (match && match[1]) {
+        serviceParam = match[1];
+      }
+    }
+
     cachedService = normalizeService(serviceParam);
   } else {
     cachedService = DEFAULT_SERVICE;

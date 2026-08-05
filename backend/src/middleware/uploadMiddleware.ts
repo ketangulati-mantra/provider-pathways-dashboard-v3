@@ -9,9 +9,17 @@ const ALLOWED_MIME_TYPES = [
   'image/png',
   'image/webp',
   'application/pdf',
+  'video/mp4',
+  'video/webm',
+  'video/quicktime',
+  'video/x-msvideo',
+  'video/3gpp',
+  'video/mov',
+  'video/avi',
+  'video/mkv'
 ];
 
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB limit
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB limit for video files
 
 export const upload = multer({
   storage,
@@ -19,10 +27,10 @@ export const upload = multer({
     fileSize: MAX_FILE_SIZE,
   },
   fileFilter: (req, file, cb) => {
-    if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+    if (ALLOWED_MIME_TYPES.includes(file.mimetype) || file.mimetype.startsWith('video/')) {
       cb(null, true);
     } else {
-      cb(new Error(`Unsupported file format '${file.mimetype}'. Allowed formats: PNG, JPG, WEBP, PDF`));
+      cb(new Error(`Unsupported file format '${file.mimetype}'. Allowed formats: MP4, WEBM, MOV, PNG, JPG, PDF`));
     }
   },
 });

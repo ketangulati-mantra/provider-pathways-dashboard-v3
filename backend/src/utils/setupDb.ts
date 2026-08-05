@@ -20,9 +20,15 @@ export async function setupDb() {
         name VARCHAR(255),
         email VARCHAR(255),
         service VARCHAR(50),
+        promotion_toolkit_data JSONB DEFAULT '{}'::jsonb,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+    `;
+
+    await sql`
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS promotion_toolkit_data JSONB DEFAULT '{}'::jsonb;
     `;
 
     await sql`
