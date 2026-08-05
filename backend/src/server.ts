@@ -17,6 +17,6 @@ setupDb()
   .then(() => console.log('✅ Neon DB Schema & Tables verified successfully'))
   .catch((err) => console.error('⚠️ DB Setup Warning:', err));
 
-app.listen(PORT, () => {
-  console.log(`🚀 Provider Pathways Backend server running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Provider Pathways Backend server running on port ${PORT} (0.0.0.0)`);
 });
