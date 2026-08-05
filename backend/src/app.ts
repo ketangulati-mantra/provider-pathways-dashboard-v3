@@ -23,6 +23,7 @@ app.use(express.json());
 // API Routes & Health Checks (mounted for root and subpath proxies)
 const apiPrefixes = [
   '/api',
+  '/provider_pathways_dashboard_v3/api',
   '/provider_pathways_dashboard_v2/api',
   '/provider_pathways_dashboard_v1/api',
   '/provider_dashboard_v1/api',
@@ -44,6 +45,7 @@ apiPrefixes.forEach((prefix) => {
 // Serve Frontend Static Assets in Production (supporting root and subpaths)
 const distPath = path.join(__dirname, '../../dist');
 app.use(express.static(distPath));
+app.use('/provider_pathways_dashboard_v3', express.static(distPath));
 app.use('/provider_pathways_dashboard_v2', express.static(distPath));
 app.use('/provider_dashboard_v1', express.static(distPath));
 app.use('/provider_pathways_dashboard_v1', express.static(distPath));
