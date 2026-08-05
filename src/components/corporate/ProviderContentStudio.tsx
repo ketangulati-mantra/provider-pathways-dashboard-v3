@@ -13,7 +13,7 @@ import {
 } from '../../utils/promotionTemplates';
 import { getCurrentUserId, MANTRA_CONFIG } from '../../mantra';
 
-const API_BASE = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null ? MANTRA_CONFIG.apiBaseUrl : (import.meta.env.PROD ? '' : 'http://localhost:5000');
+const API_BASE = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null ? MANTRA_CONFIG.apiBaseUrl : ((import.meta as any).env?.PROD ? '' : 'http://localhost:5000');
 
 interface ProviderAssets {
   name?: string;
