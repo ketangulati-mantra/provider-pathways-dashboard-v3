@@ -44,7 +44,10 @@ apiPrefixes.forEach((prefix) => {
 
 // Serve Frontend Static Assets in Production (supporting root and subpaths)
 const distPath = path.join(__dirname, '../../dist');
+
+// Direct static file serving for root and subpaths
 app.use(express.static(distPath));
+app.use('/assets', express.static(path.join(distPath, 'assets')));
 
 const subpaths = [
   '/provider_pathways_dashboard_v3',
@@ -56,11 +59,19 @@ const subpaths = [
 ];
 
 subpaths.forEach((subpath) => {
+  app.use(`${subpath}/assets`, express.static(path.join(distPath, 'assets')));
   app.use(subpath, express.static(distPath));
 });
 
+// Fallback to index.html for SPA routing (only if not requesting a file with extension)
 app.get('*', (req, res, next) => {
   if (req.path.includes('/api/')) return next();
+  
+  // If request has a file extension (e.g. .js, .css, .png) and reached here, return 404 instead of index.html
+  if (/\.[a-zA-Z0-9]+$/.test(req.path)) {
+    return res.status(404).send('Asset not found');
+  }
+  
   res.sendFile(path.join(distPath, 'index.html'), (err) => {
     if (err) next();
   });
