@@ -123,7 +123,7 @@ export const activities: Activity[] = [
     activityId: '',
     services: ['therapy'],
     title: 'Download Your Therapy Intern Certificate',
-    rewardPoints: 20,
+    rewardPoints: 0,
     estimatedDuration: '2 min',
     route: '/task/intern-certificate'
   },
@@ -289,15 +289,7 @@ export const activities: Activity[] = [
     estimatedDuration: '5 min',
     route: '/task/sales-partner'
   },
-  {
-    lessonId: 'download-certificate',
-    activityId: '',
-    services: ['therapy'],
-    title: 'Download your therapy intern provider pathway certificate',
-    rewardPoints: 0,
-    estimatedDuration: '1 min',
-    route: '/task/download-certificate'
-  },
+
   {
     lessonId: 'provider-certificate',
     activityId: '',
