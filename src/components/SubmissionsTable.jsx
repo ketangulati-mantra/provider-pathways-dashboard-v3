@@ -850,7 +850,7 @@ export default function SubmissionsTable() {
                       <div style={{ fontSize: '0.74rem', fontWeight: 600, color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {(item.activity_title === 'TherapyMantra' || item.lesson_id === 'grow-your-practice' || item.lesson_id === 'market-yourself' || item.activity_title?.toLowerCase().includes('therapymantra')) ? (
                           <a 
-                            href={`/task/market-yourself/${encodeURIComponent(item.service || 'therapy')}`} 
+                            href={`/provider_pathways_dashboard_v3/task/market-yourself/${encodeURIComponent(item.service || 'therapy')}`} 
                             style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 700 }}
                           >
                             Marketing(TM)
