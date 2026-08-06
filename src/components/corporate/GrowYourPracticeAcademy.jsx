@@ -18,124 +18,135 @@ import { CompletionScreen } from '../index';
 const API_BASE = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null ? MANTRA_CONFIG.apiBaseUrl : (import.meta.env.PROD ? '' : 'http://localhost:5000');
 
 // ─── PLATFORM PROMOTION METADATA SCHEMA (MODULE 3) ───────────────────────────
-const PLATFORMS_DATA = [
-  {
-    id: 'linkedin',
-    name: 'LinkedIn',
-    color: '#0a66c2',
-    logoUrl: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg',
-    why: 'Primary professional network for corporate clients & healthcare peers.',
-    location: 'Featured Section & Bio',
-    benefit: 'High Trust & Corporate Leads',
-    bestPractice: 'Pin your TherapyMantra listing URL in your profile Featured Section & Experience bio.',
-    url: 'https://linkedin.com'
-  },
-  {
-    id: 'instagram',
-    name: 'Instagram',
-    color: '#c026d3',
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg',
-    why: 'Visual platform ideal for sharing short mental health educational carousel tips & Reels.',
-    location: 'Bio Link & Story Highlights',
-    benefit: 'High Engagement & Young Adult Reach',
-    bestPractice: 'Place your TherapyMantra profile link in your Instagram bio link.',
-    url: 'https://instagram.com'
-  },
-  {
-    id: 'facebook',
-    name: 'Facebook',
-    color: '#2563eb',
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/b9/2023_Facebook_icon.svg',
-    why: 'Reaches client communities, support groups, and family wellness demographics.',
-    location: 'About Section & Pinned Post',
-    benefit: 'Community & Family Client Reach',
-    bestPractice: 'Add your TherapyMantra booking URL to your profile About section & pinned post.',
-    url: 'https://facebook.com'
-  },
-  {
-    id: 'whatsapp',
-    name: 'WhatsApp',
-    color: '#059669',
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg',
-    why: 'Direct messaging channel for client inquiries and auto-reply scheduling.',
-    location: 'Business About & Status',
-    benefit: 'Immediate Direct Client Bookings',
-    bestPractice: 'Add your TherapyMantra link to your WhatsApp Business About profile & Status updates.',
-    url: 'https://whatsapp.com'
-  },
-  {
-    id: 'twitter',
-    name: 'Twitter / X',
-    color: '#0f172a',
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/ce/X_logo_2023.svg',
-    why: 'Real-time mental health advocacy and healthcare community discussions.',
-    location: 'Bio & Pinned Thread',
-    benefit: 'Thought Leadership & Peer Network',
-    bestPractice: 'Add your TherapyMantra link in your bio and pin a post about your consultation availability.',
-    url: 'https://x.com'
-  },
-  {
-    id: 'email',
-    name: 'Email Signature',
-    color: '#0891b2',
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg',
-    why: 'Passive visibility across all everyday professional communications.',
-    location: 'Email Footer Sign-off',
-    benefit: 'Passive Recurring Visibility',
-    bestPractice: 'Add a hyperlinked line: "Schedule an online consultation: TherapyMantra Profile".',
-    url: 'https://therapists.therapymantra.co'
-  }
-];
+const getPlatformsData = (brand) => {
+  const brandName = brand?.name || 'TherapyMantra';
+  const baseUrl = brand?.listingBaseUrl || 'https://therapists.therapymantra.co';
+  return [
+    {
+      id: 'linkedin',
+      name: 'LinkedIn',
+      color: '#0a66c2',
+      logoUrl: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg',
+      why: 'Primary professional network for corporate clients & healthcare peers.',
+      location: 'Featured Section & Bio',
+      benefit: 'High Trust & Corporate Leads',
+      bestPractice: `Pin your ${brandName} listing URL in your profile Featured Section & Experience bio.`,
+      url: 'https://linkedin.com'
+    },
+    {
+      id: 'instagram',
+      name: 'Instagram',
+      color: '#c026d3',
+      logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg',
+      why: 'Visual platform ideal for sharing short mental health educational carousel tips & Reels.',
+      location: 'Bio Link & Story Highlights',
+      benefit: 'High Engagement & Young Adult Reach',
+      bestPractice: `Place your ${brandName} profile link in your Instagram bio link.`,
+      url: 'https://instagram.com'
+    },
+    {
+      id: 'facebook',
+      name: 'Facebook',
+      color: '#2563eb',
+      logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/b9/2023_Facebook_icon.svg',
+      why: 'Reaches client communities, support groups, and family wellness demographics.',
+      location: 'About Section & Pinned Post',
+      benefit: 'Community & Family Client Reach',
+      bestPractice: `Add your ${brandName} booking URL to your profile About section & pinned post.`,
+      url: 'https://facebook.com'
+    },
+    {
+      id: 'whatsapp',
+      name: 'WhatsApp',
+      color: '#059669',
+      logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg',
+      why: 'Direct messaging channel for client inquiries and auto-reply scheduling.',
+      location: 'Business About & Status',
+      benefit: 'Immediate Direct Client Bookings',
+      bestPractice: `Add your ${brandName} link to your WhatsApp Business About profile & Status updates.`,
+      url: 'https://whatsapp.com'
+    },
+    {
+      id: 'twitter',
+      name: 'Twitter / X',
+      color: '#0f172a',
+      logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/ce/X_logo_2023.svg',
+      why: 'Real-time mental health advocacy and healthcare community discussions.',
+      location: 'Bio & Pinned Thread',
+      benefit: 'Thought Leadership & Peer Network',
+      bestPractice: `Add your ${brandName} link in your bio and pin a post about your consultation availability.`,
+      url: 'https://x.com'
+    },
+    {
+      id: 'email',
+      name: 'Email Signature',
+      color: '#0891b2',
+      logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg',
+      why: 'Passive visibility across all everyday professional communications.',
+      location: 'Email Footer Sign-off',
+      benefit: 'Passive Recurring Visibility',
+      bestPractice: `Add a hyperlinked line: "Schedule an online consultation: ${brandName} Profile".`,
+      url: baseUrl
+    }
+  ];
+};
 
 // ─── WEEKLY GROWTH ROUTINE PLANNER DATA (MODULE 6) ───────────────────────────
-const WEEKLY_ROUTINE = [
-  { day: 'Monday', action: 'Share 1 educational post on LinkedIn linking to your TherapyMantra profile.', time: '5 min', icon: Share2 },
-  { day: 'Tuesday', action: 'Post 1 Instagram Story highlighting your consultation availability.', time: '5 min', icon: Globe },
-  { day: 'Wednesday', action: 'Answer 1 anxiety or wellness question on Reddit with thoughtful advice.', time: '10 min', icon: MessageSquare },
-  { day: 'Thursday', action: 'Answer 1 mental health question on Quora with educational insights.', time: '10 min', icon: HelpCircle },
-  { day: 'Friday', action: 'Update your TherapyMantra profile availability slots for the upcoming week.', time: '5 min', icon: Calendar },
-  { day: 'Saturday', action: 'Publish 1 short educational video (Reel or YouTube Short) on wellness.', time: '15 min', icon: Video },
-  { day: 'Sunday', action: 'Review profile visits and respond to all client messages.', time: '5 min', icon: CheckCircle2 }
-];
+const getWeeklyRoutine = (brand) => {
+  const brandName = brand?.name || 'TherapyMantra';
+  return [
+    { day: 'Monday', action: `Share 1 educational post on LinkedIn linking to your ${brandName} profile.`, time: '5 min', icon: Share2 },
+    { day: 'Tuesday', action: 'Post 1 Instagram Story highlighting your consultation availability.', time: '5 min', icon: Globe },
+    { day: 'Wednesday', action: 'Answer 1 anxiety or wellness question on Reddit with thoughtful advice.', time: '10 min', icon: MessageSquare },
+    { day: 'Thursday', action: 'Answer 1 mental health question on Quora with educational insights.', time: '10 min', icon: HelpCircle },
+    { day: 'Friday', action: `Update your ${brandName} profile availability slots for the upcoming week.`, time: '5 min', icon: Calendar },
+    { day: 'Saturday', action: 'Publish 1 short educational video (Reel or YouTube Short) on wellness.', time: '15 min', icon: Video },
+    { day: 'Sunday', action: 'Review profile visits and respond to all client messages.', time: '5 min', icon: CheckCircle2 }
+  ];
+};
 
 // ─── AUDIT CHECKLIST FOR MODULE 2 ───────────────────────────────────────────
-const PROFILE_AUDIT_ITEMS = [
-  {
-    key: 'photo',
-    label: 'Profile Photo',
-    poor: 'Blurry selfie, casual background, poor lighting',
-    good: 'High-res professional headshot with warm expression & clean background',
-    tip: 'Clients decide whether to trust a provider within 3 seconds of viewing their photo.'
-  },
-  {
-    key: 'bio',
-    label: 'Clinical Bio & Specialty Headline',
-    poor: '"Doctor offering health consultations."',
-    good: '"Licensed Psychotherapist • Anxiety & Burnout Specialist with 8+ Years Experience"',
-    tip: 'Clearly state who you help and what conditions you specialize in.'
-  },
-  {
-    key: 'availability',
-    label: 'Calendar Availability Slots',
-    poor: 'Zero open calendar slots listed for the week',
-    good: '5+ open recurring weekly slots refreshed every Friday',
-    tip: 'Profiles with active open slots receive up to 3x higher instant bookings.'
-  },
-  {
-    key: 'specialization',
-    label: 'Focus Areas & Modalities',
-    poor: 'Generic listing without explicit therapeutic approaches',
-    good: 'Explicitly tagged CBT, EMDR, Mindfulness & Couples Therapy modalities',
-    tip: 'Helps TherapyMantra recommendation engine match you with ideal clients.'
-  },
-  {
-    key: 'credentials',
-    label: 'Verified Credentials & Languages',
-    poor: 'Missing license numbers or language proficiencies',
-    good: 'Verified board license badge & all fluent languages listed',
-    tip: 'Builds immediate clinical authority and cross-cultural reach.'
-  }
-];
+const getProfileAuditItems = (brand) => {
+  const brandName = brand?.name || 'TherapyMantra';
+  const isOCD = brand?.id === 'ocdmantra';
+  return [
+    {
+      key: 'photo',
+      label: 'Profile Photo',
+      poor: 'Blurry selfie, casual background, poor lighting',
+      good: 'High-res professional headshot with warm expression & clean background',
+      tip: 'Clients decide whether to trust a provider within 3 seconds of viewing their photo.'
+    },
+    {
+      key: 'bio',
+      label: 'Clinical Bio & Specialty Headline',
+      poor: '"Doctor offering health consultations."',
+      good: isOCD ? '"Licensed ERP Specialist • OCD & Anxiety Disorder Expert with 8+ Years Experience"' : '"Licensed Psychotherapist • Anxiety & Burnout Specialist with 8+ Years Experience"',
+      tip: 'Clearly state who you help and what conditions you specialize in.'
+    },
+    {
+      key: 'availability',
+      label: 'Calendar Availability Slots',
+      poor: 'Zero open calendar slots listed for the week',
+      good: '5+ open recurring weekly slots refreshed every Friday',
+      tip: 'Profiles with active open slots receive up to 3x higher instant bookings.'
+    },
+    {
+      key: 'specialization',
+      label: 'Focus Areas & Modalities',
+      poor: 'Generic listing without explicit therapeutic approaches',
+      good: isOCD ? 'Explicitly tagged Exposure & Response Prevention (ERP), CBT & I-CBT modalities' : 'Explicitly tagged CBT, EMDR, Mindfulness & Couples Therapy modalities',
+      tip: `Helps ${brandName} recommendation engine match you with ideal clients.`
+    },
+    {
+      key: 'credentials',
+      label: 'Verified Credentials & Languages',
+      poor: 'Missing license numbers or language proficiencies',
+      good: 'Verified board license badge & all fluent languages listed',
+      tip: 'Builds immediate clinical authority and cross-cultural reach.'
+    }
+  ];
+};
 
 export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapymantra' }) {
   const brand = PLATFORM_CONFIGS[brandKey] || PLATFORM_CONFIGS.therapymantra;
@@ -551,7 +562,7 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
 
             {/* Expandable Accordion Profile Audit Items */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {PROFILE_AUDIT_ITEMS.map(item => {
+              {getProfileAuditItems(brand).map(item => {
                 const isExpanded = expandedAuditKey === item.key;
                 return (
                   <div key={item.key} style={{ border: '1px solid #cbd5e1', borderRadius: '12px', overflow: 'hidden', transition: 'all 0.2s ease' }}>
@@ -626,7 +637,7 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
 
             {/* Platform Grid with Real Brand Logos & No Durations */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
-              {PLATFORMS_DATA.map(plat => (
+              {getPlatformsData(brand).map(plat => (
                 <div key={plat.id} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', transition: 'transform 0.15s ease, box-shadow 0.15s ease' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -703,7 +714,7 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
                   <X size={16} /> Wrong (Spammy & Self-Promotional)
                 </div>
                 <div style={{ background: '#ffffff', borderRadius: '8px', padding: '10px', fontSize: '0.76rem', color: '#991b1b', border: '1px solid #fca5a5', lineHeight: 1.4 }}>
-                  "Book a therapy session with me right now on TherapyMantra! Click here for 20% off direct consultation slots!"
+                  "Book a therapy session with me right now on {brand.name}! Click here for 20% off direct consultation slots!"
                 </div>
                 <div style={{ fontSize: '0.72rem', color: '#7f1d1d', fontWeight: 600 }}>
                   ⚠️ Zero educational value, breaks community guidelines, and leads to account bans.
@@ -715,7 +726,7 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
                   <Check size={16} /> Right (Helpful & Educational)
                 </div>
                 <div style={{ background: '#ffffff', borderRadius: '8px', padding: '10px', fontSize: '0.76rem', color: '#166534', border: '1px solid #86efac', lineHeight: 1.4 }}>
-                  "When managing acute stress, try grounding exercises like 5-4-3-2-1 breathing. As a licensed provider practicing on TherapyMantra, I often recommend..."
+                  "When managing acute stress, try grounding exercises like 5-4-3-2-1 breathing. As a licensed provider practicing on {brand.name}, I often recommend..."
                 </div>
                 <div style={{ fontSize: '0.72rem', color: '#14532d', fontWeight: 600 }}>
                   ✅ Establishes clinical expertise first, builds trust, and mentions profile only when relevant.
@@ -900,7 +911,7 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
 
             {/* Weekly Routine Planner List with Time Icons */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {WEEKLY_ROUTINE.map((item, idx) => {
+              {getWeeklyRoutine(brand).map((item, idx) => {
                 const Icon = item.icon;
                 return (
                   <div key={idx} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
@@ -937,13 +948,10 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '32px 24px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }} className="animate-fade-in">
             {isCompleted ? (
               <div style={{ textAlign: 'center', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#dcfce7', color: '#15803d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Award size={36} />
-                </div>
-                <div>
+                          <div>
                   <h2 style={{ margin: '0 0 6px', fontSize: '1.5rem', fontWeight: 900, color: '#0f172a' }}>Growth Academy Completed!</h2>
                   <p style={{ margin: 0, fontSize: '0.86rem', color: '#64748b' }}>
-                    Congratulations! You have completed the TherapyMantra Growth Academy and earned <strong>+15 Reward Points</strong>.
+                    Congratulations! You have completed the {brand.name} Growth Academy and earned <strong>+15 Reward Points</strong>.
                   </p>
                 </div>
                 <button onClick={onBack} style={{ padding: '12px 28px', borderRadius: '10px', border: 'none', background: brand.primaryColor, color: '#ffffff', fontWeight: 900, fontSize: '0.86rem', cursor: 'pointer' }}>
@@ -958,7 +966,7 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
                   </div>
                   <h2 style={{ margin: '8px 0 4px', fontSize: '1.4rem', fontWeight: 900, color: '#0f172a' }}>Submit Your Introduction Video</h2>
                   <p style={{ margin: 0, fontSize: '0.84rem', color: '#64748b' }}>
-                    Submit a 30-60 second video introducing yourself. Selected videos may be featured on official TherapyMantra platforms.
+                    Submit a 30-60 second video introducing yourself. Selected videos may be featured on official {brand.name} platforms.
                   </p>
                 </div>
 
@@ -1125,7 +1133,7 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
                   <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <input type="checkbox" id="consentCheck" checked={videoFormData.consent} onChange={e => setVideoFormData({ ...videoFormData, consent: e.target.checked })} style={{ cursor: 'pointer' }} />
                     <label htmlFor="consentCheck" style={{ fontSize: '0.76rem', color: '#334155', fontWeight: 700, cursor: 'pointer' }}>
-                      I agree that my video may be featured on official TherapyMantra websites and social marketing channels.
+                      I agree that my video may be featured on official {brand.name} websites and social marketing channels.
                     </label>
                   </div>
 
