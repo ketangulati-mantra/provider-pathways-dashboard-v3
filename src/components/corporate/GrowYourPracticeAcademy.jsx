@@ -525,19 +525,7 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
               />
             </div>
 
-            {/* Dynamic Session URL Bar */}
-            <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '14px', display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Sparkles size={18} color={brand.primaryColor} />
-                <div>
-                  <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#1d4ed8', textTransform: 'uppercase' }}>Active Listing URL for this Session</div>
-                  <div style={{ fontSize: '0.8rem', color: '#1e3a8a', fontWeight: 800 }}>{activeProfileUrl}</div>
-                </div>
-              </div>
-              <button onClick={() => setCurrentStepIndex(1)} style={{ padding: '6px 12px', borderRadius: '8px', background: brand.primaryColor, color: '#ffffff', fontWeight: 800, fontSize: '0.74rem', border: 'none', cursor: 'pointer' }}>
-                Edit URL
-              </button>
-            </div>
+
 
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
               <button onClick={handlePrev} style={{ padding: '9px 18px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#334155', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
