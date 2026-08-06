@@ -119,6 +119,15 @@ export const activities: Activity[] = [
     route: '/task/intern-program'
   },
   {
+    lessonId: 'intern-certificate',
+    activityId: '',
+    services: ['therapy'],
+    title: 'Download Your Therapy Intern Certificate',
+    rewardPoints: 20,
+    estimatedDuration: '2 min',
+    route: '/task/intern-certificate'
+  },
+  {
     lessonId: 'session-notes',
     activityId: '',
     services: ['therapy', 'psychiatry'],

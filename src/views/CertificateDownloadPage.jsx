@@ -62,9 +62,9 @@ const PremiumCertificate = ({ userName, innerRef, certificateId, config }) => {
         zIndex: 2
       }}>
         <img 
-          src="https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg" 
-          alt="MantraCare" 
-          style={{ height: '30px', marginBottom: '12px' }} 
+          src={config?.logoUrl || "https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg"} 
+          alt={config?.programName || "MantraCare"} 
+          style={{ height: '32px', marginBottom: '12px', objectFit: 'contain' }} 
           crossOrigin="anonymous"
         />
 
@@ -151,10 +151,10 @@ const PremiumCertificate = ({ userName, innerRef, certificateId, config }) => {
           width: '78%',
           marginBottom: '16px'
         }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '160px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '180px' }}>
             <div style={{
               fontFamily: "'Great Vibes', 'Brush Script MT', cursive",
-              fontSize: '1.6rem',
+              fontSize: '1.5rem',
               color: '#0f172a',
               borderBottom: '1px solid #cbd5e1',
               paddingBottom: '2px',
@@ -162,12 +162,12 @@ const PremiumCertificate = ({ userName, innerRef, certificateId, config }) => {
               width: '100%',
               lineHeight: '1'
             }}>
-              MantraCare
+              {config.signatureText || 'MantraCare'}
             </div>
             <span style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Authorized By
             </span>
-            <span style={{ fontSize: '0.78rem', color: '#0f172a', fontWeight: 500, marginTop: '2px' }}>
+            <span style={{ fontSize: '0.76rem', color: '#0f172a', fontWeight: 600, marginTop: '2px' }}>
               {config.authorizedBy}
             </span>
           </div>
@@ -245,7 +245,7 @@ const PremiumCertificate = ({ userName, innerRef, certificateId, config }) => {
         }}>
           <ShieldCheck size={18} color="#1e40af" style={{ marginBottom: '2px' }} />
           <span style={{ fontSize: '0.45rem', fontWeight: 800, color: '#1e40af', letterSpacing: '0.05em' }}>VERIFIED</span>
-          <span style={{ fontSize: '0.35rem', color: '#475569', marginTop: '1px', textAlign: 'center', lineHeight: '1.2', fontWeight: 600 }}>Issued by<br/>MantraCare</span>
+          <span style={{ fontSize: '0.35rem', color: '#475569', marginTop: '1px', textAlign: 'center', lineHeight: '1.2', fontWeight: 600 }}>{config.stampText || 'MantraCare Stamp'}</span>
         </div>
       </div>
     </div>
@@ -311,9 +311,9 @@ const OnScreenCertificatePreview = ({ userName, certificateId, config }) => {
         zIndex: 2
       }}>
         <img 
-          src="https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg" 
-          alt="MantraCare" 
-          style={{ height: 'clamp(22px, 4vw, 28px)', marginBottom: '10px' }} 
+          src={config?.logoUrl || "https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg"} 
+          alt={config?.programName || "MantraCare"} 
+          style={{ height: 'clamp(22px, 4vw, 30px)', marginBottom: '10px', objectFit: 'contain' }} 
           crossOrigin="anonymous"
         />
 
@@ -412,12 +412,12 @@ const OnScreenCertificatePreview = ({ userName, certificateId, config }) => {
               width: '100px',
               lineHeight: '1'
             }}>
-              MantraCare
+              {config.signatureText || 'MantraCare'}
             </div>
             <span style={{ fontSize: '0.62rem', color: '#64748b', textTransform: 'uppercase' }}>
               Authorized By
             </span>
-            <span style={{ fontSize: '0.7rem', color: '#0f172a', fontWeight: 500 }}>
+            <span style={{ fontSize: '0.7rem', color: '#0f172a', fontWeight: 600 }}>
               {config.authorizedBy}
             </span>
           </div>
@@ -480,6 +480,7 @@ const OnScreenCertificatePreview = ({ userName, certificateId, config }) => {
       }}>
         <ShieldCheck size={16} color="#1e40af" />
         <span style={{ fontSize: '0.4rem', fontWeight: 800, color: '#1e40af' }}>VERIFIED</span>
+        <span style={{ fontSize: '0.3rem', color: '#475569', textAlign: 'center', fontWeight: 600 }}>{config.stampText || 'MantraCare'}</span>
       </div>
     </div>
   );

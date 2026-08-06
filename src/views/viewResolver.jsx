@@ -30,6 +30,7 @@ import EarnPointsLessonPage from './EarnPointsLessonPage';
 import ReferProviderLessonPage from './ReferProviderLessonPage';
 import SalesPartnerLessonPage from './SalesPartnerLessonPage';
 import CertificateDownloadPage from './CertificateDownloadPage';
+import TherapyInternCertificatePage from './TherapyInternCertificatePage';
 import TherapyProviderCertificatePage from './TherapyProviderCertificatePage';
 import TopListenerLessonPage from './TopListenerLessonPage';
 import ListenerCertificatePage from './ListenerCertificatePage';
@@ -131,6 +132,7 @@ const ROUTE_VIEW_REGISTRY = {
   '/task/earn-points': { default: EarnPointsLessonPage },
   '/task/refer-provider': { default: ReferProviderLessonPage },
   '/task/sales-partner': { default: SalesPartnerLessonPage },
+  '/task/intern-certificate': { default: TherapyInternCertificatePage },
   '/task/download-certificate': { default: CertificateDownloadPage },
   '/task/provider-certificate': { default: TherapyProviderCertificatePage },
   '/task/top-listener-recognition': { default: TopListenerLessonPage },
