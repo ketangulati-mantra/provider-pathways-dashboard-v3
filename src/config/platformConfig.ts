@@ -147,7 +147,7 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     name: 'PhysioMantra',
     tagline: 'PhysioMantra Growth Academy',
     subtitle: 'Learn how to increase your visibility, attract physiotherapy clients, and grow your PhysioMantra listing.',
-    logo: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785997703/physiomantra_logo_max8il.png',
+    logo: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1786001822/Physio_mantra_logo_zuxinh.png',
     primaryColor: '#059669',
     gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
     listingBaseUrl: 'https://physiomantra.com/list/therapist/',
@@ -186,6 +186,31 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     supportedPlatforms: [],
     shareTemplates: {
       linkedin: (url: string) => `LGBTQIA+ Affirmative Therapy consultations on PrideMantra: ${url}`
+    }
+  },
+  mantracare: {
+    id: 'mantracare',
+    name: 'MantraCare',
+    tagline: 'MantraCare Growth Academy',
+    subtitle: 'Learn how to increase your visibility, attract clients across all healthcare modalities, and grow your practice on MantraCare.',
+    logo: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg',
+    primaryColor: '#2563eb',
+    gradient: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+    listingBaseUrl: 'https://mantra.care/list/provider/',
+    demoProfileUrl: 'https://mantra.care/list/provider/demo',
+    sampleListingId: 'mantra-specialist',
+    submissionService: 'corporate',
+    activityId: 'mantracare-growth',
+    lessonId: 'mantra-market-yourself',
+    youtubeVideos: {
+      gettingClients: 'https://res.cloudinary.com/hxbamdqf/video/upload/v1785829768/vidssave.com_Getting_Clients_from_Mantra_Business_Growth_through_Platform_Visibility_1080P_o0lhmj.mp4',
+      gettingClientsPoster: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785830152/thumnail_2_YT_ubtbev.jpg',
+      marketProfile: 'https://res.cloudinary.com/hxbamdqf/video/upload/v1785829769/Market_Your_Profile_1080P_v6wtcx.mp4',
+      marketProfilePoster: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785830152/thumbnail_1_YT_t5egvr.jpg'
+    },
+    supportedPlatforms: [],
+    shareTemplates: {
+      linkedin: (url: string) => `Online health & wellness consultations on MantraCare: ${url}`
     }
   }
 };

@@ -61,12 +61,24 @@ const PremiumCertificate = ({ userName, innerRef, certificateId, config }) => {
         textAlign: 'center',
         zIndex: 2
       }}>
-        <img 
-          src={config?.logoUrl || "https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg"} 
-          alt={config?.programName || "MantraCare"} 
-          style={{ height: '32px', marginBottom: '12px', objectFit: 'contain' }} 
-          crossOrigin="anonymous"
-        />
+        <div style={{
+          background: '#ffffff',
+          padding: '6px 18px',
+          borderRadius: '12px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+          border: '1px solid #f1f5f9',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '12px'
+        }}>
+          <img 
+            src={config?.logoUrl || "https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg"} 
+            alt={config?.programName || "MantraCare"} 
+            style={{ height: '36px', maxWidth: '180px', objectFit: 'contain' }} 
+            crossOrigin="anonymous"
+          />
+        </div>
 
         <div style={{ 
           fontSize: '0.8rem', 
@@ -310,12 +322,24 @@ const OnScreenCertificatePreview = ({ userName, certificateId, config }) => {
         textAlign: 'center',
         zIndex: 2
       }}>
-        <img 
-          src={config?.logoUrl || "https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg"} 
-          alt={config?.programName || "MantraCare"} 
-          style={{ height: 'clamp(22px, 4vw, 30px)', marginBottom: '10px', objectFit: 'contain' }} 
-          crossOrigin="anonymous"
-        />
+        <div style={{
+          background: '#ffffff',
+          padding: '4px 14px',
+          borderRadius: '10px',
+          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
+          border: '1px solid #f1f5f9',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '10px'
+        }}>
+          <img 
+            src={config?.logoUrl || "https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg"} 
+            alt={config?.programName || "MantraCare"} 
+            style={{ height: 'clamp(24px, 4.5vw, 34px)', maxWidth: '160px', objectFit: 'contain' }} 
+            crossOrigin="anonymous"
+          />
+        </div>
 
         <div style={{ 
           fontSize: 'clamp(0.65rem, 1.8vw, 0.78rem)', 

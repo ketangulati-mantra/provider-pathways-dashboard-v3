@@ -65,7 +65,7 @@ You can learn more about my work or schedule an appointment here:
         id: 'li-3',
         title: '3. Storytelling & Client Care',
         category: 'Storytelling',
-        content: `One of the most rewarding aspects of working in {{specialization}} is witnessing a client move from feeling stuck to rebuilding confidence and clarity.
+        content: `One of the most rewarding aspects of working as a {{specialization}} is witnessing a client move from feeling stuck to rebuilding confidence and clarity.
 
 My name is {{providerName}}, and I believe establishing a safe, trusting therapeutic alliance is where meaningful progress begins.
 
@@ -213,22 +213,74 @@ Book a session here: {{profileUrl}}`
   },
   email: {
     id: 'email',
-    name: 'Email Signature',
-    description: 'Professional email footer & booking link',
+    name: 'Email & Outreach',
+    description: 'Professional introduction & consultation details',
     iconName: 'Mail',
     color: '#4f46e5',
-    webUrl: 'https://mail.google.com/',
+    webUrl: 'https://mail.google.com/mail/u/0/#inbox?compose=new',
     templates: [
       {
         id: 'em-1',
-        title: 'Standard Email Signature Footer',
-        category: 'Signature',
-        content: `--
-{{providerName}}
-{{specialization}}
+        title: '1. Professional Client Introduction',
+        category: 'Outreach',
+        content: `Subject: Professional Support & Consultations – TherapyMantra
 
-Book Appointment & Online Consultations:
-{{profileUrl}}`
+Hi,
+
+I hope you're doing well.
+
+I wanted to introduce TherapyMantra, a platform that connects individuals with qualified mental health professionals.
+
+As a {{specialization}}, I am available for structured online consultations through TherapyMantra.
+
+If you or someone in your network may benefit from professional support, you can view my credentials and availability here:
+
+{{profileUrl}}
+
+Feel free to reach out if you'd like to know more.
+
+Warm regards,
+
+{{providerName}}`
+      },
+      {
+        id: 'em-2',
+        title: '2. Professional Referral Notice',
+        category: 'Referral',
+        content: `Subject: Consultation Availability & Practice Update – TherapyMantra
+
+Hello,
+
+I am writing to share an update regarding my practice. I am currently offering virtual consultations through TherapyMantra.
+
+In my work as a {{specialization}}, I focus on supporting clients with evidence-based care and structured guidance.
+
+For booking details or to view my clinical profile, please visit:
+
+{{profileUrl}}
+
+Thank you for your time, and please feel free to share this with anyone seeking specialized guidance.
+
+Sincerely,
+
+{{providerName}}`
+      },
+      {
+        id: 'em-3',
+        title: '3. Concise Email Footer / Bio',
+        category: 'Signature',
+        content: `Subject: Online Consultation Booking – {{providerName}}
+
+Hi,
+
+For confidential online consultations and appointments in {{specialization}}, you can access my profile directly through TherapyMantra:
+
+{{profileUrl}}
+
+Best regards,
+
+{{providerName}}
+{{specialization}}`
       }
     ]
   },
@@ -432,10 +484,83 @@ Book here:
       }
     ]
   },
+  email: {
+    id: 'email',
+    name: 'Email & Outreach',
+    description: 'Specialized ERP consultation introduction & referrals',
+    iconName: 'Mail',
+    color: '#4f46e5',
+    webUrl: 'https://mail.google.com/mail/u/0/#inbox?compose=new',
+    templates: [
+      {
+        id: 'em-ocd-1',
+        title: '1. ERP Practice & Client Introduction',
+        category: 'Outreach',
+        content: `Subject: Specialized ERP Therapy for OCD – OCDMantra
+
+Hi,
+
+I hope you're doing well.
+
+I wanted to share that I am currently offering specialized Exposure and Response Prevention (ERP) consultations through OCDMantra.
+
+OCD requires evidence-based, specialized care. As an OCD specialist focusing on {{specialization}}, I help clients systematically face anxiety triggers without engaging in compulsive rituals.
+
+If you or someone in your network is seeking specialized ERP support for OCD, you can view my credentials and current availability here:
+
+{{profileUrl}}
+
+Feel free to reach out if you'd like to learn more.
+
+Warm regards,
+
+{{providerName}}`
+      },
+      {
+        id: 'em-ocd-2',
+        title: '2. Professional ERP Clinical Referral',
+        category: 'Referral',
+        content: `Subject: OCD & ERP Consultation Availability – OCDMantra
+
+Hello,
+
+I am writing to share an update regarding my clinical practice. I am accepting new virtual ERP consultation clients on OCDMantra.
+
+In my work as a {{specialization}}, I utilize Exposure & Response Prevention (ERP) protocols to support individuals navigating intrusive thoughts and compulsions.
+
+You can review my clinical profile or schedule a direct consultation here:
+
+{{profileUrl}}
+
+Thank you for your time, and please feel free to forward this to colleagues or clients seeking OCD treatment.
+
+Sincerely,
+
+{{providerName}}`
+      },
+      {
+        id: 'em-ocd-3',
+        title: '3. Concise ERP Consultation Footer',
+        category: 'Signature',
+        content: `Subject: ERP Therapy & Consultation Booking – {{providerName}}
+
+Hi,
+
+For confidential online ERP consultations for Obsessive-Compulsive Disorder (OCD), you can access my profile directly through OCDMantra:
+
+{{profileUrl}}
+
+Best regards,
+
+{{providerName}}
+{{specialization}}`
+      }
+    ]
+  },
   reddit: {
     id: 'reddit',
     name: 'Reddit',
-    description: 'r/OCD educational advice & ERP attribution',
+    description: 'OCD educational advice & ERP attribution',
     iconName: 'MessageSquare',
     color: '#ea580c',
     webUrl: 'https://www.reddit.com/',
@@ -456,6 +581,214 @@ My name is {{providerName}}, and as a {{specialization}}, I focus on ERP for OCD
   }
 };
 
+export const PHYSIO_TEMPLATES: Record<string, PlatformConfig> = {
+  linkedin: {
+    id: 'linkedin',
+    name: 'LinkedIn',
+    description: 'Physical therapy clinical announcements & rehabilitation networks',
+    iconName: 'Globe',
+    color: '#0a66c2',
+    webUrl: 'https://www.linkedin.com/feed/',
+    templates: [
+      {
+        id: 'li-physio-1',
+        title: 'Physiotherapy Practice Announcement',
+        category: 'Clinical Post',
+        content: `I am pleased to share that I am accepting online physiotherapy & rehabilitation consultation appointments through PhysioMantra!
+
+My name is {{providerName}} and I work with clients seeking evidence-based physical therapy for musculoskeletal recovery, posture correction, post-op rehab, and chronic pain management.
+
+If you or someone in your network needs professional physiotherapy guidance, you can schedule a session directly through my profile:
+
+🔗 {{profileUrl}}
+
+#Physiotherapy #PhysioMantra #Rehabilitation #PhysicalTherapy #MusculoskeletalHealth`
+      }
+    ]
+  },
+  instagram: {
+    id: 'instagram',
+    name: 'Instagram',
+    description: 'Exercise form reels & rehabilitation bio links',
+    iconName: 'Share2',
+    color: '#c026d3',
+    webUrl: 'https://www.instagram.com/',
+    templates: [
+      {
+        id: 'ig-physio-1',
+        title: 'Physio Profile Bio',
+        category: 'Bio Link',
+        content: `Physiotherapist & Movement Specialist 🏋️‍♂️✨
+Empowering recovery, posture correction & pain management.
+👇 Book online physio consultations on PhysioMantra:
+{{profileUrl}}`
+      }
+    ]
+  },
+  facebook: {
+    id: 'facebook',
+    name: 'Facebook',
+    description: 'Physiotherapy community & rehabilitation posts',
+    iconName: 'Share2',
+    color: '#2563eb',
+    webUrl: 'https://www.facebook.com/',
+    templates: [
+      {
+        id: 'fb-physio-1',
+        title: 'Physiotherapy Support Announcement',
+        category: 'Community',
+        content: `Hello everyone,
+
+I wanted to share that I am currently offering specialized online physiotherapy consultations through PhysioMantra.
+
+My name is {{providerName}} and I assist individuals with targeted exercise therapy, injury rehabilitation, and pain relief.
+
+View my profile and book a session directly here:
+
+{{profileUrl}}`
+      }
+    ]
+  },
+  whatsapp: {
+    id: 'whatsapp',
+    name: 'WhatsApp',
+    description: 'Direct status updates & physio client inquiries',
+    iconName: 'MessageSquare',
+    color: '#16a34a',
+    webUrl: 'https://web.whatsapp.com/',
+    templates: [
+      {
+        id: 'wa-physio-1',
+        title: 'Business About / Description',
+        category: 'Profile Info',
+        content: `{{providerName}} — {{specialization}} | Physical Therapy on PhysioMantra: {{profileUrl}}`
+      },
+      {
+        id: 'wa-physio-2',
+        title: 'Status Update',
+        category: 'Status',
+        content: `Now accepting online physiotherapy appointments on PhysioMantra.
+
+Book your session here:
+{{profileUrl}}`
+      }
+    ]
+  },
+  twitter: {
+    id: 'twitter',
+    name: 'Twitter / X',
+    description: 'Physiotherapy & posture tips',
+    iconName: 'FileText',
+    color: '#0284c7',
+    webUrl: 'https://x.com/',
+    templates: [
+      {
+        id: 'tw-physio-1',
+        title: 'Physio & Movement Advocacy',
+        category: 'Short Post',
+        content: `Targeted exercise therapy and movement guidance build long-term physical health. As a physiotherapist specializing in {{specialization}}, my virtual consultation slots are open on PhysioMantra:
+
+{{profileUrl}}`
+      }
+    ]
+  },
+  email: {
+    id: 'email',
+    name: 'Email & Outreach',
+    description: 'Specialized physiotherapy consultation introduction & referrals',
+    iconName: 'Mail',
+    color: '#4f46e5',
+    webUrl: 'https://mail.google.com/mail/u/0/#inbox?compose=new',
+    templates: [
+      {
+        id: 'em-physio-1',
+        title: '1. Physiotherapy Practice & Client Introduction',
+        category: 'Outreach',
+        content: `Subject: Professional Physiotherapy & Rehabilitation Consultations – PhysioMantra
+
+Hi,
+
+I hope you're doing well.
+
+I wanted to share that I am currently offering specialized online physiotherapy consultations through PhysioMantra.
+
+As a {{specialization}}, I help clients with targeted physical therapy protocols, posture correction, injury recovery, and pain management.
+
+If you or someone in your network is seeking physical therapy support, you can view my credentials and current availability here:
+
+{{profileUrl}}
+
+Feel free to reach out if you'd like to learn more.
+
+Warm regards,
+
+{{providerName}}`
+      },
+      {
+        id: 'em-physio-2',
+        title: '2. Professional Physio Referral Notice',
+        category: 'Referral',
+        content: `Subject: Physiotherapy Consultation Availability – PhysioMantra
+
+Hello,
+
+I am writing to share an update regarding my clinical practice. I am accepting new virtual physical therapy consultation clients on PhysioMantra.
+
+In my work as a {{specialization}}, I utilize evidence-based movement protocols to support individuals navigating musculoskeletal recovery and injury rehabilitation.
+
+You can review my clinical profile or schedule a direct consultation here:
+
+{{profileUrl}}
+
+Thank you for your time, and please feel free to forward this to anyone seeking physical therapy care.
+
+Sincerely,
+
+{{providerName}}`
+      },
+      {
+        id: 'em-physio-3',
+        title: '3. Concise Physio Consultation Footer',
+        category: 'Signature',
+        content: `Subject: Physiotherapy Consultation Booking – {{providerName}}
+
+Hi,
+
+For confidential online physiotherapy consultations, you can access my profile directly through PhysioMantra:
+
+{{profileUrl}}
+
+Best regards,
+
+{{providerName}}
+{{specialization}}`
+      }
+    ]
+  },
+  reddit: {
+    id: 'reddit',
+    name: 'Reddit',
+    description: 'Physiotherapy advice & rehabilitation attribution',
+    iconName: 'MessageSquare',
+    color: '#ea580c',
+    webUrl: 'https://www.reddit.com/',
+    templates: [
+      {
+        id: 'rd-physio-1',
+        title: 'r/Physiotherapy Response Ending',
+        category: 'Guidelines & Ending',
+        content: `[PROVIDE DETAILED, HELPFUL MOVEMENT/EXERCISE ADVICE FIRST - DO NOT SPAM.]
+
+---
+RECOMMENDED CLOSING ATTRIBUTION:
+"Consistent movement therapy and proper exercise technique take guidance and practice.
+
+My name is {{providerName}}, and as a {{specialization}}, I focus on physical rehabilitation. If you're seeking structured virtual sessions, you can view my profile on PhysioMantra: {{profileUrl}}"`
+      }
+    ]
+  }
+};
+
 /**
  * Replace placeholders in template text strictly without fake fallbacks
  */
@@ -470,10 +803,31 @@ export function interpolateTemplate(
     brandName = 'TherapyMantra'
   } = vars;
 
+  const defaultSpec = brandName.toLowerCase().includes('ocd')
+    ? 'OCD & ERP Specialist'
+    : brandName.toLowerCase().includes('physio')
+    ? 'Physiotherapist'
+    : 'Specialist';
+
+  const specValue = specialization || defaultSpec;
+
+  // Helper to ensure proper article ("a" vs "an") before specialization if preceded by "as a " or "as an "
+  const formattedSpec = specValue.trim();
+
   let result = templateText
     .replaceAll('{{providerName}}', providerName)
     .replaceAll('{{name}}', providerName)
-    .replaceAll('{{specialization}}', specialization || (brandName.toLowerCase().includes('ocd') ? 'OCD & ERP Specialist' : 'Specialist'))
+    .replaceAll('as a {{specialization}}', (match) => {
+      const firstChar = formattedSpec.charAt(0).toLowerCase();
+      const article = ['a', 'e', 'i', 'o', 'u'].includes(firstChar) ? 'an' : 'a';
+      return `as ${article} ${formattedSpec}`;
+    })
+    .replaceAll('as an {{specialization}}', (match) => {
+      const firstChar = formattedSpec.charAt(0).toLowerCase();
+      const article = ['a', 'e', 'i', 'o', 'u'].includes(firstChar) ? 'an' : 'a';
+      return `as ${article} ${formattedSpec}`;
+    })
+    .replaceAll('{{specialization}}', formattedSpec)
     .replaceAll('{{profileUrl}}', profileUrl);
 
   if (brandName && brandName !== 'TherapyMantra' && !result.includes(brandName)) {
@@ -487,9 +841,12 @@ export function interpolateTemplate(
  * Get all available promotion platform configurations for a brand
  */
 export function getPromotionPlatforms(brandName: string = 'TherapyMantra'): PlatformConfig[] {
-  const isOCD = brandName.toLowerCase().includes('ocd');
-  if (isOCD) {
+  const brandLower = brandName.toLowerCase();
+  if (brandLower.includes('ocd')) {
     return Object.values(OCD_TEMPLATES);
+  }
+  if (brandLower.includes('physio')) {
+    return Object.values(PHYSIO_TEMPLATES);
   }
   return Object.values(DEFAULT_TEMPLATES);
 }

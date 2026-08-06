@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import {
   Copy, Check, ExternalLink, X, Share2, Globe, MessageSquare,
   HelpCircle, FileText, Mail, Megaphone, ShieldCheck, Edit3, ArrowRight, Save,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, Video
 } from 'lucide-react';
 import {
   getPromotionPlatforms,
@@ -11,6 +11,10 @@ import {
   PlatformConfig,
   PromotionTemplateItem
 } from '../../utils/promotionTemplates';
+import {
+  PLATFORM_SHARE_CONFIGS,
+  executePlatformShare
+} from '../../utils/platformShareConfig';
 import { getCurrentUserId, MANTRA_CONFIG } from '../../mantra';
 
 const API_BASE = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null ? MANTRA_CONFIG.apiBaseUrl : ((import.meta as any).env?.PROD ? '' : 'http://localhost:5000');
@@ -35,7 +39,8 @@ const ICON_MAP: Record<string, React.ElementType> = {
   MessageSquare,
   HelpCircle,
   FileText,
-  Mail
+  Mail,
+  Video
 };
 
 const SPECIALIZATION_SUGGESTIONS = [
@@ -93,6 +98,7 @@ export default function ProviderContentStudio({
   const [selectedPlatformId, setSelectedPlatformId] = useState<string>('linkedin');
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Reset to form view whenever isOpen turns true
   useEffect(() => {
@@ -100,6 +106,14 @@ export default function ProviderContentStudio({
       setIsEditing(true);
     }
   }, [isOpen]);
+
+  // Toast Auto-Dismiss
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3800);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
   // Mobile Navigation Stack state ('platforms' | 'templates' | 'preview')
   const [mobileStep, setMobileStep] = useState<MobileStep>('platforms');
@@ -147,25 +161,24 @@ export default function ProviderContentStudio({
       profileUrl: cleanUrl
     };
 
-    // 1. Save to localStorage
+    // 1. Save to LocalStorage
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-    } catch (e) { }
+    } catch (err) {
+      console.warn('[Promotion Toolkit] Failed to write localStorage:', err);
+    }
 
-    // 2. Save to Backend DB
-    try {
-      await fetch(`${API_BASE}/api/users`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          name: cleanName,
-          service: cleanSpec,
-          promotionToolkitData: payload
-        })
-      });
-    } catch (e) {
-      console.warn('[Promotion Toolkit] DB save notice:', e);
+    // 2. Save to User DB Profile
+    if (userId) {
+      try {
+        await fetch(`${API_BASE}/api/users/${encodeURIComponent(userId)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ promotion_toolkit_data: payload })
+        });
+      } catch (err) {
+        console.warn('[Promotion Toolkit] DB save notice:', err);
+      }
     }
 
     // 3. Update Parent State & Close Form View
@@ -178,10 +191,24 @@ export default function ProviderContentStudio({
     setIsEditing(false);
   };
 
-  const handleCopy = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2200);
+  const handlePlatformAction = async (
+    platformId: string,
+    content: string,
+    templateId: string,
+    emailClient?: 'gmail' | 'outlook' | 'default'
+  ) => {
+    const res = await executePlatformShare(platformId, content, {
+      subject: `Professional Mental Health Support – ${brandName}`,
+      providerName: formData.name,
+      specialization: formData.specialization,
+      profileUrl: formData.profileUrl,
+      brandName,
+      emailClient
+    });
+
+    setCopiedId(templateId);
+    setToastMessage(res.toastMessage);
+    setTimeout(() => setCopiedId(null), 2500);
   };
 
   const selectedPlatform: PlatformConfig =
@@ -688,64 +715,119 @@ export default function ProviderContentStudio({
                   </div>
                 </div>
 
-                {/* BOTTOM STICKY ACTION BAR (Min 54px touch targets) */}
+                {/* BOTTOM STICKY ACTION BAR */}
                 <div
                   style={{
                     padding: '14px 16px',
                     background: '#ffffff',
                     borderTop: '1px solid #e2e8f0',
                     display: 'flex',
+                    flexDirection: 'column',
                     gap: '10px',
                     boxShadow: '0 -4px 16px rgba(0,0,0,0.06)'
                   }}
                 >
-                  <button
-                    onClick={() => handleCopy(activeInterpolatedContent, selectedTemplate.id)}
-                    style={{
-                      flex: 1,
-                      minHeight: '52px',
-                      borderRadius: '14px',
-                      border: copiedId === selectedTemplate.id ? '1px solid #10b981' : 'none',
-                      background: copiedId === selectedTemplate.id ? '#ecfdf5' : 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                      color: copiedId === selectedTemplate.id ? '#059669' : '#ffffff',
-                      fontWeight: 900,
-                      fontSize: '0.9rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      boxShadow: '0 4px 12px rgba(37,99,235,0.25)',
-                      touchAction: 'manipulation'
-                    }}
-                  >
-                    {copiedId === selectedTemplate.id ? <Check size={18} color="#059669" /> : <Copy size={18} />}
-                    {copiedId === selectedTemplate.id ? 'Copied!' : 'Copy Template'}
-                  </button>
+                  {(() => {
+                    const isCopied = copiedId === selectedTemplate.id;
 
-                  <a
-                    href={selectedPlatform.webUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      minHeight: '52px',
-                      padding: '0 18px',
-                      borderRadius: '14px',
-                      border: `1px solid ${selectedPlatform.color}40`,
-                      background: `${selectedPlatform.color}10`,
-                      color: selectedPlatform.color,
-                      fontWeight: 900,
-                      fontSize: '0.88rem',
-                      textDecoration: 'none',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                      touchAction: 'manipulation'
-                    }}
-                  >
-                    Open <ExternalLink size={16} />
-                  </a>
+                    if (selectedPlatform.id === 'email') {
+                      return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                          <button
+                            onClick={() => handlePlatformAction('email', activeInterpolatedContent, selectedTemplate.id, 'gmail')}
+                            style={{
+                              width: '100%',
+                              minHeight: '46px',
+                              borderRadius: '12px',
+                              border: 'none',
+                              background: '#ea4335',
+                              color: '#ffffff',
+                              fontWeight: 900,
+                              fontSize: '0.86rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px'
+                            }}
+                          >
+                            <Mail size={16} />Open Gmail
+                          </button>
+                          <button
+                            onClick={() => handlePlatformAction('email', activeInterpolatedContent, selectedTemplate.id, 'outlook')}
+                            style={{
+                              width: '100%',
+                              minHeight: '46px',
+                              borderRadius: '12px',
+                              border: 'none',
+                              background: '#0078d4',
+                              color: '#ffffff',
+                              fontWeight: 900,
+                              fontSize: '0.86rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px'
+                            }}
+                          >
+                            <Mail size={16} />Open Outlook
+                          </button>
+                          <button
+                            onClick={() => handlePlatformAction('email', activeInterpolatedContent, selectedTemplate.id, 'default')}
+                            style={{
+                              width: '100%',
+                              minHeight: '42px',
+                              borderRadius: '12px',
+                              border: '1px solid #cbd5e1',
+                              background: '#ffffff',
+                              color: '#334155',
+                              fontWeight: 800,
+                              fontSize: '0.8rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px'
+                            }}
+                          >
+                            Use Default Mail App
+                          </button>
+                        </div>
+                      );
+                    }
+
+                    const shareCfg = PLATFORM_SHARE_CONFIGS[selectedPlatform.id] || {
+                      buttonLabel: '📋 Copy & Open Platform',
+                      color: selectedPlatform.color
+                    };
+
+                    return (
+                      <button
+                        onClick={() => handlePlatformAction(selectedPlatform.id, activeInterpolatedContent, selectedTemplate.id)}
+                        style={{
+                          width: '100%',
+                          minHeight: '52px',
+                          borderRadius: '14px',
+                          border: 'none',
+                          background: isCopied ? '#ecfdf5' : `linear-gradient(135deg, ${shareCfg.color || selectedPlatform.color} 0%, #0f172a 100%)`,
+                          color: isCopied ? '#059669' : '#ffffff',
+                          fontWeight: 900,
+                          fontSize: '0.92rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
+                          touchAction: 'manipulation'
+                        }}
+                      >
+                        {isCopied ? <Check size={18} color="#059669" /> : <ExternalLink size={18} />}
+                        {isCopied ? 'Action Completed!' : shareCfg.buttonLabel}
+                      </button>
+                    );
+                  })()}
                 </div>
               </div>
             )}
@@ -877,28 +959,6 @@ export default function ProviderContentStudio({
                     Personalized for <strong>{formData.name}</strong> ({formData.specialization})
                   </p>
                 </div>
-
-                <a
-                  href={selectedPlatform.webUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '10px',
-                    border: `1px solid ${selectedPlatform.color}40`,
-                    background: `${selectedPlatform.color}0a`,
-                    color: selectedPlatform.color,
-                    fontWeight: 800,
-                    fontSize: '0.8rem',
-                    textDecoration: 'none',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  Open {selectedPlatform.name} <ExternalLink size={14} />
-                </a>
               </div>
 
               {/* Templates List */}
@@ -910,6 +970,11 @@ export default function ProviderContentStudio({
                     profileUrl: formData.profileUrl,
                     brandName
                   });
+
+                  const shareCfg = PLATFORM_SHARE_CONFIGS[selectedPlatform.id] || {
+                    buttonLabel: '📋 Copy & Open Platform',
+                    color: selectedPlatform.color
+                  };
 
                   const isCopied = copiedId === tpl.id;
 
@@ -938,26 +1003,88 @@ export default function ProviderContentStudio({
                           )}
                         </div>
 
-                        <button
-                          onClick={() => handleCopy(interpolatedContent, tpl.id)}
-                          style={{
-                            padding: '7px 14px',
-                            borderRadius: '8px',
-                            border: isCopied ? '1px solid #10b981' : '1px solid #cbd5e1',
-                            background: isCopied ? '#ecfdf5' : '#ffffff',
-                            color: isCopied ? '#059669' : '#0f172a',
-                            fontWeight: 800,
-                            fontSize: '0.78rem',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            transition: 'all 0.15s ease'
-                          }}
-                        >
-                          {isCopied ? <Check size={14} color="#059669" /> : <Copy size={14} />}
-                          {isCopied ? 'Copied Successfully!' : 'Copy Template'}
-                        </button>
+                        {selectedPlatform.id === 'email' ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                            <button
+                              onClick={() => handlePlatformAction('email', interpolatedContent, tpl.id, 'gmail')}
+                              style={{
+                                padding: '8px 14px',
+                                borderRadius: '10px',
+                                border: 'none',
+                                background: '#ea4335',
+                                color: '#ffffff',
+                                fontWeight: 800,
+                                fontSize: '0.78rem',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                boxShadow: '0 2px 6px rgba(234,67,53,0.25)'
+                              }}
+                            >
+                              <Mail size={14} />Open Gmail
+                            </button>
+                            <button
+                              onClick={() => handlePlatformAction('email', interpolatedContent, tpl.id, 'outlook')}
+                              style={{
+                                padding: '8px 14px',
+                                borderRadius: '10px',
+                                border: 'none',
+                                background: '#0078d4',
+                                color: '#ffffff',
+                                fontWeight: 800,
+                                fontSize: '0.78rem',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                boxShadow: '0 2px 6px rgba(0,120,212,0.25)'
+                              }}
+                            >
+                              <Mail size={14} />Open Outlook
+                            </button>
+                            <button
+                              onClick={() => handlePlatformAction('email', interpolatedContent, tpl.id, 'default')}
+                              style={{
+                                padding: '8px 12px',
+                                borderRadius: '10px',
+                                border: '1px solid #cbd5e1',
+                                background: '#ffffff',
+                                color: '#334155',
+                                fontWeight: 800,
+                                fontSize: '0.76rem',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                            >
+                              Use Default Mail App
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handlePlatformAction(selectedPlatform.id, interpolatedContent, tpl.id)}
+                            style={{
+                              padding: '8px 16px',
+                              borderRadius: '10px',
+                              border: 'none',
+                              background: isCopied ? '#ecfdf5' : selectedPlatform.color,
+                              color: isCopied ? '#059669' : '#ffffff',
+                              fontWeight: 800,
+                              fontSize: '0.82rem',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              boxShadow: `0 3px 10px ${selectedPlatform.color}30`,
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            {isCopied ? <Check size={14} color="#059669" /> : <ExternalLink size={14} />}
+                            {isCopied ? 'Action Completed!' : shareCfg.buttonLabel}
+                          </button>
+                        )}
                       </div>
 
                       {/* Non-editable Content Preview Box */}
@@ -989,6 +1116,38 @@ export default function ProviderContentStudio({
           </div>
         )}
       </div>
+
+      {/* Floating Toast Notification Banner */}
+      {toastMessage && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 9999999,
+            background: '#0f172a',
+            color: '#ffffff',
+            padding: '12px 24px',
+            borderRadius: '14px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.35)',
+            border: '1px solid #334155',
+            fontSize: '0.88rem',
+            fontWeight: 800,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            maxWidth: '90vw',
+            textAlign: 'center',
+            animation: 'fadeInUp 0.25s ease-out'
+          }}
+        >
+          <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Check size={14} color="#ffffff" />
+          </div>
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </div>,
     document.body
   );

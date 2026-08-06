@@ -8,7 +8,7 @@ const internCertificateConfig = {
   completionText: 'for successfully completing the',
   courseName: 'Therapy Intern Provider Pathway',
   quote: '"The journey of a therapist begins with learning, listening, and practicing with deep empathy. Your dedication to your professional growth and to your clients is highly valued."',
-  authorizedBy: 'MantraCare Therapy Program',
+  authorizedBy: 'MantraCare',
   signatureText: 'TherapyMantra',
   stampText: 'MantraCare Stamp Verified',
   logoUrl: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785828110/therapymantraIcon_kie5d3.png',

@@ -8,7 +8,7 @@ const providerConfig = {
   completionText: 'for successfully completing the',
   courseName: 'Therapy Provider Pathway',
   quote: '"Therapy is a sacred collaboration of self-discovery and healing. Your presence, guidance, and compassion support others in navigating life’s challenges and finding their strength."',
-  authorizedBy: 'MantraCare Therapy Program',
+  authorizedBy: 'MantraCare',
   signatureText: 'TherapyMantra',
   stampText: 'TherapyMantra Stamp Verified',
   logoUrl: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785828110/therapymantraIcon_kie5d3.png',

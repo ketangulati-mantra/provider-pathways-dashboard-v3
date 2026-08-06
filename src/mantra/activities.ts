@@ -99,6 +99,15 @@ export const activities: Activity[] = [
     estimatedDuration: '10 min',
     route: '/task/physio-market-yourself/physiotherapy'
   },
+  {
+    lessonId: 'mantra-market-yourself',
+    activityId: 'mantracare-growth',
+    services: ['diet', 'coach', 'doctor', 'fitness', 'wellness', '*'],
+    title: 'grow your practice (mantracare)',
+    rewardPoints: 50,
+    estimatedDuration: '10 min',
+    route: '/task/mantra-market-yourself'
+  },
 
   {
     lessonId: 'share-linkedin',
