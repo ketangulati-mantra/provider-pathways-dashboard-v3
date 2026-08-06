@@ -34,6 +34,8 @@ function App() {
       p = p.slice('/provider_pathways'.length) || '/';
     } else if (p.startsWith('/provider_pathway')) {
       p = p.slice('/provider_pathway'.length) || '/';
+    } else if (p.startsWith('/provider_activity')) {
+      p = p.slice('/provider_activity'.length) || '/';
     }
     return p || '/';
   };

@@ -34,7 +34,8 @@ function getApiBase(): string {
     '/provider_pathways_dashboard_v1',
     '/provider_pathways_v2_testing',
     '/provider_pathways',
-    '/provider_pathway'
+    '/provider_pathway',
+    '/provider_activity'
   ];
   for (const prefix of prefixes) {
     if (pathname.startsWith(prefix)) return `${prefix}/api`;
