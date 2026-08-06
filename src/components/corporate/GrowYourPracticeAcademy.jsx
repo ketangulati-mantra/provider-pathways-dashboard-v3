@@ -460,11 +460,9 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
               <Megaphone size={13} /> Promotion Toolkit
             </button>
 
-            {onBack && (
-              <button onClick={onBack} style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#475569', fontWeight: 800, fontSize: '0.74rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <ArrowLeft size={13} /> Continue Later
-              </button>
-            )}
+            <button onClick={() => { if (onBack) onBack(); else goToDashboard(); }} style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#475569', fontWeight: 800, fontSize: '0.74rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <ArrowLeft size={13} /> Continue Later
+            </button>
           </div>
         </div>
       </div>
