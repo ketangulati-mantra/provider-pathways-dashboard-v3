@@ -472,11 +472,11 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
       <div style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '10px 16px', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src={brand.logo} alt={brand.name} style={{ height: '26px', width: 'auto' }} />
-            <div style={{ height: '16px', width: '1px', background: '#cbd5e1' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img src={brand.logo} alt={brand.name} style={{ height: '38px', maxWidth: '160px', width: 'auto', objectFit: 'contain' }} />
+            <div style={{ height: '22px', width: '1px', background: '#cbd5e1' }} />
             <div>
-              <div style={{ fontSize: '0.86rem', fontWeight: 900, color: '#0f172a' }}>Grow Your Practice</div>
+              <div style={{ fontSize: '0.94rem', fontWeight: 900, color: '#0f172a' }}>Grow Your Practice</div>
             </div>
           </div>
 
