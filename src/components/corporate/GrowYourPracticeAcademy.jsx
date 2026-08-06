@@ -486,15 +486,15 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }} className="animate-fade-in">
             <div>
               <div style={{ fontSize: '0.64rem', fontWeight: 800, color: brand.primaryColor, textTransform: 'uppercase', letterSpacing: '0.05em' }}>MODULE 1 OF 6</div>
-              <h2 style={{ margin: '4px 0 2px', fontSize: '1.3rem', fontWeight: 900, color: '#0f172a' }}>How TherapyMantra Gets You Clients</h2>
+              <h2 style={{ margin: '4px 0 2px', fontSize: '1.3rem', fontWeight: 900, color: '#0f172a' }}>How {brand.name || 'TherapyMantra'} Gets You Clients</h2>
               <p style={{ margin: 0, fontSize: '0.84rem', color: '#64748b' }}>Interactive client acquisition funnel breakdown.</p>
             </div>
 
             {/* Interactive Step-by-Step Funnel */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px' }}>
               {[
-                { step: '1', title: 'Client Searches Google', desc: 'Clients search for therapists or wellness support online.', icon: Search, color: '#2563eb' },
-                { step: '2', title: 'TherapyMantra Hub', desc: 'TherapyMantra surfaces verified provider directories.', icon: Globe, color: '#059669' },
+                { step: '1', title: 'Client Searches Google', desc: `Clients search for specialists or wellness support online.`, icon: Search, color: '#2563eb' },
+                { step: '2', title: `${brand.name || 'TherapyMantra'} Hub`, desc: `${brand.name || 'TherapyMantra'} surfaces verified provider directories.`, icon: Globe, color: '#059669' },
                 { step: '3', title: 'Your Listing', desc: 'Client lands directly on your personalized listing page.', icon: UserCheck, color: '#c026d3' },
                 { step: '4', title: 'Direct Booking', desc: 'Client schedules a 1-on-1 online consultation session.', icon: Calendar, color: '#dc2626' }
               ].map((item, idx) => {
