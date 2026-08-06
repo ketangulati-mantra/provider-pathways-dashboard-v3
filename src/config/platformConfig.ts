@@ -147,7 +147,7 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     name: 'PhysioMantra',
     tagline: 'PhysioMantra Growth Academy',
     subtitle: 'Learn how to increase your visibility, attract physiotherapy clients, and grow your PhysioMantra listing.',
-    logo: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg',
+    logo: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785997703/physiomantra_logo_max8il.png',
     primaryColor: '#059669',
     gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
     listingBaseUrl: 'https://physiomantra.com/list/therapist/',

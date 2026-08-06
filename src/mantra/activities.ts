@@ -90,6 +90,15 @@ export const activities: Activity[] = [
     estimatedDuration: '10 min',
     route: '/task/ocd-market-yourself/therapy'
   },
+  {
+    lessonId: 'physio-market-yourself',
+    activityId: 'physio-growth',
+    services: ['physiotherapy'],
+    title: 'grow your practice (physiomantra)',
+    rewardPoints: 50,
+    estimatedDuration: '10 min',
+    route: '/task/physio-market-yourself/physiotherapy'
+  },
 
   {
     lessonId: 'share-linkedin',

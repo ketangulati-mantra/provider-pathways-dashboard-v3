@@ -157,7 +157,11 @@ export const resolveLessonView = ({ currentPath, currentService, onBack, activit
     return <Component onBack={onBack} />;
   }
 
-  // Dynamic path matching for /task/market-yourself/* and /task/ocd-market-yourself/*
+  // Dynamic path matching for /task/market-yourself/*, /task/ocd-market-yourself/*, /task/physio-market-yourself/*
+  if (currentPath.startsWith('/task/physio-market-yourself')) {
+    return <GrowYourPracticeAcademy onBack={onBack} brandKey="physiomantra" />;
+  }
+
   if (currentPath.startsWith('/task/ocd-market-yourself')) {
     return <GrowYourPracticeAcademy onBack={onBack} brandKey="ocdmantra" />;
   }

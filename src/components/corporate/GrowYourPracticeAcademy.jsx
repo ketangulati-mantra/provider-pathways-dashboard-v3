@@ -94,13 +94,14 @@ const getPlatformsData = (brand) => {
 // ─── WEEKLY GROWTH ROUTINE PLANNER DATA (MODULE 6) ───────────────────────────
 const getWeeklyRoutine = (brand) => {
   const brandName = brand?.name || 'TherapyMantra';
+  const isPhysio = brand?.id === 'physiomantra';
   return [
     { day: 'Monday', action: `Share 1 educational post on LinkedIn linking to your ${brandName} profile.`, time: '5 min', icon: Share2 },
     { day: 'Tuesday', action: 'Post 1 Instagram Story highlighting your consultation availability.', time: '5 min', icon: Globe },
-    { day: 'Wednesday', action: 'Answer 1 anxiety or wellness question on Reddit with thoughtful advice.', time: '10 min', icon: MessageSquare },
-    { day: 'Thursday', action: 'Answer 1 mental health question on Quora with educational insights.', time: '10 min', icon: HelpCircle },
+    { day: 'Wednesday', action: isPhysio ? 'Answer 1 physical recovery or posture question on Reddit with advice.' : 'Answer 1 anxiety or wellness question on Reddit with thoughtful advice.', time: '10 min', icon: MessageSquare },
+    { day: 'Thursday', action: isPhysio ? 'Answer 1 joint pain or exercise question on Quora with insights.' : 'Answer 1 mental health question on Quora with educational insights.', time: '10 min', icon: HelpCircle },
     { day: 'Friday', action: `Update your ${brandName} profile availability slots for the upcoming week.`, time: '5 min', icon: Calendar },
-    { day: 'Saturday', action: 'Publish 1 short educational video (Reel or YouTube Short) on wellness.', time: '15 min', icon: Video },
+    { day: 'Saturday', action: isPhysio ? 'Publish 1 short exercise demo video (Reel or YouTube Short) on mobility.' : 'Publish 1 short educational video (Reel or YouTube Short) on wellness.', time: '15 min', icon: Video },
     { day: 'Sunday', action: 'Review profile visits and respond to all client messages.', time: '5 min', icon: CheckCircle2 }
   ];
 };
@@ -109,6 +110,7 @@ const getWeeklyRoutine = (brand) => {
 const getProfileAuditItems = (brand) => {
   const brandName = brand?.name || 'TherapyMantra';
   const isOCD = brand?.id === 'ocdmantra';
+  const isPhysio = brand?.id === 'physiomantra';
   return [
     {
       key: 'photo',
@@ -121,7 +123,11 @@ const getProfileAuditItems = (brand) => {
       key: 'bio',
       label: 'Clinical Bio & Specialty Headline',
       poor: '"Doctor offering health consultations."',
-      good: isOCD ? '"Licensed ERP Specialist • OCD & Anxiety Disorder Expert with 8+ Years Experience"' : '"Licensed Psychotherapist • Anxiety & Burnout Specialist with 8+ Years Experience"',
+      good: isOCD
+        ? '"Licensed ERP Specialist • OCD & Anxiety Disorder Expert with 8+ Years Experience"'
+        : isPhysio
+        ? '"Licensed Physiotherapist • Musculoskeletal & Post-Op Rehab Specialist with 8+ Years Experience"'
+        : '"Licensed Psychotherapist • Anxiety & Burnout Specialist with 8+ Years Experience"',
       tip: 'Clearly state who you help and what conditions you specialize in.'
     },
     {
@@ -135,7 +141,11 @@ const getProfileAuditItems = (brand) => {
       key: 'specialization',
       label: 'Focus Areas & Modalities',
       poor: 'Generic listing without explicit therapeutic approaches',
-      good: isOCD ? 'Explicitly tagged Exposure & Response Prevention (ERP), CBT & I-CBT modalities' : 'Explicitly tagged CBT, EMDR, Mindfulness & Couples Therapy modalities',
+      good: isOCD
+        ? 'Explicitly tagged Exposure & Response Prevention (ERP), CBT & I-CBT modalities'
+        : isPhysio
+        ? 'Explicitly tagged Manual Therapy, Sports Rehab, Posture Correction & HEP Modalities'
+        : 'Explicitly tagged CBT, EMDR, Mindfulness & Couples Therapy modalities',
       tip: `Helps ${brandName} recommendation engine match you with ideal clients.`
     },
     {
@@ -799,12 +809,22 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
                   <HeartHandshake size={14} color="#2563eb" /> 2. POPULAR CLINICAL TOPICS
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                  {[
+                  {(brand.id === 'physiomantra' ? [
+                    { topic: 'Posture & Ergonomics', icon: Activity, color: '#059669', bg: '#f0fdf4', border: '#dcfce7' },
+                    { topic: 'Back & Neck Pain', icon: HeartHandshake, color: '#2563eb', bg: '#eff6ff', border: '#dbeafe' },
+                    { topic: 'Sports Injury Rehab', icon: Zap, color: '#ea580c', bg: '#fff7ed', border: '#ffedd5' },
+                    { topic: 'Joint Mobility Drills', icon: Users, color: '#7c3aed', bg: '#f3e8ff', border: '#e9d5ff' }
+                  ] : brand.id === 'ocdmantra' ? [
+                    { topic: 'Intrusive Thoughts', icon: Activity, color: '#7c3aed', bg: '#f3e8ff', border: '#e9d5ff' },
+                    { topic: 'ERP Exposure Drills', icon: Zap, color: '#2563eb', bg: '#eff6ff', border: '#dbeafe' },
+                    { topic: 'Contamination Fears', icon: Users, color: '#c026d3', bg: '#fae8ff', border: '#f5d0fe' },
+                    { topic: 'Stopping Reassurance', icon: HeartHandshake, color: '#ea580c', bg: '#fff7ed', border: '#ffedd5' }
+                  ] : [
                     { topic: 'Anxiety & Overthink', icon: HeartHandshake, color: '#2563eb', bg: '#eff6ff', border: '#dbeafe' },
                     { topic: 'Healthy Boundaries', icon: Users, color: '#c026d3', bg: '#fae8ff', border: '#f5d0fe' },
                     { topic: 'Stress & Burnout', icon: Activity, color: '#ea580c', bg: '#fff7ed', border: '#ffedd5' },
                     { topic: 'Sleep & Relaxation', icon: Moon, color: '#059669', bg: '#f0fdf4', border: '#dcfce7' }
-                  ].map((item, idx) => {
+                  ]).map((item, idx) => {
                     const Icon = item.icon;
                     return (
                       <div key={idx} style={{ background: item.bg, border: `1px solid ${item.border}`, borderRadius: '10px', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
