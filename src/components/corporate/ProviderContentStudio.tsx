@@ -86,7 +86,17 @@ export default function ProviderContentStudio({
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [isEditing, setIsEditing] = useState<boolean>(false);
+  // If provider data is empty or generic default, open entry form first!
+  const [isEditing, setIsEditing] = useState<boolean>(() => {
+    let saved = null;
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) saved = JSON.parse(stored);
+    } catch (e) { }
+    const hasCustomName = Boolean((saved?.name || providerAssets?.name || '').trim());
+    const hasCustomUrl = Boolean((saved?.profileUrl || providerAssets?.profileUrl || '').trim());
+    return !hasCustomName || !hasCustomUrl;
+  });
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [selectedPlatformId, setSelectedPlatformId] = useState<string>('linkedin');
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
@@ -163,7 +173,7 @@ export default function ProviderContentStudio({
 
     if (!cleanName) errors.name = 'Provider Name is required';
     if (!cleanSpec) errors.specialization = 'Designation / Specialization is required';
-    if (!cleanUrl) errors.profileUrl = 'TherapyMantra Profile URL is required';
+    if (!cleanUrl) errors.profileUrl = `${brandName} Profile URL is required`;
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -475,16 +485,16 @@ export default function ProviderContentStudio({
                 </div>
               </div>
 
-              {/* TherapyMantra Profile URL */}
+              {/* Profile URL */}
               <div>
                 <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0f172a', display: 'block', marginBottom: '6px' }}>
-                  TherapyMantra Profile URL *
+                  {brandName} Profile URL *
                 </label>
                 <input
                   type="url"
                   value={formData.profileUrl || ''}
                   onChange={e => setFormData({ ...formData, profileUrl: e.target.value })}
-                  placeholder="https://therapists.therapymantra.co/list/therapist/your-profile"
+                  placeholder={`https://${brandName.toLowerCase().replace(/\s+/g, '')}.com/list/therapist/your-profile`}
                   style={{
                     width: '100%',
                     padding: '12px 14px',
