@@ -1,22 +1,9 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
-
-# Copy root and backend package files
 COPY package*.json ./
-COPY backend/package*.json ./backend/
-
-# Install root & backend dependencies
-RUN npm ci || npm i
-RUN cd backend && (npm ci || npm i)
-
-# Copy source files
+RUN npm i
 COPY . .
-
-# Build frontend static bundle
 RUN npm run build
-
-# Build backend TypeScript
-RUN cd backend && npm run build
 
 FROM node:20-alpine AS runner
 WORKDIR /app
@@ -24,13 +11,9 @@ ENV NODE_ENV=production
 ENV PORT=80
 
 COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/backend/package*.json ./backend/
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/backend/dist ./backend/dist
-
-# Install production dependencies only
-RUN npm i --only=production
-RUN cd backend && npm i --only=production
+COPY --from=builder /app/server.js ./server.js
+COPY --from=builder /app/public ./public
 
 EXPOSE 80
-CMD ["node", "backend/dist/server.js"]
+CMD ["node", "server.js"]

@@ -3,15 +3,31 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import resourcesToBackend from 'i18next-resources-to-backend';
 
+// Normalize language codes (e.g. 'en-US' -> 'en', 'es-ES' -> 'es') while preserving 'zh-Hans' and 'zh-Hant'
+const normalizeLanguage = (lng) => {
+  if (!lng) return 'en';
+  if (lng === 'zh-TW' || lng === 'zh-Hant') return 'zh-Hant';
+  if (lng === 'zh-CN' || lng === 'zh-Hans' || lng === 'zh') return 'zh-Hans';
+  return lng.split('-')[0];
+};
+
 i18n
   // Configure language detection to check querystring ?lang=xx
   .use(LanguageDetector)
-  // Enable dynamic imports for namespaces using Vite's dynamic import
-  .use(resourcesToBackend((language, namespace) => import(`./locales/${namespace}/${language}.json`)))
+  // Enable dynamic imports for namespaces using Vite's dynamic import with automatic fallback
+  .use(
+    resourcesToBackend((language, namespace) => {
+      const normLang = normalizeLanguage(language);
+      return import(`./locales/${namespace}/${normLang}.json`).catch(() => {
+        return import(`./locales/${namespace}/en.json`);
+      });
+    })
+  )
   // Pass the i18n instance to react-i18next
   .use(initReactI18next)
   .init({
     fallbackLng: 'en',
+    load: 'languageOnly',
     
     // We will let LanguageDetector handle querystring resolution
     detection: {
@@ -29,7 +45,7 @@ i18n
     },
 
     react: {
-      useSuspense: true,
+      useSuspense: false, // Prevent blank screen hangs if dynamic imports load asynchronously
     }
   });
 
