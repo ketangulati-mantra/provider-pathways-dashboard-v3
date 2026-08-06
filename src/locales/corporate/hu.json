@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Fejleszd a praxisodat",
+    "promotion_toolkit": "Promóciós eszköztár",
+    "continue_later": "Folytatás később",
+    "module1_tag": "MODUL 1 A 6-BÓL",
+    "module1_title": "Hogyan jut a {{brandName}} ügyfeleid",
+    "module1_subtitle": "Interaktív ügyfélszerzési tölcsér elemzés.",
+    "module2_tag": "MODUL 2 A 6-BÓL",
+    "module2_title": "Reklámozd a profilodat",
+    "module3_tag": "3. MODUL A 6-BÓL",
+    "module4_tag": "MODUL 4 A 6-BÓL",
+    "module5_tag": "5. MODUL A 6-BÓL",
+    "module6_tag": "6-OS MODUL A 6-BÓL",
+    "next_module": "Következő modul",
+    "previous": "Korábbi",
+    "congratulations": "Gratulálok!",
+    "completed_subtitle": "Befejezted az órát, és növelted a szolgáltatói pontszámodat."
+  },
+  "outreach": {
+    "header_tag": "Vállalati Partner Akadémia",
+    "header_title": "A vállalati bevezetések kezdete",
+    "exit": "Kijárat",
+    "next_module": "Következő modul",
+    "previous": "Korábbi",
+    "complete_and_refer": "Teljes és ajánlott egy vállalatot"
+  },
+  "landing": {
+    "tag": "Mantra vezetői partnerségek",
+    "title": "Vállalati Növekedési Partner Program",
+    "exit": "Kijárat",
+    "why_wellness": "Miért fontos a vállalati jólét"
+  },
+  "under_review": {
+    "title": "Kérelem felülvizsgálat alatt",
+    "subtitle": "A vállalati partneri kérelmed sikeresen benyújtásra került.",
+    "back_to_dashboard": "Vissza a Dashboardhoz"
+  }
+}

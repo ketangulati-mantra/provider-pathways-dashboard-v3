@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Utveckla din praktik",
+    "promotion_toolkit": "Marknadsföringsverktygslåda",
+    "continue_later": "Fortsätt senare",
+    "module1_tag": "MODUL 1 AV 6",
+    "module1_title": "Hur {{brandName}} får dig kunder",
+    "module1_subtitle": "Interaktiv genomgång av kundanskaffningstratt.",
+    "module2_tag": "MODUL 2 AV 6",
+    "module2_title": "Marknadsför din profil",
+    "module3_tag": "MODUL 3 AV 6",
+    "module4_tag": "MODUL 4 AV 6",
+    "module5_tag": "MODUL 5 AV 6",
+    "module6_tag": "MODUL 6 AV 6",
+    "next_module": "Nästa modul",
+    "previous": "Tidigare",
+    "congratulations": "Grattis!",
+    "completed_subtitle": "Du har slutfört lektionen och höjt din vårdgivares poäng."
+  },
+  "outreach": {
+    "header_tag": "Corporate Partner Academy",
+    "header_title": "Att komma igång med företagsintroduktioner",
+    "exit": "Utgång",
+    "next_module": "Nästa modul",
+    "previous": "Tidigare",
+    "complete_and_refer": "Färdigställ och hänvisa ett företag"
+  },
+  "landing": {
+    "tag": "Mantra Ledningspartnerskap",
+    "title": "Företagsutvecklingspartnerprogrammet",
+    "exit": "Utgång",
+    "why_wellness": "Varför företagsvälmående är viktigt"
+  },
+  "under_review": {
+    "title": "Ansökan under granskning",
+    "subtitle": "Din ansökan om företagspartner har skickats in framgångsrikt.",
+    "back_to_dashboard": "Tillbaka till instrumentpanelen"
+  }
+}

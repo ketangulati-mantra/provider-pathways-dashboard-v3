@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Admin bejelentkezés",
+    "login_subtitle": "Hozzáférés a Provider Pathways menedzsment portálhoz",
+    "email_label": "E-mail cím",
+    "password_label": "Jelszó",
+    "sign_in": "Bejelentkezés",
+    "dashboard_title": "Fejlesztő és adminisztrátor irányítópult",
+    "users_management": "Felhasználói menedzsment",
+    "submissions_management": "Felvételek kezelése",
+    "logout": "Kilépés",
+    "roles": {
+      "admin": "Admin",
+      "superadmin": "Super Admin",
+      "user": "Felhasználó"
+    }
+  }
+}

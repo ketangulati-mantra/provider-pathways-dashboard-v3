@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Autentificare de administrator",
+    "login_subtitle": "Accesează portalul de management Provider Pathways",
+    "email_label": "Adresă de email",
+    "password_label": "Parolă",
+    "sign_in": "Autentifică-te",
+    "dashboard_title": "Tabloul de bord pentru dezvoltatori și administratori",
+    "users_management": "Managementul utilizatorilor",
+    "submissions_management": "Managementul înscrierilor",
+    "logout": "Deconectează-te",
+    "roles": {
+      "admin": "Administrare",
+      "superadmin": "Super Admin",
+      "user": "Utilizator"
+    }
+  }
+}

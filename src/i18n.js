@@ -33,4 +33,24 @@ i18n
     }
   });
 
+const RTL_LANGUAGES = ['ar', 'he', 'ur'];
+
+const updateDocumentDirection = (lng) => {
+  if (typeof document !== 'undefined') {
+    const langCode = (lng || 'en').split('-')[0];
+    const isRtl = RTL_LANGUAGES.includes(lng) || RTL_LANGUAGES.includes(langCode);
+    const dir = isRtl ? 'rtl' : 'ltr';
+    document.documentElement.dir = dir;
+    document.documentElement.lang = lng;
+    document.body.setAttribute('dir', dir);
+  }
+};
+
+i18n.on('languageChanged', updateDocumentDirection);
+
+// Initial call
+if (i18n.language) {
+  updateDocumentDirection(i18n.language);
+}
+
 export default i18n;

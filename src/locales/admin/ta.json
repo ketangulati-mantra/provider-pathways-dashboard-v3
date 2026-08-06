@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "நிர்வாக உள்நுழைவு",
+    "login_subtitle": "வழங்குநர் பாதைகள் மேலாண்மை போர்ட்டலை அணுகவும்",
+    "email_label": "மின்னஞ்சல் முகவரி",
+    "password_label": "கடவுச்சொல்",
+    "sign_in": "உள்நுழைக",
+    "dashboard_title": "டெவலப்பர் & நிர்வாகி டாஷ்போர்டு",
+    "users_management": "பயனர் முகாமைத்துவம்",
+    "submissions_management": "சமர்ப்பிப்பு மேலாண்மை",
+    "logout": "வெளியேறு",
+    "roles": {
+      "admin": "நிர்வாகம்",
+      "superadmin": "சூப்பர் நிர்வாகம்",
+      "user": "பயனர்"
+    }
+  }
+}

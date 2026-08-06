@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "تسجيل دخول المسؤول",
+    "login_subtitle": "الوصول إلى بوابة إدارة مسارات المزودين",
+    "email_label": "عنوان البريد الإلكتروني",
+    "password_label": "كلمة المرور",
+    "sign_in": "تسجيل الدخول",
+    "dashboard_title": "لوحة تحكم المطور والإدارة",
+    "users_management": "إدارة المستخدمين",
+    "submissions_management": "إدارة المشاركات",
+    "logout": "تسجيل الخروج",
+    "roles": {
+      "admin": "المسؤول",
+      "superadmin": "المشرف الخارق",
+      "user": "المستخدم"
+    }
+  }
+}

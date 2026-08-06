@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Kembangkan Praktik Anda",
+    "promotion_toolkit": "Paket Alat Promosi",
+    "continue_later": "Lanjutkan Nanti",
+    "module1_tag": "MODUL 1 DARI 6",
+    "module1_title": "Bagaimana {{brandName}} Mendapatkan Anda Klien",
+    "module1_subtitle": "Rincian corong akuisisi klien interaktif.",
+    "module2_tag": "MODUL 2 DARI 6",
+    "module2_title": "Pasarkan Profil Anda",
+    "module3_tag": "MODUL 3 DARI 6",
+    "module4_tag": "MODUL 4 DARI 6",
+    "module5_tag": "MODUL 5 DARI 6",
+    "module6_tag": "MODUL 6 DARI 6",
+    "next_module": "Modul Berikutnya",
+    "previous": "Sebelumnya",
+    "congratulations": "Selamat!",
+    "completed_subtitle": "Anda menyelesaikan pelajaran dan meningkatkan skor penyedia Anda."
+  },
+  "outreach": {
+    "header_tag": "Akademi Mitra Korporat",
+    "header_title": "Memulai dengan Perkenalan Korporat",
+    "exit": "Keluar",
+    "next_module": "Modul Berikutnya",
+    "previous": "Sebelumnya",
+    "complete_and_refer": "Lengkapi & Referensikan Perusahaan"
+  },
+  "landing": {
+    "tag": "Mantra Executive Partnerships",
+    "title": "Program Mitra Pertumbuhan Korporat",
+    "exit": "Keluar",
+    "why_wellness": "Mengapa Kesehatan Korporat Itu Penting"
+  },
+  "under_review": {
+    "title": "Aplikasi yang sedang ditinjau",
+    "subtitle": "Aplikasi mitra korporat Anda telah berhasil diajukan.",
+    "back_to_dashboard": "Kembali ke Dasbor"
+  }
+}

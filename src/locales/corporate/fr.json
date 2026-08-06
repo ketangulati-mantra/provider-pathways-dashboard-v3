@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Développez votre cabinet",
+    "promotion_toolkit": "Boîte à outils de promotion",
+    "continue_later": "Continuer plus tard",
+    "module1_tag": "MODULE 1 SUR 6",
+    "module1_title": "Comment {{brandName}} vous procure des clients",
+    "module1_subtitle": "Décomposition interactive de l’entonnoir d’acquisition client.",
+    "module2_tag": "MODULE 2 SUR 6",
+    "module2_title": "Promouvoir votre profil",
+    "module3_tag": "MODULE 3 SUR 6",
+    "module4_tag": "MODULE 4 SUR 6",
+    "module5_tag": "MODULE 5 SUR 6",
+    "module6_tag": "MODULE 6 SUR 6",
+    "next_module": "Module suivant",
+    "previous": "Précédent",
+    "congratulations": "Félicitations !",
+    "completed_subtitle": "Vous avez terminé la leçon et augmenté votre score de fournisseur."
+  },
+  "outreach": {
+    "header_tag": "Académie des partenaires corporatifs",
+    "header_title": "Débuter avec les présentations en entreprise",
+    "exit": "Sortie",
+    "next_module": "Module suivant",
+    "previous": "Précédent",
+    "complete_and_refer": "Compléter et recommander une entreprise"
+  },
+  "landing": {
+    "tag": "Partenariats exécutifs Mantra",
+    "title": "Programme de partenaires de croissance d’entreprise",
+    "exit": "Sortie",
+    "why_wellness": "Pourquoi le bien-être en entreprise est important"
+  },
+  "under_review": {
+    "title": "Demande en cours d’examen",
+    "subtitle": "Votre candidature de partenaire corporatif a été soumise avec succès.",
+    "back_to_dashboard": "Retour au tableau de bord"
+  }
+}

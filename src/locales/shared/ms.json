@@ -50,5 +50,12 @@
     "message": "Kami memohon maaf atas kesulitan itu. Ralat teknikal berlaku semasa cuba memuatkan pelajaran ini.",
     "details": "Lihat Butiran Ralat",
     "return": "Kembali ke Papan Pemuka"
+  },
+  "buttons": {
+    "continue_later": "Teruskan Kemudian",
+    "exit": "Keluar",
+    "next_module": "Modul Seterusnya",
+    "previous": "Sebelumnya",
+    "promotion_toolkit": "Kit Alat Promosi"
   }
 }

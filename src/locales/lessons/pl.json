@@ -1,0 +1,10 @@
+{
+  "lessons": {
+    "about_lesson": "O tej lekcji",
+    "video_lesson": "Lekcja wideo",
+    "practice_question": "Pytanie ćwiczeniowe",
+    "client_scenario": "Scenariusz klienta",
+    "certificate_download": "Pobieranie certyfikatu",
+    "download_now": "Pobierz certyfikat teraz"
+  }
+}

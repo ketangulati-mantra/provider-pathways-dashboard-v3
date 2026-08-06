@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "תגדיל את המרפאה שלך",
+    "promotion_toolkit": "ערכת כלים לקידום",
+    "continue_later": "המשך מאוחר יותר",
+    "module1_tag": "מודול 1 מתוך 6",
+    "module1_title": "איך {{brandName}} משיג לקוחות",
+    "module1_subtitle": "פירוט משפך רכישת לקוחות אינטראקטיבי.",
+    "module2_tag": "מודול 2 מתוך 6",
+    "module2_title": "שווק את הפרופיל שלך",
+    "module3_tag": "מודול 3 מתוך 6",
+    "module4_tag": "מודול 4 מתוך 6",
+    "module5_tag": "מודול 5 מתוך 6",
+    "module6_tag": "מודול 6 מתוך 6",
+    "next_module": "המודול הבא",
+    "previous": "קודם",
+    "congratulations": "מזל טוב!",
+    "completed_subtitle": "סיימת את השיעור ושיפרת את הציון של הרופא שלך."
+  },
+  "outreach": {
+    "header_tag": "אקדמיית שותפים תאגידיים",
+    "header_title": "התחלה עם היכרות תאגידית",
+    "exit": "יציאה",
+    "next_module": "המודול הבא",
+    "previous": "קודם",
+    "complete_and_refer": "שלם והפנה תאגיד"
+  },
+  "landing": {
+    "tag": "שותפויות מנהלים במנטרה",
+    "title": "תוכנית שותפים לצמיחה תאגידית",
+    "exit": "יציאה",
+    "why_wellness": "מדוע רווחה תאגידית חשובה"
+  },
+  "under_review": {
+    "title": "הבקשה בבחינה",
+    "subtitle": "בקשת השותפות התאגידית שלך הוגשה בהצלחה.",
+    "back_to_dashboard": "חזרה ללוח הבקרה"
+  }
+}

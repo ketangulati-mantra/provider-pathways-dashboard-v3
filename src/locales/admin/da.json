@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Admin-login",
+    "login_subtitle": "Få adgang til Provider Pathways-administrationsportalen",
+    "email_label": "E-mailadresse",
+    "password_label": "Adgangskode",
+    "sign_in": "Log ind",
+    "dashboard_title": "Udvikler- og administrationsdashboard",
+    "users_management": "Brugerstyring",
+    "submissions_management": "Indsendelseshåndtering",
+    "logout": "Log ud",
+    "roles": {
+      "admin": "Administration",
+      "superadmin": "Super Admin",
+      "user": "Bruger"
+    }
+  }
+}

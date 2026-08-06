@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Login de administrador",
+    "login_subtitle": "Acesse o portal de gestão de Caminhos de Provedores",
+    "email_label": "Endereço de E-mail",
+    "password_label": "Senha",
+    "sign_in": "Faça login",
+    "dashboard_title": "Painel de Desenvolvedores & Administradores",
+    "users_management": "Gerenciamento de Usuários",
+    "submissions_management": "Gestão de Inscrições",
+    "logout": "Sair de Logout",
+    "roles": {
+      "admin": "Administração",
+      "superadmin": "Super Admin",
+      "user": "Usuário"
+    }
+  }
+}

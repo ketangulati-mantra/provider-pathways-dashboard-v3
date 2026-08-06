@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Dezvoltă-ți practica",
+    "promotion_toolkit": "Trusa de Promovare",
+    "continue_later": "Continuă mai târziu",
+    "module1_tag": "MODULUL 1 DIN 6",
+    "module1_title": "Cum îți atrage clienți {{brandName}}",
+    "module1_subtitle": "Analiza interactivă a funnel-ului de achiziție a clienților.",
+    "module2_tag": "MODULUL 2 DIN 6",
+    "module2_title": "Promovează-ți profilul",
+    "module3_tag": "MODULUL 3 DIN 6",
+    "module4_tag": "MODULUL 4 DIN 6",
+    "module5_tag": "MODULUL 5 DIN 6",
+    "module6_tag": "MODULUL 6 DIN 6",
+    "next_module": "Următorul modul",
+    "previous": "Anterior",
+    "congratulations": "Felicitări!",
+    "completed_subtitle": "Ai terminat lecția și ți-ai crescut scorul la furnizor."
+  },
+  "outreach": {
+    "header_tag": "Academia Partenerilor Corporativi",
+    "header_title": "Începerea introducerilor corporative",
+    "exit": "Ieșire",
+    "next_module": "Următorul modul",
+    "previous": "Anterior",
+    "complete_and_refer": "Completează și trimite o companie"
+  },
+  "landing": {
+    "tag": "Parteneriate Executive Mantra",
+    "title": "Programul de Parteneri pentru Creștere Corporativă",
+    "exit": "Ieșire",
+    "why_wellness": "De ce contează bunăstarea corporativă"
+  },
+  "under_review": {
+    "title": "Cererea în curs de analiză",
+    "subtitle": "Cererea dumneavoastră de partener corporativ a fost trimisă cu succes.",
+    "back_to_dashboard": "Înapoi la Dashboard"
+  }
+}

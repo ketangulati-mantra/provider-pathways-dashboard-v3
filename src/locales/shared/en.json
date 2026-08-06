@@ -45,6 +45,13 @@
     "points": "{{points}} Provider Points",
     "continue": "Continue to Dashboard"
   },
+  "buttons": {
+    "continue_later": "Continue Later",
+    "exit": "Exit",
+    "next_module": "Next Module",
+    "previous": "Previous",
+    "promotion_toolkit": "Promotion Toolkit"
+  },
   "error": {
     "title": "Something went wrong",
     "message": "We apologize for the inconvenience. A technical error occurred while trying to load this lesson.",

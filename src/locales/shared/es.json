@@ -50,5 +50,12 @@
     "message": "Pedimos disculpas por las molestias. Ocurrió un error técnico al intentar cargar esta lección.",
     "details": "Ver detalles del error",
     "return": "Volver al Panel de Control"
+  },
+  "buttons": {
+    "continue_later": "Continuar más tarde",
+    "exit": "Salida",
+    "next_module": "Siguiente módulo",
+    "previous": "Anterior",
+    "promotion_toolkit": "Kit de herramientas de promoción"
   }
 }

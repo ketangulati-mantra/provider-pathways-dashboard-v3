@@ -50,5 +50,12 @@
     "message": "Humihingi kami ng paumanhin para sa kakulangan sa ginhawa. Isang teknikal na error ang naganap habang sinusubukang i-load ang araling ito.",
     "details": "Tingnan ang Mga Detalye ng Error",
     "return": "Bumalik sa Dashboard"
+  },
+  "buttons": {
+    "continue_later": "Magpatuloy Mamaya",
+    "exit": "Exit",
+    "next_module": "Susunod na Module",
+    "previous": "Nakaraan",
+    "promotion_toolkit": "Toolkit para sa Promosyon"
   }
 }

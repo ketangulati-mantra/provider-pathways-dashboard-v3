@@ -50,5 +50,12 @@
     "message": "Ne cerem scuze pentru inconvenient. A apărut o eroare tehnică în timp ce încercam să încarc această lecție.",
     "details": "Vezi detaliile erorii",
     "return": "Întoarcerea la Dashboard"
+  },
+  "buttons": {
+    "continue_later": "Continuă mai târziu",
+    "exit": "Ieșire",
+    "next_module": "Următorul modul",
+    "previous": "Anterior",
+    "promotion_toolkit": "Trusa de Promovare"
   }
 }

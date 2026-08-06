@@ -50,5 +50,12 @@
     "message": "Pedimos desculpas pelo transtorno. Um erro técnico ocorreu ao tentar carregar esta lição.",
     "details": "Ver Detalhes do Erro",
     "return": "Voltar ao Painel"
+  },
+  "buttons": {
+    "continue_later": "Continue depois",
+    "exit": "Saída",
+    "next_module": "Próximo Módulo",
+    "previous": "Anterior",
+    "promotion_toolkit": "Kit de Ferramentas de Promoção"
   }
 }

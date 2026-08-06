@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "Campus Ambassador Learning",
+    "resume_later": "Folytatás később",
+    "return_to_dashboard": "Visszatérés a Dashboard-ra",
+    "back_to_dashboard": "Vissza a Dashboardhoz",
+    "orientation_tag": "Campus Initiative Orientáció",
+    "program_title": "Campus Ambassador Képzési Program",
+    "under_review_title": "Kérelem felülvizsgálat alatt",
+    "more_info_title": "További információ szükséges",
+    "rejected_title": "Kérelem döntése",
+    "next": "Következő",
+    "previous": "Korábbi",
+    "submit": "Jelentkezés benyújtása"
+  }
+}

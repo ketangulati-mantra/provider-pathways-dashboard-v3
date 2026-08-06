@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "Campus Ambassador Learning",
+    "resume_later": "Resume Later",
+    "return_to_dashboard": "Return to Dashboard",
+    "back_to_dashboard": "Back to Dashboard",
+    "orientation_tag": "Campus Initiative Orientation",
+    "program_title": "Campus Ambassador Training Program",
+    "under_review_title": "Application Under Review",
+    "more_info_title": "Additional Information Required",
+    "rejected_title": "Application Decision",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit Application"
+  }
+}

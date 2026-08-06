@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Đăng nhập quản trị viên",
+    "login_subtitle": "Truy cập cổng quản lý Lộ trình Nhà cung cấp",
+    "email_label": "Địa chỉ email",
+    "password_label": "Mật khẩu",
+    "sign_in": "Đăng nhập",
+    "dashboard_title": "Bảng điều khiển Nhà phát triển & Quản trị viên",
+    "users_management": "Quản lý người dùng",
+    "submissions_management": "Quản lý Gửi bài",
+    "logout": "Đăng xuất",
+    "roles": {
+      "admin": "Quản trị viên",
+      "superadmin": "Quản trị viên siêu cấp",
+      "user": "Người dùng"
+    }
+  }
+}

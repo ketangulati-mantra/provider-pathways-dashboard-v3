@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Admin-Login",
+    "login_subtitle": "Greifen Sie auf das Provider Pathways-Management-Portal auf",
+    "email_label": "E-Mail-Adresse",
+    "password_label": "Passwort",
+    "sign_in": "Anmelden",
+    "dashboard_title": "Entwickler- und Admin-Dashboard",
+    "users_management": "Benutzerverwaltung",
+    "submissions_management": "Einreichungsmanagement",
+    "logout": "Ausloggen",
+    "roles": {
+      "admin": "Verwaltung",
+      "superadmin": "Super-Admin",
+      "user": "Nutzer"
+    }
+  }
+}

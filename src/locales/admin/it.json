@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Accesso amministratore",
+    "login_subtitle": "Accedi al portale di gestione dei percorsi dei fornitori",
+    "email_label": "Indirizzo email",
+    "password_label": "Password",
+    "sign_in": "Accedi",
+    "dashboard_title": "Dashboard Sviluppatori & Amministratori",
+    "users_management": "Gestione degli utenti",
+    "submissions_management": "Gestione delle candidature",
+    "logout": "Disconnettiti",
+    "roles": {
+      "admin": "Amministrazione",
+      "superadmin": "Super Admin",
+      "user": "Utente"
+    }
+  }
+}

@@ -176,7 +176,10 @@ function EmbeddedVideoPlayer({ videoUrl, posterUrl }) {
   );
 }
 
+import { useTranslation } from 'react-i18next';
+
 export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapymantra' }) {
+  const { t } = useTranslation(['corporate', 'shared']);
   const brand = PLATFORM_CONFIGS[brandKey] || PLATFORM_CONFIGS.therapymantra;
 
   // STEP MANAGEMENT WITH LOCALSTORAGE PERSISTENCE:
@@ -500,11 +503,11 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button onClick={() => setIsStudioOpen(true)} style={{ padding: '6px 12px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#ffffff', fontWeight: 800, fontSize: '0.74rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', boxShadow: '0 2px 8px rgba(37,99,235,0.25)' }}>
-              <Megaphone size={13} /> Promotion Toolkit
+              <Megaphone size={13} /> {t('buttons.promotion_toolkit', 'Promotion Toolkit')}
             </button>
 
             <button onClick={() => goBack(onBack)} style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#475569', fontWeight: 800, fontSize: '0.74rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <ArrowLeft size={13} /> Continue Later
+              <ArrowLeft size={13} /> {t('buttons.continue_later', 'Continue Later')}
             </button>
           </div>
         </div>

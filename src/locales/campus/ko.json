@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "캠퍼스 앰배서더 러닝",
+    "resume_later": "이후 재개",
+    "return_to_dashboard": "대시보드로 돌아가기",
+    "back_to_dashboard": "대시보드로 돌아가기",
+    "orientation_tag": "캠퍼스 이니셔티브 오리엔테이션",
+    "program_title": "캠퍼스 앰배서더 교육 프로그램",
+    "under_review_title": "심사 중인 신청서",
+    "more_info_title": "추가 정보 필요",
+    "rejected_title": "신청 결정",
+    "next": "다음",
+    "previous": "이전",
+    "submit": "신청서 제출하기"
+  }
+}

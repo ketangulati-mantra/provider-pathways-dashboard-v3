@@ -50,5 +50,12 @@
     "message": "Wir entschuldigen uns für die Unannehmlichkeiten. Beim Versuch, diese Lektion zu laden, trat ein technischer Fehler auf.",
     "details": "Fehlerdetails anzeigen",
     "return": "Zurück zum Dashboard"
+  },
+  "buttons": {
+    "continue_later": "Später weitermachen",
+    "exit": "Ausgang",
+    "next_module": "Nächstes Modul",
+    "previous": "Früher",
+    "promotion_toolkit": "Beförderungs-Werkzeugkasten"
   }
 }

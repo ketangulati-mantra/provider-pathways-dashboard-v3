@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Είσοδος διαχειριστή",
+    "login_subtitle": "Πρόσβαση στην πύλη διαχείρισης Provider Pathways",
+    "email_label": "Διεύθυνση ηλεκτρονικού ταχυδρομείου",
+    "password_label": "Κωδικός πρόσβασης",
+    "sign_in": "Είσοδος",
+    "dashboard_title": "Πίνακας ελέγχου προγραμματιστή και διαχειριστή",
+    "users_management": "Διαχείριση χρηστών",
+    "submissions_management": "Διαχείριση Υποβολών",
+    "logout": "Αποσύνδεση",
+    "roles": {
+      "admin": "Διαχειριστής",
+      "superadmin": "Σούπερ διαχειριστής",
+      "user": "Χρήστης"
+    }
+  }
+}

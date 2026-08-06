@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Inicio de sesión de administrador",
+    "login_subtitle": "Accede al portal de gestión de Vías de Proveedores",
+    "email_label": "Dirección de correo electrónico",
+    "password_label": "Contraseña",
+    "sign_in": "Iniciar sesión",
+    "dashboard_title": "Panel de Desarrolladores y Administradores",
+    "users_management": "Gestión de usuarios",
+    "submissions_management": "Gestión de Envíos",
+    "logout": "Cerrar sesión",
+    "roles": {
+      "admin": "Administración",
+      "superadmin": "Super Admin",
+      "user": "Usuario"
+    }
+  }
+}

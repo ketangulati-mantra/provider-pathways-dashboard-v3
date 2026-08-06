@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "Campusambassadörslärande",
+    "resume_later": "Återupptag senare",
+    "return_to_dashboard": "Återvänd till instrumentpanelen",
+    "back_to_dashboard": "Tillbaka till instrumentpanelen",
+    "orientation_tag": "Campusinitiativets orientering",
+    "program_title": "Campusambassadörsutbildningsprogram",
+    "under_review_title": "Ansökan under granskning",
+    "more_info_title": "Ytterligare information krävs",
+    "rejected_title": "Beslut om ansökan",
+    "next": "Nästa",
+    "previous": "Tidigare",
+    "submit": "Skicka in ansökan"
+  }
+}

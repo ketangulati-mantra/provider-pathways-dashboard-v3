@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "Învățarea Ambasadorilor Campusului",
+    "resume_later": "Reluarea mai târziu",
+    "return_to_dashboard": "Întoarcerea la Dashboard",
+    "back_to_dashboard": "Înapoi la Dashboard",
+    "orientation_tag": "Orientarea Inițiativei Campusului",
+    "program_title": "Programul de Formare a Ambasadorilor Campusului",
+    "under_review_title": "Cererea în curs de analiză",
+    "more_info_title": "Informații suplimentare necesare",
+    "rejected_title": "Decizie privind cererea",
+    "next": "Următorul",
+    "previous": "Anterior",
+    "submit": "Trimite cererea"
+  }
+}

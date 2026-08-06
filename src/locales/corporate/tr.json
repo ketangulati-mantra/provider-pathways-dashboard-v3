@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Uygulamanızı Büyütün",
+    "promotion_toolkit": "Promosyon Araç Seti",
+    "continue_later": "Daha Sonra Devam Et",
+    "module1_tag": "MODÜL 1 OF 6",
+    "module1_title": "{{brandName}} Müşterilerinizi Nasıl Bulur?",
+    "module1_subtitle": "Etkileşimli müşteri edinimi huni dökümü.",
+    "module2_tag": "MODÜL 2 OF 6",
+    "module2_title": "Profilinizi Pazarlayın",
+    "module3_tag": "MODÜL 3 OF 6",
+    "module4_tag": "MODÜL 4 OF 6",
+    "module5_tag": "MODÜL 5 OF 6",
+    "module6_tag": "MODÜL 6 OF 6",
+    "next_module": "Sonraki Modül",
+    "previous": "Önceki",
+    "congratulations": "Tebrikler!",
+    "completed_subtitle": "Dersi tamamladın ve sağlayıcı puanını yükselttin."
+  },
+  "outreach": {
+    "header_tag": "Kurumsal Ortak Akademisi",
+    "header_title": "Kurumsal Tanıtımlara Başlamak",
+    "exit": "Çıkış",
+    "next_module": "Sonraki Modül",
+    "previous": "Önceki",
+    "complete_and_refer": "Bir Şirketi Tamamla ve Yönlendir"
+  },
+  "landing": {
+    "tag": "Mantra Yönetici Ortaklıkları",
+    "title": "Kurumsal Büyüme Ortağı Programı",
+    "exit": "Çıkış",
+    "why_wellness": "Kurumsal Sağlık Neden Önemlidir"
+  },
+  "under_review": {
+    "title": "Başvuru İnceliyor",
+    "subtitle": "Kurumsal ortak başvurunuz başarıyla sunuldu.",
+    "back_to_dashboard": "Dashboard'a Geri Dön"
+  }
+}

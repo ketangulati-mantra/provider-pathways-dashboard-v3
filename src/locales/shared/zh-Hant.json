@@ -50,5 +50,12 @@
     "message": "對於造成的不便，我們深感抱歉。在嘗試載入本課程時發生了技術錯誤。",
     "details": "查看錯誤詳情",
     "return": "返回儀表板"
+  },
+  "buttons": {
+    "continue_later": "稍後繼續",
+    "exit": "退出",
+    "next_module": "下一單元",
+    "previous": "先前",
+    "promotion_toolkit": "升遷工具包"
   }
 }

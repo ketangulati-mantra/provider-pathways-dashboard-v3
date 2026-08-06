@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Admin-innlogging",
+    "login_subtitle": "Få tilgang til portalen for administrasjon av leverandørstier",
+    "email_label": "E-postadresse",
+    "password_label": "Passord",
+    "sign_in": "Logg inn",
+    "dashboard_title": "Utvikler- og administrasjonsdashboard",
+    "users_management": "Brukeradministrasjon",
+    "submissions_management": "Innsendingshåndtering",
+    "logout": "Logg ut",
+    "roles": {
+      "admin": "Administrasjon",
+      "superadmin": "Superadministrator",
+      "user": "Bruker"
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Expanda sua Prática",
+    "promotion_toolkit": "Kit de Ferramentas de Promoção",
+    "continue_later": "Continue depois",
+    "module1_tag": "MÓDULO 1 DE 6",
+    "module1_title": "Como {{BrandName}} Consegue Clientes",
+    "module1_subtitle": "Análise interativa do funil de aquisição de clientes.",
+    "module2_tag": "MÓDULO 2 DE 6",
+    "module2_title": "Divulgue Seu Perfil",
+    "module3_tag": "MÓDULO 3 DE 6",
+    "module4_tag": "MÓDULO 4 DE 6",
+    "module5_tag": "MÓDULO 5 DE 6",
+    "module6_tag": "MÓDULO 6 DE 6",
+    "next_module": "Próximo Módulo",
+    "previous": "Anterior",
+    "congratulations": "Parabéns!",
+    "completed_subtitle": "Você completou a aula e aumentou sua pontuação no provedor."
+  },
+  "outreach": {
+    "header_tag": "Academia de Parceiros Corporativos",
+    "header_title": "Começando com Apresentações Corporativas",
+    "exit": "Saída",
+    "next_module": "Próximo Módulo",
+    "previous": "Anterior",
+    "complete_and_refer": "Complete e Encaminhe uma Empresa"
+  },
+  "landing": {
+    "tag": "Parcerias Executivas Mantra",
+    "title": "Programa de Parceiros de Crescimento Corporativo",
+    "exit": "Saída",
+    "why_wellness": "Por que o bem-estar corporativo importa"
+  },
+  "under_review": {
+    "title": "Pedido em análise",
+    "subtitle": "Sua solicitação para sócio corporativo foi enviada com sucesso.",
+    "back_to_dashboard": "Voltar ao Painel"
+  }
+}

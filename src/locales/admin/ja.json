@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "管理者ログイン",
+    "login_subtitle": "プロバイダー・パスウェイ管理ポータルへのアクセス",
+    "email_label": "メールアドレス",
+    "password_label": "パスワード",
+    "sign_in": "サインイン",
+    "dashboard_title": "開発者&管理ダッシュボード",
+    "users_management": "ユーザー管理",
+    "submissions_management": "提出物管理",
+    "logout": "ログアウト",
+    "roles": {
+      "admin": "管理",
+      "superadmin": "スーパー管理者",
+      "user": "ユーザー"
+    }
+  }
+}

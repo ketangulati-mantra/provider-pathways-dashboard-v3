@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Admin Girişi",
+    "login_subtitle": "Sağlayıcı Yolları yönetim portalına erişim",
+    "email_label": "E-posta Adresi",
+    "password_label": "Şifre",
+    "sign_in": "Giriş Yapın",
+    "dashboard_title": "Geliştirici ve Yönetici Kontrol Paneli",
+    "users_management": "Kullanıcı Yönetimi",
+    "submissions_management": "Başvuru Yönetimi",
+    "logout": "Çıkış",
+    "roles": {
+      "admin": "Yönetici",
+      "superadmin": "Süper Admin",
+      "user": "Kullanıcı"
+    }
+  }
+}

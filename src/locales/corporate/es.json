@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Haz crecer tu práctica",
+    "promotion_toolkit": "Kit de herramientas de promoción",
+    "continue_later": "Continuar más tarde",
+    "module1_tag": "MÓDULO 1 DE 6",
+    "module1_title": "Cómo {{NombreMarca}} Consigue clientes",
+    "module1_subtitle": "Desglose interactivo del embudo de adquisición de clientes.",
+    "module2_tag": "MÓDULO 2 DE 6",
+    "module2_title": "Promociona tu perfil",
+    "module3_tag": "MÓDULO 3 DE 6",
+    "module4_tag": "MÓDULO 4 DE 6",
+    "module5_tag": "MÓDULO 5 DE 6",
+    "module6_tag": "MÓDULO 6 DE 6",
+    "next_module": "Siguiente módulo",
+    "previous": "Anterior",
+    "congratulations": "¡Enhorabuena!",
+    "completed_subtitle": "Completaste la lección y aumentaste tu puntuación en el proveedor."
+  },
+  "outreach": {
+    "header_tag": "Academia de Socios Corporativos",
+    "header_title": "Empezando con las introducciones corporativas",
+    "exit": "Salida",
+    "next_module": "Siguiente módulo",
+    "previous": "Anterior",
+    "complete_and_refer": "Completar y referir una empresa"
+  },
+  "landing": {
+    "tag": "Alianzas Ejecutivas Mantra",
+    "title": "Programa de Socios de Crecimiento Corporativo",
+    "exit": "Salida",
+    "why_wellness": "Por qué importa el bienestar corporativo"
+  },
+  "under_review": {
+    "title": "Solicitud en revisión",
+    "subtitle": "Tu solicitud de socio corporativo ha sido enviada con éxito.",
+    "back_to_dashboard": "Volver al Panel de Control"
+  }
+}

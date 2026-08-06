@@ -50,5 +50,12 @@
     "message": "Elnézést kérünk a kellemetlenségért. Technikai hiba történt, miközben ezt a leckét próbáltam betölteni.",
     "details": "Hiba részleteinek megtekintése",
     "return": "Visszatérés a Dashboard-ra"
+  },
+  "buttons": {
+    "continue_later": "Folytatás később",
+    "exit": "Kijárat",
+    "next_module": "Következő modul",
+    "previous": "Korábbi",
+    "promotion_toolkit": "Promóciós eszköztár"
   }
 }

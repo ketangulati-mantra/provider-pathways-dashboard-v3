@@ -50,5 +50,12 @@
     "message": "Nous nous excusons pour le désagrément. Une erreur technique s’est produite lors d’une tentative de chargement de cette leçon.",
     "details": "Voir les détails de l’erreur",
     "return": "Retour au tableau de bord"
+  },
+  "buttons": {
+    "continue_later": "Continuer plus tard",
+    "exit": "Sortie",
+    "next_module": "Module suivant",
+    "previous": "Précédent",
+    "promotion_toolkit": "Boîte à outils de promotion"
   }
 }

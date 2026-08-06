@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "Campus-Botschafter-Lernen",
+    "resume_later": "Lebenslauf später",
+    "return_to_dashboard": "Zurück zum Dashboard",
+    "back_to_dashboard": "Zurück zum Dashboard",
+    "orientation_tag": "Campus-Initiative-Orientierung",
+    "program_title": "Campus-Botschafter-Ausbildungsprogramm",
+    "under_review_title": "Der Antrag in Prüfung",
+    "more_info_title": "Zusätzliche Informationen erforderlich",
+    "rejected_title": "Antragsentscheidung",
+    "next": "Als Nächstes",
+    "previous": "Früher",
+    "submit": "Bewerbung einreichen"
+  }
+}

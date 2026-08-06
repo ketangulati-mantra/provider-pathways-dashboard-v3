@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Fai crescere la tua attività",
+    "promotion_toolkit": "Kit di Strumenti per la Promozione",
+    "continue_later": "Continuare più tardi",
+    "module1_tag": "MODULO 1 DI 6",
+    "module1_title": "Come {{brandName}} ti procura clienti",
+    "module1_subtitle": "Analisi interattiva del funnel per l'acquisizione clienti.",
+    "module2_tag": "MODULO 2 DI 6",
+    "module2_title": "Promuovere il tuo profilo",
+    "module3_tag": "MODULO 3 DI 6",
+    "module4_tag": "MODULO 4 DI 6",
+    "module5_tag": "MODULO 5 DI 6",
+    "module6_tag": "MODULO 6 DI 6",
+    "next_module": "Modulo successivo",
+    "previous": "Precedente",
+    "congratulations": "Congratulazioni!",
+    "completed_subtitle": "Hai completato la lezione e aumentato il punteggio del tuo provider."
+  },
+  "outreach": {
+    "header_tag": "Accademia dei Partner Aziendali",
+    "header_title": "Iniziare con le introduzioni aziendali",
+    "exit": "Uscita",
+    "next_module": "Modulo successivo",
+    "previous": "Precedente",
+    "complete_and_refer": "Completa e segnala una società"
+  },
+  "landing": {
+    "tag": "Mantra Executive Partnerships",
+    "title": "Programma Partner per la Crescita Aziendale",
+    "exit": "Uscita",
+    "why_wellness": "Perché il benessere aziendale è importante"
+  },
+  "under_review": {
+    "title": "Domanda in esame",
+    "subtitle": "La tua domanda di partner aziendale è stata inviata con successo.",
+    "back_to_dashboard": "Torna al cruscotto"
+  }
+}

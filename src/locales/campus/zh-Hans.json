@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "校园大使学习",
+    "resume_later": "稍后继续",
+    "return_to_dashboard": "返回仪表盘",
+    "back_to_dashboard": "返回仪表盘",
+    "orientation_tag": "校园倡议导向",
+    "program_title": "校园大使培训项目",
+    "under_review_title": "申请正在审核",
+    "more_info_title": "需要补充信息",
+    "rejected_title": "申请决定",
+    "next": "下一个",
+    "previous": "之前",
+    "submit": "提交申请"
+  }
+}

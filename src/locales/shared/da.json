@@ -50,5 +50,12 @@
     "message": "Vi beklager ulejligheden. Der opstod en teknisk fejl under forsøget på at indlæse denne lektion.",
     "details": "Se fejldetaljer",
     "return": "Tilbage til Dashboard"
+  },
+  "buttons": {
+    "continue_later": "Fortsæt senere",
+    "exit": "Udgang",
+    "next_module": "Næste modul",
+    "previous": "Tidligere",
+    "promotion_toolkit": "Promoveringsværktøjssæt"
   }
 }

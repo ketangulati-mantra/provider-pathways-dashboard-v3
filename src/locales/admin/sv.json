@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Admininloggning",
+    "login_subtitle": "Besök Provider Pathways-hanteringsportalen",
+    "email_label": "E-postadress",
+    "password_label": "Lösenord",
+    "sign_in": "Logga in",
+    "dashboard_title": "Utvecklar- och administratörsdashboard",
+    "users_management": "Användarhantering",
+    "submissions_management": "Hantering av inlämningar",
+    "logout": "Logga ut",
+    "roles": {
+      "admin": "Administration",
+      "superadmin": "Superadministratör",
+      "user": "Användare"
+    }
+  }
+}

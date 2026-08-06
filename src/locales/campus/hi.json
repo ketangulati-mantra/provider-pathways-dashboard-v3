@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "कैंपस एंबेसडर लर्निंग",
+    "resume_later": "बाद में फिर से शुरू करें",
+    "return_to_dashboard": "डैशबोर्ड पर लौटें",
+    "back_to_dashboard": "डैशबोर्ड पर वापस जाएं",
+    "orientation_tag": "कैंपस इनिशिएटिव ओरिएंटेशन",
+    "program_title": "कैंपस एंबेसडर प्रशिक्षण कार्यक्रम",
+    "under_review_title": "आवेदन की समीक्षा की जा रही है",
+    "more_info_title": "अतिरिक्त जानकारी की आवश्यकता है",
+    "rejected_title": "आवेदन निर्णय",
+    "next": "अगला",
+    "previous": "पिछला",
+    "submit": "आवेदन जमा करें"
+  }
+}

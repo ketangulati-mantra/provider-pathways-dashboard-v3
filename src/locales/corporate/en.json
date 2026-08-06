@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Grow Your Practice",
+    "promotion_toolkit": "Promotion Toolkit",
+    "continue_later": "Continue Later",
+    "module1_tag": "MODULE 1 OF 6",
+    "module1_title": "How {{brandName}} Gets You Clients",
+    "module1_subtitle": "Interactive client acquisition funnel breakdown.",
+    "module2_tag": "MODULE 2 OF 6",
+    "module2_title": "Market Your Profile",
+    "module3_tag": "MODULE 3 OF 6",
+    "module4_tag": "MODULE 4 OF 6",
+    "module5_tag": "MODULE 5 OF 6",
+    "module6_tag": "MODULE 6 OF 6",
+    "next_module": "Next Module",
+    "previous": "Previous",
+    "congratulations": "Congratulations!",
+    "completed_subtitle": "You completed the lesson and boosted your provider score."
+  },
+  "outreach": {
+    "header_tag": "Corporate Partner Academy",
+    "header_title": "Getting Started with Corporate Introductions",
+    "exit": "Exit",
+    "next_module": "Next Module",
+    "previous": "Previous",
+    "complete_and_refer": "Complete & Refer a Corporate"
+  },
+  "landing": {
+    "tag": "Mantra Executive Partnerships",
+    "title": "Corporate Growth Partner Program",
+    "exit": "Exit",
+    "why_wellness": "Why Corporate Wellness Matters"
+  },
+  "under_review": {
+    "title": "Application Under Review",
+    "subtitle": "Your corporate partner application has been submitted successfully.",
+    "back_to_dashboard": "Back to Dashboard"
+  }
+}

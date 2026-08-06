@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Wachsen Sie Ihre Praxis",
+    "promotion_toolkit": "Beförderungs-Werkzeugkasten",
+    "continue_later": "Später weitermachen",
+    "module1_tag": "MODUL 1 VON 6",
+    "module1_title": "Wie {{brandName}} Ihre Kunden bekommt",
+    "module1_subtitle": "Interaktive Aufschlüsselung des Trichters zur Kundengewinnung.",
+    "module2_tag": "MODUL 2 VON 6",
+    "module2_title": "Vermarkten Sie Ihr Profil",
+    "module3_tag": "MODUL 3 VON 6",
+    "module4_tag": "MODUL 4 VON 6",
+    "module5_tag": "MODUL 5 VON 6",
+    "module6_tag": "MODUL 6 VON 6",
+    "next_module": "Nächstes Modul",
+    "previous": "Früher",
+    "congratulations": "Herzlichen Glückwunsch!",
+    "completed_subtitle": "Du hast die Lektion abgeschlossen und deine Leistungspunktzahl verbessert."
+  },
+  "outreach": {
+    "header_tag": "Corporate Partner Academy",
+    "header_title": "Einstieg in die Unternehmensvorstellungen",
+    "exit": "Ausgang",
+    "next_module": "Nächstes Modul",
+    "previous": "Früher",
+    "complete_and_refer": "Ein Unternehmen vervollständigen und empfehlen"
+  },
+  "landing": {
+    "tag": "Mantra Führungspartnerschaften",
+    "title": "Partnerprogramm für Unternehmenswachstum",
+    "exit": "Ausgang",
+    "why_wellness": "Warum unternehmerisches Wohlbefinden wichtig ist"
+  },
+  "under_review": {
+    "title": "Der Antrag in Prüfung",
+    "subtitle": "Ihr Antrag als Unternehmenspartner wurde erfolgreich eingereicht.",
+    "back_to_dashboard": "Zurück zum Dashboard"
+  }
+}

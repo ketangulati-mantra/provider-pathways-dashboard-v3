@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Phát triển phòng khám của bạn",
+    "promotion_toolkit": "Bộ công cụ quảng bá",
+    "continue_later": "Tiếp tục sau",
+    "module1_tag": "MÔ-ĐUN 1 TRONG 6",
+    "module1_title": "Cách {{brandName}} giúp bạn có được khách hàng",
+    "module1_subtitle": "Phân tích phễu thu hút khách hàng tương tác.",
+    "module2_tag": "MÔ-ĐUN 2 TRONG 6",
+    "module2_title": "Quảng bá hồ sơ của bạn",
+    "module3_tag": "MÔ-ĐUN 3 TRONG 6",
+    "module4_tag": "MÔ-ĐUN 4 TRONG 6",
+    "module5_tag": "MÔ-ĐUN 5 TRÊN 6",
+    "module6_tag": "MÔ-ĐUN 6 TRONG 6",
+    "next_module": "Mô-đun tiếp theo",
+    "previous": "Trước đây",
+    "congratulations": "Chúc mừng bạn!",
+    "completed_subtitle": "Bạn đã hoàn thành bài học và nâng cao điểm số nhà cung cấp của mình."
+  },
+  "outreach": {
+    "header_tag": "Học viện Đối tác Doanh nghiệp",
+    "header_title": "Bắt đầu với giới thiệu doanh nghiệp",
+    "exit": "Lối ra",
+    "next_module": "Mô-đun tiếp theo",
+    "previous": "Trước đây",
+    "complete_and_refer": "Hoàn thành & Giới thiệu một doanh nghiệp"
+  },
+  "landing": {
+    "tag": "Quan hệ đối tác điều hành Mantra",
+    "title": "Chương trình Đối tác Phát triển Doanh nghiệp",
+    "exit": "Lối ra",
+    "why_wellness": "Tại sao sức khỏe doanh nghiệp lại quan trọng"
+  },
+  "under_review": {
+    "title": "Đơn đăng ký đang được xem xét",
+    "subtitle": "Đơn ứng tuyển đối tác doanh nghiệp của bạn đã được gửi thành công.",
+    "back_to_dashboard": "Quay lại Bảng điều khiển"
+  }
+}

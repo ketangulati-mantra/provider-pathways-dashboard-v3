@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Ylläpitäjän kirjautuminen",
+    "login_subtitle": "Pääsy Provider Pathways -hallintaportaaliin",
+    "email_label": "Sähköpostiosoite",
+    "password_label": "Salasana",
+    "sign_in": "Kirjaudu sisään",
+    "dashboard_title": "Kehittäjä- ja ylläpitäjäpaneeli",
+    "users_management": "Käyttäjähallinta",
+    "submissions_management": "Lähetysten hallinta",
+    "logout": "Kirjaudu ulos",
+    "roles": {
+      "admin": "Hallinto",
+      "superadmin": "Super Admin",
+      "user": "Käyttäjä"
+    }
+  }
+}

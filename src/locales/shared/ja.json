@@ -50,5 +50,12 @@
     "message": "ご不便をおかけして申し訳ありません。このレッスンの読み込み中に技術的なエラーが発生しました。",
     "details": "エラー詳細を見る",
     "return": "ダッシュボードに戻る"
+  },
+  "buttons": {
+    "continue_later": "続きは後ほど",
+    "exit": "退場",
+    "next_module": "次のモジュール",
+    "previous": "過去",
+    "promotion_toolkit": "プロモーションツールキット"
   }
 }

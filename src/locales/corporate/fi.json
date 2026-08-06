@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Kasvata käytäntöäsi",
+    "promotion_toolkit": "Markkinointityökalupakki",
+    "continue_later": "Jatka myöhemmin",
+    "module1_tag": "MODUULI 1/6",
+    "module1_title": "Miten {{brandName}} saa asiakkaat",
+    "module1_subtitle": "Interaktiivinen asiakashankinnan suppilon erittely.",
+    "module2_tag": "MODUULI 2/6",
+    "module2_title": "Markkinoi profiiliasi",
+    "module3_tag": "MODUULI 3/6",
+    "module4_tag": "MODUULI 4/6",
+    "module5_tag": "MODUULI 5/6",
+    "module6_tag": "MODUULI 6/6",
+    "next_module": "Seuraava moduuli",
+    "previous": "Edellinen",
+    "congratulations": "Onnittelen!",
+    "completed_subtitle": "Suoritit oppitunnin ja paransit palveluntarjoajan pistettäsi."
+  },
+  "outreach": {
+    "header_tag": "Yrityskumppaniakatemia",
+    "header_title": "Yritysesittelyjen aloittaminen",
+    "exit": "Poistuminen",
+    "next_module": "Seuraava moduuli",
+    "previous": "Edellinen",
+    "complete_and_refer": "Täydennä ja suosittele yritystä"
+  },
+  "landing": {
+    "tag": "Mantra-johtokumppanuudet",
+    "title": "Yrityksen kasvukumppaniohjelma",
+    "exit": "Poistuminen",
+    "why_wellness": "Miksi yrityshyvinvointi on tärkeää"
+  },
+  "under_review": {
+    "title": "Hakemus tarkastelussa",
+    "subtitle": "Yrityskumppanihakemuksesi on onnistuneesti toimitettu.",
+    "back_to_dashboard": "Takaisin Dashboardiin"
+  }
+}

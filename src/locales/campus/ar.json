@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "سفيرة الجامعات للتعلم",
+    "resume_later": "السيرة الذاتية لاحقا",
+    "return_to_dashboard": "العودة إلى لوحة التحكم",
+    "back_to_dashboard": "العودة إلى لوحة التحكم",
+    "orientation_tag": "توجيه مبادرة الحرم الجامعي",
+    "program_title": "برنامج تدريب سفراء الحرم الجامعي",
+    "under_review_title": "الطلب قيد المراجعة",
+    "more_info_title": "معلومات إضافية مطلوبة",
+    "rejected_title": "قرار التقديم",
+    "next": "التالي",
+    "previous": "السابق",
+    "submit": "تقديم الطلب"
+  }
+}

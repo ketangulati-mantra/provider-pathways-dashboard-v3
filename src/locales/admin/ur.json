@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "ایڈمن لاگ ان",
+    "login_subtitle": "پرووائیڈر پاتھ ویز مینجمنٹ پورٹل تک رسائی حاصل کریں",
+    "email_label": "ای میل ایڈریس",
+    "password_label": "پاس ورڈ",
+    "sign_in": "سائن ان کریں",
+    "dashboard_title": "Developer & Admin Dashboard",
+    "users_management": "یوزر مینجمنٹ",
+    "submissions_management": "جمع کرائی گئی تجاویز کا انتظام",
+    "logout": "لاگ آؤٹ کریں",
+    "roles": {
+      "admin": "ایڈمن",
+      "superadmin": "سپر ایڈمن",
+      "user": "صارف"
+    }
+  }
+}

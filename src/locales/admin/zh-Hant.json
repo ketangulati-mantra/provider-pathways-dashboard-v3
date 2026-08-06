@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "管理員登入",
+    "login_subtitle": "存取提供者路徑管理入口網站",
+    "email_label": "電子郵件地址",
+    "password_label": "密碼",
+    "sign_in": "登入",
+    "dashboard_title": "開發者與管理儀表板",
+    "users_management": "使用者管理",
+    "submissions_management": "投稿管理",
+    "logout": "登出",
+    "roles": {
+      "admin": "行政",
+      "superadmin": "超級管理員",
+      "user": "使用者"
+    }
+  }
+}

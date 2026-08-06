@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "כניסת מנהל",
+    "login_subtitle": "גש לפורטל ניהול מסלולי הספקים",
+    "email_label": "כתובת דוא\"ל",
+    "password_label": "סיסמה",
+    "sign_in": "התחברות",
+    "dashboard_title": "לוח מחוונים של מפתחים ומנהלים",
+    "users_management": "ניהול משתמשים",
+    "submissions_management": "ניהול הגשות",
+    "logout": "התנתקות",
+    "roles": {
+      "admin": "מנהל",
+      "superadmin": "סופר אדמין",
+      "user": "משתמש"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "Kampüs Elçisi Öğrenimi",
+    "resume_later": "Daha sonra devam et",
+    "return_to_dashboard": "Dashboard'a Dönüş",
+    "back_to_dashboard": "Dashboard'a Geri Dön",
+    "orientation_tag": "Kampüs Girişimi Oryantasyonu",
+    "program_title": "Kampüs Elçisi Eğitim Programı",
+    "under_review_title": "Başvuru İnceliyor",
+    "more_info_title": "Ek Bilgi Gereklidir",
+    "rejected_title": "Başvuru Kararı",
+    "next": "Sıradaki",
+    "previous": "Önceki",
+    "submit": "Başvuru Gönder"
+  }
+}

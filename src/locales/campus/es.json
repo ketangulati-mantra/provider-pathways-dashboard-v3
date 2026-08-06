@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "Aprendizaje de Embajadores del Campus",
+    "resume_later": "Reanudar más tarde",
+    "return_to_dashboard": "Volver al Panel de Control",
+    "back_to_dashboard": "Volver al Panel de Control",
+    "orientation_tag": "Orientación de la Iniciativa en el Campus",
+    "program_title": "Programa de Formación de Embajadores en el Campus",
+    "under_review_title": "Solicitud en revisión",
+    "more_info_title": "Se requiere información adicional",
+    "rejected_title": "Decisión de solicitud",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "submit": "Enviar solicitud"
+  }
+}

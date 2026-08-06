@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Groei je praktijk",
+    "promotion_toolkit": "Promotietoolkit",
+    "continue_later": "Ga later verder",
+    "module1_tag": "MODULE 1 VAN 6",
+    "module1_title": "Hoe {{brandName}} je klanten krijgt",
+    "module1_subtitle": "Interactieve overzicht van de trechter voor klantacquisitie.",
+    "module2_tag": "MODULE 2 VAN 6",
+    "module2_title": "Verkoop je profiel",
+    "module3_tag": "MODULE 3 VAN 6",
+    "module4_tag": "MODULE 4 VAN 6",
+    "module5_tag": "MODULE 5 VAN 6",
+    "module6_tag": "MODULE 6 VAN 6",
+    "next_module": "Volgende module",
+    "previous": "Eerder",
+    "congratulations": "Gefeliciteerd!",
+    "completed_subtitle": "Je hebt de les afgerond en je score van de zorgverlener verhoogd."
+  },
+  "outreach": {
+    "header_tag": "Corporate Partner Academy",
+    "header_title": "Beginnen met bedrijfsintroducties",
+    "exit": "Exit",
+    "next_module": "Volgende module",
+    "previous": "Eerder",
+    "complete_and_refer": "Voltooi en verwijs een bedrijf aan"
+  },
+  "landing": {
+    "tag": "Mantra Uitvoerende Partnerschappen",
+    "title": "Programma voor Corporate Growth Partner",
+    "exit": "Exit",
+    "why_wellness": "Waarom bedrijfswelzijn belangrijk is"
+  },
+  "under_review": {
+    "title": "Aanvraag in behandeling",
+    "subtitle": "Uw aanvraag voor een corporate partner is succesvol ingediend.",
+    "back_to_dashboard": "Terug naar Dashboard"
+  }
+}

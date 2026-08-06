@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "نمي ممارستك",
+    "promotion_toolkit": "مجموعة أدوات الترويج",
+    "continue_later": "تابع لاحقا",
+    "module1_tag": "الوحدة 1 من 6",
+    "module1_title": "كيف يحصل لك {{brandName}} على العملاء",
+    "module1_subtitle": "تفصيل تفاعلي لمسار اكتساب العملاء.",
+    "module2_tag": "الوحدة 2 من 6",
+    "module2_title": "تسويق ملفك الشخصي",
+    "module3_tag": "الوحدة 3 من 6",
+    "module4_tag": "الوحدة 4 من 6",
+    "module5_tag": "الوحدة 5 من 6",
+    "module6_tag": "الوحدة 6 من 6",
+    "next_module": "الوحدة التالية",
+    "previous": "السابق",
+    "congratulations": "مبروك!",
+    "completed_subtitle": "لقد أنهيت الدرس ورفعت درجة مقدم الرعاية الخاص بك."
+  },
+  "outreach": {
+    "header_tag": "أكاديمية الشركاء المؤسسيين",
+    "header_title": "البدء في تقديم الشركات",
+    "exit": "الخروج",
+    "next_module": "الوحدة التالية",
+    "previous": "السابق",
+    "complete_and_refer": "اكتمل وراجع شركة"
+  },
+  "landing": {
+    "tag": "شراكات التنفيذيين في مانترا",
+    "title": "برنامج شركاء النمو المؤسسي",
+    "exit": "الخروج",
+    "why_wellness": "لماذا تهم العافية المؤسسية"
+  },
+  "under_review": {
+    "title": "الطلب قيد المراجعة",
+    "subtitle": "تم تقديم طلب شريكك في الشركة بنجاح.",
+    "back_to_dashboard": "العودة إلى لوحة التحكم"
+  }
+}

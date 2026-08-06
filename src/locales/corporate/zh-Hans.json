@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "拓展您的业务",
+    "promotion_toolkit": "晋升工具包",
+    "continue_later": "稍后继续",
+    "module1_tag": "模块1，共6个",
+    "module1_title": "{{brandName}} 如何帮你赢得客户",
+    "module1_subtitle": "互动式客户获取漏斗分析。",
+    "module2_tag": "模块2（共6个）",
+    "module2_title": "推广你的个人资料",
+    "module3_tag": "模块3，共6个",
+    "module4_tag": "模块4，共6个",
+    "module5_tag": "模块5，共6个",
+    "module6_tag": "模块6，共6个",
+    "next_module": "下一模块",
+    "previous": "之前",
+    "congratulations": "恭喜你！",
+    "completed_subtitle": "你完成了课程并提升了你的提供者评分。"
+  },
+  "outreach": {
+    "header_tag": "企业合作伙伴学院",
+    "header_title": "企业介绍入门",
+    "exit": "退出",
+    "next_module": "下一模块",
+    "previous": "之前",
+    "complete_and_refer": "完成并推荐企业"
+  },
+  "landing": {
+    "tag": "Mantra 高管合作",
+    "title": "企业成长合作伙伴计划",
+    "exit": "退出",
+    "why_wellness": "为什么企业健康至关重要"
+  },
+  "under_review": {
+    "title": "申请正在审核",
+    "subtitle": "您的企业合作伙伴申请已成功提交。",
+    "back_to_dashboard": "返回仪表盘"
+  }
+}

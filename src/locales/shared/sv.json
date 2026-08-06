@@ -50,5 +50,12 @@
     "message": "Vi ber om ursäkt för besväret. Ett tekniskt fel uppstod när jag försökte ladda denna lektion.",
     "details": "Visa feldetaljer",
     "return": "Återvänd till instrumentpanelen"
+  },
+  "buttons": {
+    "continue_later": "Fortsätt senare",
+    "exit": "Utgång",
+    "next_module": "Nästa modul",
+    "previous": "Tidigare",
+    "promotion_toolkit": "Marknadsföringsverktygslåda"
   }
 }

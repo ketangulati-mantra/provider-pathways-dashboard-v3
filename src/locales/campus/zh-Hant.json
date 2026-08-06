@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "校園大使學習",
+    "resume_later": "稍後續作",
+    "return_to_dashboard": "返回儀表板",
+    "back_to_dashboard": "返回儀表板",
+    "orientation_tag": "校園計畫導向",
+    "program_title": "校園大使培訓計畫",
+    "under_review_title": "申請審核中",
+    "more_info_title": "需要補充資訊",
+    "rejected_title": "申請決定",
+    "next": "下一篇",
+    "previous": "先前",
+    "submit": "提交申請"
+  }
+}

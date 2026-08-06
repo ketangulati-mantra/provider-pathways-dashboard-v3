@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "व्यवस्थापक लॉगिन",
+    "login_subtitle": "प्रदाता पाथवे प्रबंधन पोर्टल तक पहुंचें",
+    "email_label": "ईमेल पता",
+    "password_label": "पासवर्ड",
+    "sign_in": "साइन इन करें",
+    "dashboard_title": "डेवलपर और एडमिन डैशबोर्ड",
+    "users_management": "उपयोगकर्ता प्रबंधन",
+    "submissions_management": "प्रस्तुतियाँ प्रबंधन",
+    "logout": "लॉग आउट करें",
+    "roles": {
+      "admin": "व्यवस्थापक",
+      "superadmin": "सुपर व्यवस्थापक",
+      "user": "उपभोक्ता"
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Palaguin ang Iyong Praktis",
+    "promotion_toolkit": "Toolkit para sa Promosyon",
+    "continue_later": "Magpatuloy Mamaya",
+    "module1_tag": "MODULE 1 NG 6",
+    "module1_title": "Paano Nakakakuha ng Kliyente ang {{brandName}}",
+    "module1_subtitle": "Interactive client acquisition funnel breakdown.",
+    "module2_tag": "MODULE 2 NG 6",
+    "module2_title": "I-market ang Iyong Profile",
+    "module3_tag": "MODULE 3 NG 6",
+    "module4_tag": "MODULE 4 NG 6",
+    "module5_tag": "MODULE 5 NG 6",
+    "module6_tag": "MODULE 6 NG 6",
+    "next_module": "Susunod na Module",
+    "previous": "Nakaraan",
+    "congratulations": "Congrats!",
+    "completed_subtitle": "Natapos mo ang aralin at tumaas ang iyong provider score."
+  },
+  "outreach": {
+    "header_tag": "Akademya ng Kasosyo sa Korporasyon",
+    "header_title": "Pagsisimula sa Corporate Introductions",
+    "exit": "Exit",
+    "next_module": "Susunod na Module",
+    "previous": "Nakaraan",
+    "complete_and_refer": "Kumpletuhin at I-refer ang isang Corporate"
+  },
+  "landing": {
+    "tag": "Mantra Executive Partnerships",
+    "title": "Programa ng Kasosyo sa Paglago ng Kumpanya",
+    "exit": "Exit",
+    "why_wellness": "Bakit Mahalaga ang Corporate Wellness"
+  },
+  "under_review": {
+    "title": "Aplikasyon na Sinusuri",
+    "subtitle": "Matagumpay na naisumite ang iyong aplikasyon para sa corporate partner.",
+    "back_to_dashboard": "Bumalik sa Dashboard"
+  }
+}

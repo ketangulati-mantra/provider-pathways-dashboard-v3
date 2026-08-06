@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Rozwijaj swoją praktykę",
+    "promotion_toolkit": "Zestaw narzędzi awansowych",
+    "continue_later": "Kontynuacja później",
+    "module1_tag": "MODUŁ 1 Z 6",
+    "module1_title": "Jak {{brandName}} zdobywa klientów",
+    "module1_subtitle": "Interaktywny podział lejka pozyskiwania klientów.",
+    "module2_tag": "MODUŁ 2 Z 6",
+    "module2_title": "Promuj swój profil",
+    "module3_tag": "MODUŁ 3 Z 6",
+    "module4_tag": "MODUŁ 4 Z 6",
+    "module5_tag": "MODUŁ 5 Z 6",
+    "module6_tag": "MODUŁ 6 Z 6",
+    "next_module": "Następny moduł",
+    "previous": "Poprzednie",
+    "congratulations": "Gratulacje!",
+    "completed_subtitle": "Ukończyłeś lekcję i podniósłeś wynik swojego świadczeniodawcy."
+  },
+  "outreach": {
+    "header_tag": "Akademia Partnerów Korporacyjnych",
+    "header_title": "Rozpoczęcie od korporacyjnych przedstawień",
+    "exit": "Wyjście",
+    "next_module": "Następny moduł",
+    "previous": "Poprzednie",
+    "complete_and_refer": "Uzupełnij i skieruj firmę"
+  },
+  "landing": {
+    "tag": "Mantra Executive Partnerships",
+    "title": "Program Partnerów Rozwoju Korporacyjnego",
+    "exit": "Wyjście",
+    "why_wellness": "Dlaczego wellness w firmach jest ważny"
+  },
+  "under_review": {
+    "title": "Wniosek w trakcie rozpatrywania",
+    "subtitle": "Twój wniosek o partnerstwo korporacyjne został pomyślnie złożony.",
+    "back_to_dashboard": "Powrót do panelu"
+  }
+}

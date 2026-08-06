@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "Vzdělávání ambasadorů kampusu",
+    "resume_later": "Pozdější životopis",
+    "return_to_dashboard": "Návrat na dashboard",
+    "back_to_dashboard": "Zpět na palubní desku",
+    "orientation_tag": "Orientace na kampusové iniciativy",
+    "program_title": "Program školení ambasadorů kampusu",
+    "under_review_title": "Žádost v přezkumu",
+    "more_info_title": "Vyžaduje další informace",
+    "rejected_title": "Rozhodnutí o žádosti",
+    "next": "Další",
+    "previous": "Předchozí",
+    "submit": "Odevzdat přihlášku"
+  }
+}

@@ -50,5 +50,12 @@
     "message": "Yaşadığımız rahatsızlık için özür dileriz. Bu dersi yüklemeye çalışırken teknik bir hata meydana geldi.",
     "details": "Hata Detaylarını Görüntüle",
     "return": "Dashboard'a Dönüş"
+  },
+  "buttons": {
+    "continue_later": "Daha Sonra Devam Et",
+    "exit": "Çıkış",
+    "next_module": "Sonraki Modül",
+    "previous": "Önceki",
+    "promotion_toolkit": "Promosyon Araç Seti"
   }
 }

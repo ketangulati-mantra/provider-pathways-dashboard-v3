@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Log Masuk Pentadbir",
+    "login_subtitle": "Akses portal pengurusan Laluan Penyedia",
+    "email_label": "Alamat Emel",
+    "password_label": "Kata Laluan",
+    "sign_in": "Dafar masuk",
+    "dashboard_title": "Papan Pemuka Pembangun & Pentadbir",
+    "users_management": "Pengurusan Pengguna",
+    "submissions_management": "Pengurusan Penyerahan",
+    "logout": "log keluar",
+    "roles": {
+      "admin": "Admin",
+      "superadmin": "Super Admin",
+      "user": "Pengguna"
+    }
+  }
+}

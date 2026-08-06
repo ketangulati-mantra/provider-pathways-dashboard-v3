@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Logowanie administratora",
+    "login_subtitle": "Uzyskaj dostęp do portalu zarządzania Provider Pathways",
+    "email_label": "Adres e-mail",
+    "password_label": "Hasło",
+    "sign_in": "Rejestrowanie",
+    "dashboard_title": "Panel deweloperski i administracyjny",
+    "users_management": "Zarządzanie użytkownikami",
+    "submissions_management": "Zarządzanie zgłoszeniami",
+    "logout": "Wyloguj się",
+    "roles": {
+      "admin": "Administracja",
+      "superadmin": "Super Admin",
+      "user": "Użytkownik"
+    }
+  }
+}

@@ -50,5 +50,12 @@
     "message": "Chúng tôi xin lỗi vì sự bất tiện này. Đã xảy ra lỗi kỹ thuật trong khi cố gắng tải bài học này.",
     "details": "Xem chi tiết lỗi",
     "return": "Quay lại Bảng điều khiển"
+  },
+  "buttons": {
+    "continue_later": "Tiếp tục sau",
+    "exit": "Lối ra",
+    "next_module": "Mô-đun tiếp theo",
+    "previous": "Trước đây",
+    "promotion_toolkit": "Bộ công cụ quảng bá"
   }
 }

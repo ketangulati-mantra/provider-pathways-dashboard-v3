@@ -50,5 +50,12 @@
     "message": "Kami mohon maaf atas ketidaknyamanan tersebut. Terjadi kesalahan teknis saat mencoba memuat pelajaran ini.",
     "details": "Lihat Detail Kesalahan",
     "return": "Kembali ke Dasbor"
+  },
+  "buttons": {
+    "continue_later": "Lanjutkan Nanti",
+    "exit": "Keluar",
+    "next_module": "Modul Berikutnya",
+    "previous": "Sebelumnya",
+    "promotion_toolkit": "Paket Alat Promosi"
   }
 }

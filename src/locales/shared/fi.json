@@ -50,5 +50,12 @@
     "message": "Pahoittelemme aiheutunutta vaivaa. Tekninen virhe tapahtui yrittäessäni ladata tätä oppituntia.",
     "details": "Katso virhetiedot",
     "return": "Palaa Dashboardiin"
+  },
+  "buttons": {
+    "continue_later": "Jatka myöhemmin",
+    "exit": "Poistuminen",
+    "next_module": "Seuraava moduuli",
+    "previous": "Edellinen",
+    "promotion_toolkit": "Markkinointityökalupakki"
   }
 }

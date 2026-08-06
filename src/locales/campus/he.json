@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "קמפוס שגריר למידה",
+    "resume_later": "קורות חיים מאוחר יותר",
+    "return_to_dashboard": "חזרה ללוח הבקרה",
+    "back_to_dashboard": "חזרה ללוח הבקרה",
+    "orientation_tag": "הכוונה ליוזמת הקמפוס",
+    "program_title": "תוכנית ההכשרה לשגרירי הקמפוס",
+    "under_review_title": "הבקשה בבחינה",
+    "more_info_title": "נדרש מידע נוסף",
+    "rejected_title": "החלטת הבקשה",
+    "next": "הבא",
+    "previous": "קודם",
+    "submit": "הגיש בקשה"
+  }
+}

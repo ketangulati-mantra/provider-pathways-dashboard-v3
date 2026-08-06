@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Rozvíjejte svou praxi",
+    "promotion_toolkit": "Propagační nástroje",
+    "continue_later": "Pokračovat později",
+    "module1_tag": "MODUL 1 Z 6",
+    "module1_title": "Jak {{brandName}} získáváte klienty",
+    "module1_subtitle": "Interaktivní rozpis trychtýře pro získávání klientů.",
+    "module2_tag": "MODUL 2 Z 6",
+    "module2_title": "Propagujte svůj profil",
+    "module3_tag": "MODUL 3 Z 6",
+    "module4_tag": "MODUL 4 Z 6",
+    "module5_tag": "MODUL 5 Z 6",
+    "module6_tag": "MODUL 6 Z 6",
+    "next_module": "Další modul",
+    "previous": "Předchozí",
+    "congratulations": "Gratuluji!",
+    "completed_subtitle": "Dokončili jste lekci a zvýšili své skóre poskytovatele."
+  },
+  "outreach": {
+    "header_tag": "Akademie korporátních partnerů",
+    "header_title": "Začínáme s firemními představami",
+    "exit": "Východ",
+    "next_module": "Další modul",
+    "previous": "Předchozí",
+    "complete_and_refer": "Vyplnit a doporučit firmu"
+  },
+  "landing": {
+    "tag": "Mantra Executive Partnerships",
+    "title": "Program partnerských korporátních růstů",
+    "exit": "Východ",
+    "why_wellness": "Proč je firemní wellness důležitý"
+  },
+  "under_review": {
+    "title": "Žádost v přezkumu",
+    "subtitle": "Vaše žádost o korporátního partnera byla úspěšně podána.",
+    "back_to_dashboard": "Zpět na palubní desku"
+  }
+}

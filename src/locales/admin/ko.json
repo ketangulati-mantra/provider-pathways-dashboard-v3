@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "관리자 로그인",
+    "login_subtitle": "제공자 경로 관리 포털에 접속하세요",
+    "email_label": "이메일 주소",
+    "password_label": "비밀번호",
+    "sign_in": "로그인",
+    "dashboard_title": "개발자 및 관리자 대시보드",
+    "users_management": "사용자 관리",
+    "submissions_management": "제출 관리",
+    "logout": "로그아웃",
+    "roles": {
+      "admin": "행정",
+      "superadmin": "슈퍼 어드민",
+      "user": "사용자"
+    }
+  }
+}

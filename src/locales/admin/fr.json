@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Connexion administrateur",
+    "login_subtitle": "Accédez au portail de gestion des parcours des fournisseurs",
+    "email_label": "Adresse e-mail",
+    "password_label": "Mot de passe",
+    "sign_in": "Connexion",
+    "dashboard_title": "Tableau de bord Développeurs & Administrateurs",
+    "users_management": "Gestion des utilisateurs",
+    "submissions_management": "Gestion des soumissions",
+    "logout": "Déconnexion",
+    "roles": {
+      "admin": "Administration",
+      "superadmin": "Super Admin",
+      "user": "Utilisateur"
+    }
+  }
+}

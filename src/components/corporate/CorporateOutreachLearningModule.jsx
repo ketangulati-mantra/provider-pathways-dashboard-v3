@@ -522,7 +522,10 @@ const OUTREACH_ACADEMY_MODULES = [
 
 // ─── COURSERA-STYLE MAIN ACADEMY COMPONENT ────────────────────────────────────
 
+import { useTranslation } from 'react-i18next';
+
 export default function CorporateOutreachLearningModule({ onBack, onComplete }) {
+  const { t } = useTranslation(['corporate', 'shared']);
   const [activeModuleIndex, setActiveModuleIndex] = useState(0);
   const [completedModules, setCompletedModules] = useState(new Set([0]));
   const [timeSpentSeconds, setTimeSpentSeconds] = useState(0);
@@ -608,7 +611,7 @@ export default function CorporateOutreachLearningModule({ onBack, onComplete }) 
             onClick={() => goBack(onBack)}
             style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#475569', fontWeight: 800, fontSize: '0.76rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0, marginLeft: 'auto' }}
           >
-            <ArrowLeft size={13} /> Exit
+            <ArrowLeft size={13} /> {t('buttons.exit', 'Exit')}
           </button>
         </div>
       </div>

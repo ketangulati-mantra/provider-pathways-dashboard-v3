@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "Apprentissage des ambassadeurs sur le campus",
+    "resume_later": "Reprise ultérieure",
+    "return_to_dashboard": "Retour au tableau de bord",
+    "back_to_dashboard": "Retour au tableau de bord",
+    "orientation_tag": "Orientation sur l’initiative sur le campus",
+    "program_title": "Programme de formation des ambassadeurs sur campus",
+    "under_review_title": "Demande en cours d’examen",
+    "more_info_title": "Informations supplémentaires requises",
+    "rejected_title": "Décision de demande",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "submit": "Soumettre la candidature"
+  }
+}

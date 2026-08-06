@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "Pembelajaran Duta Kampus",
+    "resume_later": "Lanjutkan Nanti",
+    "return_to_dashboard": "Kembali ke Dashboard",
+    "back_to_dashboard": "Kembali ke Dasbor",
+    "orientation_tag": "Orientasi Inisiatif Kampus",
+    "program_title": "Program Pelatihan Duta Kampus",
+    "under_review_title": "Aplikasi yang sedang ditinjau",
+    "more_info_title": "Informasi tambahan yang diperlukan",
+    "rejected_title": "Keputusan Aplikasi",
+    "next": "Selanjutnya",
+    "previous": "Sebelumnya",
+    "submit": "Kirim Aplikasi"
+  }
+}

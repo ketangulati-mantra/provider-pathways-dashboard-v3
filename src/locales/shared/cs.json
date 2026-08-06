@@ -50,5 +50,12 @@
     "message": "Omlouváme se za nepříjemnosti. Při načtení této lekce došlo k technické chybě.",
     "details": "Zobrazit podrobnosti o chybě",
     "return": "Návrat na dashboard"
+  },
+  "buttons": {
+    "continue_later": "Pokračovat později",
+    "exit": "Východ",
+    "next_module": "Další modul",
+    "previous": "Předchozí",
+    "promotion_toolkit": "Propagační nástroje"
   }
 }

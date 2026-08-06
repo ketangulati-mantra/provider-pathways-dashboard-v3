@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "Ambasadorzy Kampusu Nauka",
+    "resume_later": "Późniejsze CV",
+    "return_to_dashboard": "Powrót do pulpitu",
+    "back_to_dashboard": "Powrót do panelu",
+    "orientation_tag": "Orientacja na inicjatywę kampusową",
+    "program_title": "Program szkoleniowy dla ambasadorów kampusu",
+    "under_review_title": "Wniosek w trakcie rozpatrywania",
+    "more_info_title": "Wymagane dodatkowe informacje",
+    "rejected_title": "Decyzja o zgłoszeniu",
+    "next": "Następny",
+    "previous": "Poprzednie",
+    "submit": "Złóż wniosek"
+  }
+}

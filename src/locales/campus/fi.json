@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "Campus Ambassador Learning",
+    "resume_later": "Jatka myöhemmin",
+    "return_to_dashboard": "Palaa Dashboardiin",
+    "back_to_dashboard": "Takaisin Dashboardiin",
+    "orientation_tag": "Kampusaloitteen orientaatio",
+    "program_title": "Kampuksen lähettiläskoulutusohjelma",
+    "under_review_title": "Hakemus tarkastelussa",
+    "more_info_title": "Lisätietoja tarvitaan",
+    "rejected_title": "Hakemuspäätös",
+    "next": "Seuraavaksi",
+    "previous": "Edellinen",
+    "submit": "Lähetä hakemus"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "キャンパス・アンバサダー・ラーニング",
+    "resume_later": "後で再開",
+    "return_to_dashboard": "ダッシュボードに戻る",
+    "back_to_dashboard": "ダッシュボードに戻る",
+    "orientation_tag": "キャンパス・イニシアチブ・オリエンテーション",
+    "program_title": "キャンパスアンバサダー研修プログラム",
+    "under_review_title": "審査中の申請書",
+    "more_info_title": "追加情報が必要です",
+    "rejected_title": "申請決定",
+    "next": "次",
+    "previous": "過去",
+    "submit": "申請書を提出する"
+  }
+}

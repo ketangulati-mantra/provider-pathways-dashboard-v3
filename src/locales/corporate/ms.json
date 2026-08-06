@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Kembangkan Amalan Anda",
+    "promotion_toolkit": "Kit Alat Promosi",
+    "continue_later": "Teruskan Kemudian",
+    "module1_tag": "MODUL 1 DARIPADA 6",
+    "module1_title": "Bagaimana {{brandName}} Mendapatkan Pelanggan Anda",
+    "module1_subtitle": "Pecahan corong pemerolehan klien interaktif.",
+    "module2_tag": "MODUL 2 DARIPADA 6",
+    "module2_title": "Pasarkan Profil Anda",
+    "module3_tag": "MODUL 3 DARIPADA 6",
+    "module4_tag": "MODUL 4 DARIPADA 6",
+    "module5_tag": "MODUL 5 DARIPADA 6",
+    "module6_tag": "MODUL 6 DARIPADA 6",
+    "next_module": "Modul Seterusnya",
+    "previous": "Sebelumnya",
+    "congratulations": "Tahniah!",
+    "completed_subtitle": "Anda telah menamatkan pelajaran dan meningkatkan skor penyedia anda."
+  },
+  "outreach": {
+    "header_tag": "Akademi Rakan Kongsi Korporat",
+    "header_title": "Memulakan dengan Pengenalan Korporat",
+    "exit": "Keluar",
+    "next_module": "Modul Seterusnya",
+    "previous": "Sebelumnya",
+    "complete_and_refer": "Lengkapkan & Rujuk Korporat"
+  },
+  "landing": {
+    "tag": "Perkongsian Eksekutif Mantra",
+    "title": "Program Rakan Kongsi Pertumbuhan Korporat",
+    "exit": "Keluar",
+    "why_wellness": "Mengapa Kesejahteraan Korporat Penting"
+  },
+  "under_review": {
+    "title": "Permohonan Sedang Semakan",
+    "subtitle": "Permohonan rakan kongsi korporat anda telah dihantar dengan jayanya.",
+    "back_to_dashboard": "Kembali ke Papan Pemuka"
+  }
+}

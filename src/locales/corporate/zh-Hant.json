@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "擴展您的診所",
+    "promotion_toolkit": "升遷工具包",
+    "continue_later": "稍後繼續",
+    "module1_tag": "模組 1，共 6 單元",
+    "module1_title": "{{brandName}} 如何幫你吸引客戶",
+    "module1_subtitle": "互動式客戶獲取漏斗分析。",
+    "module2_tag": "模組 2，共 6 單元",
+    "module2_title": "行銷你的個人檔案",
+    "module3_tag": "模組 3，共 6 單元",
+    "module4_tag": "模組 4，共 6 個模組",
+    "module5_tag": "模組 5，共 6 單元",
+    "module6_tag": "模組 6 中 6",
+    "next_module": "下一單元",
+    "previous": "先前",
+    "congratulations": "恭喜！",
+    "completed_subtitle": "你完成了課程並提升了你的提供者分數。"
+  },
+  "outreach": {
+    "header_tag": "企業夥伴學院",
+    "header_title": "企業介紹入門",
+    "exit": "退出",
+    "next_module": "下一單元",
+    "previous": "先前",
+    "complete_and_refer": "完成並推薦企業"
+  },
+  "landing": {
+    "tag": "Mantra 執行夥伴關係",
+    "title": "企業成長夥伴計畫",
+    "exit": "退出",
+    "why_wellness": "企業健康的重要性"
+  },
+  "under_review": {
+    "title": "申請審核中",
+    "subtitle": "您的企業合作夥伴申請已成功提交。",
+    "back_to_dashboard": "返回儀表板"
+  }
+}

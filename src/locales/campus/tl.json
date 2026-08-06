@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "Campus Ambassador Learning",
+    "resume_later": "Magpatuloy sa Susunod",
+    "return_to_dashboard": "Bumalik sa Dashboard",
+    "back_to_dashboard": "Bumalik sa Dashboard",
+    "orientation_tag": "Oryentasyon ng Inisyatiba sa Kampus",
+    "program_title": "Programa sa Pagsasanay ng Campus Ambassador",
+    "under_review_title": "Aplikasyon na Sinusuri",
+    "more_info_title": "Karagdagang Impormasyon na Kailangan",
+    "rejected_title": "Desisyon sa Aplikasyon",
+    "next": "Susunod",
+    "previous": "Nakaraan",
+    "submit": "Magsumite ng Aplikasyon"
+  }
+}

@@ -50,5 +50,12 @@
     "message": "对给你带来的不便我们深表歉意。在尝试加载本课程时发生了技术错误。",
     "details": "查看错误详情",
     "return": "返回仪表盘"
+  },
+  "buttons": {
+    "continue_later": "稍后继续",
+    "exit": "退出",
+    "next_module": "下一模块",
+    "previous": "之前",
+    "promotion_toolkit": "晋升工具包"
   }
 }

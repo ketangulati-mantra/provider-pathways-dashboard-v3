@@ -50,5 +50,12 @@
     "message": "Przepraszamy za niedogodności. Podczas próby ładowania tej lekcji wystąpił błąd techniczny.",
     "details": "Zobacz szczegóły błędów",
     "return": "Powrót do pulpitu"
+  },
+  "buttons": {
+    "continue_later": "Kontynuacja później",
+    "exit": "Wyjście",
+    "next_module": "Następny moduł",
+    "previous": "Poprzednie",
+    "promotion_toolkit": "Zestaw narzędzi awansowych"
   }
 }

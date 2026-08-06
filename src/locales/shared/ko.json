@@ -50,5 +50,12 @@
     "message": "불편을 끼쳐 드려 죄송합니다. 이 수업을 불러오려던 중 기술적인 오류가 발생했습니다.",
     "details": "오류 세부 정보 보기",
     "return": "대시보드로 돌아가기"
+  },
+  "buttons": {
+    "continue_later": "나중에 계속",
+    "exit": "출구",
+    "next_module": "다음 모듈",
+    "previous": "이전",
+    "promotion_toolkit": "승진 도구 키트"
   }
 }

@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Utvikle praksisen din",
+    "promotion_toolkit": "Fremmingsverktøykasse",
+    "continue_later": "Fortsett senere",
+    "module1_tag": "MODUL 1 AV 6",
+    "module1_title": "Hvordan {{brandName}} skaffer deg kunder",
+    "module1_subtitle": "Interaktiv gjennomgang av kundetilegnelsestrakten.",
+    "module2_tag": "MODUL 2 AV 6",
+    "module2_title": "Markedsfør profilen din",
+    "module3_tag": "MODUL 3 AV 6",
+    "module4_tag": "MODUL 4 AV 6",
+    "module5_tag": "MODUL 5 AV 6",
+    "module6_tag": "MODUL 6 AV 6",
+    "next_module": "Neste modul",
+    "previous": "Tidligere",
+    "congratulations": "Gratulerer!",
+    "completed_subtitle": "Du fullførte leksjonen og økte behandlerscoren din."
+  },
+  "outreach": {
+    "header_tag": "Corporate Partner Academy",
+    "header_title": "Å komme i gang med bedriftsintroduksjoner",
+    "exit": "Utgang",
+    "next_module": "Neste modul",
+    "previous": "Tidligere",
+    "complete_and_refer": "Fullfør og henvis et selskap"
+  },
+  "landing": {
+    "tag": "Mantra Lederpartnerskap",
+    "title": "Partnerprogram for bedriftsvekst",
+    "exit": "Utgang",
+    "why_wellness": "Hvorfor bedriftsvelvære er viktig"
+  },
+  "under_review": {
+    "title": "Søknad under vurdering",
+    "subtitle": "Søknaden din om bedriftspartner er sendt inn med suksess.",
+    "back_to_dashboard": "Tilbake til dashbordet"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "Udbyg din praksis",
+    "promotion_toolkit": "Promoveringsværktøjssæt",
+    "continue_later": "Fortsæt senere",
+    "module1_tag": "MODUL 1 AF 6",
+    "module1_title": "Hvordan {{brandName}} får dig kunder",
+    "module1_subtitle": "Interaktiv gennemgang af kundeerhvervelsestragten.",
+    "module2_tag": "MODUL 2 AF 6",
+    "module2_title": "Markedsfør din profil",
+    "module3_tag": "MODUL 3 AF 6",
+    "module4_tag": "MODUL 4 AF 6",
+    "module5_tag": "MODUL 5 AF 6",
+    "module6_tag": "MODUL 6 AF 6",
+    "next_module": "Næste modul",
+    "previous": "Tidligere",
+    "congratulations": "Tillykke!",
+    "completed_subtitle": "Du gennemførte lektionen og forbedrede din udbyderscore."
+  },
+  "outreach": {
+    "header_tag": "Corporate Partner Academy",
+    "header_title": "At komme i gang med introduktioner til virksomheder",
+    "exit": "Udgang",
+    "next_module": "Næste modul",
+    "previous": "Tidligere",
+    "complete_and_refer": "Fuldfør og henvis en virksomhed"
+  },
+  "landing": {
+    "tag": "Mantra Ledelsespartnerskaber",
+    "title": "Corporate Growth Partnerprogram",
+    "exit": "Udgang",
+    "why_wellness": "Hvorfor virksomhedstrivsel betyder noget"
+  },
+  "under_review": {
+    "title": "Ansøgning under gennemgang",
+    "subtitle": "Din ansøgning om virksomhedspartner er blevet indsendt med succes.",
+    "back_to_dashboard": "Tilbage til Dashboard"
+  }
+}

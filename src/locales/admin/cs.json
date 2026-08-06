@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Administrátorské přihlášení",
+    "login_subtitle": "Přístup k portálu pro správu poskytovatelských cest",
+    "email_label": "E-mailová adresa",
+    "password_label": "Heslo",
+    "sign_in": "Přihlášení",
+    "dashboard_title": "Dashboard pro vývojáře a administrátory",
+    "users_management": "Správa uživatelů",
+    "submissions_management": "Správa podání",
+    "logout": "Odhlásit se",
+    "roles": {
+      "admin": "Administrativa",
+      "superadmin": "Super Admin",
+      "user": "Uživatel"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Admin Login",
+    "login_subtitle": "Access the Provider Pathways management portal",
+    "email_label": "Email Address",
+    "password_label": "Password",
+    "sign_in": "Sign In",
+    "dashboard_title": "Developer & Admin Dashboard",
+    "users_management": "User Management",
+    "submissions_management": "Submissions Management",
+    "logout": "Log Out",
+    "roles": {
+      "admin": "Admin",
+      "superadmin": "Super Admin",
+      "user": "User"
+    }
+  }
+}

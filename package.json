@@ -8,7 +8,8 @@
     "dev:backend": "npm --prefix backend run dev",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "i18n:translate": "node scripts/translate.cjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

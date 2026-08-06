@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Admin-login",
+    "login_subtitle": "Toegang tot het Provider Pathways-beheersportaal",
+    "email_label": "E-mailadres",
+    "password_label": "Wachtwoord",
+    "sign_in": "Aanmelden",
+    "dashboard_title": "Ontwikkelaar & Admin Dashboard",
+    "users_management": "Gebruikersbeheer",
+    "submissions_management": "Inzendingsbeheer",
+    "logout": "Uitloggen",
+    "roles": {
+      "admin": "Administratie",
+      "superadmin": "Super Admin",
+      "user": "Gebruiker"
+    }
+  }
+}

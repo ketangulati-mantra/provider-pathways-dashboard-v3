@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Admin Login",
+    "login_subtitle": "Akses portal manajemen Jalur Penyedia",
+    "email_label": "Alamat Email",
+    "password_label": "Kata Sandi",
+    "sign_in": "Masuk",
+    "dashboard_title": "Dasbor Pengembang & Admin",
+    "users_management": "Manajemen Pengguna",
+    "submissions_management": "Manajemen Pengajuan",
+    "logout": "Keluar",
+    "roles": {
+      "admin": "Admin",
+      "superadmin": "Super Admin",
+      "user": "Pengguna"
+    }
+  }
+}

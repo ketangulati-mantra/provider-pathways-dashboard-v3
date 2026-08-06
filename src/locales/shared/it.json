@@ -50,5 +50,12 @@
     "message": "Ci scusiamo per l'inconveniente. Si è verificato un errore tecnico mentre cercavo di caricare questa lezione.",
     "details": "Visualizza i dettagli dell'errore",
     "return": "Ritorno al Cruscotto"
+  },
+  "buttons": {
+    "continue_later": "Continuare più tardi",
+    "exit": "Uscita",
+    "next_module": "Modulo successivo",
+    "previous": "Precedente",
+    "promotion_toolkit": "Kit di Strumenti per la Promozione"
   }
 }

@@ -1,0 +1,16 @@
+{
+  "campus": {
+    "header_title": "Apprendimento dell'Ambasciatore del Campus",
+    "resume_later": "Riprendere più tardi",
+    "return_to_dashboard": "Ritorno al Cruscotto",
+    "back_to_dashboard": "Torna al cruscotto",
+    "orientation_tag": "Orientamento all'Iniziativa del Campus",
+    "program_title": "Programma di Formazione per Ambasciatori del Campus",
+    "under_review_title": "Domanda in esame",
+    "more_info_title": "Informazioni aggiuntive richieste",
+    "rejected_title": "Decisione sulla domanda",
+    "next": "Prossimo",
+    "previous": "Precedente",
+    "submit": "Invia domanda"
+  }
+}

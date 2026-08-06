@@ -1,0 +1,39 @@
+{
+  "grow_practice": {
+    "header_title": "あなたの診療所を成長させましょう",
+    "promotion_toolkit": "プロモーションツールキット",
+    "continue_later": "続きは後ほど",
+    "module1_tag": "モジュール1/6",
+    "module1_title": "{{brandName}}がクライアントを獲得する方法",
+    "module1_subtitle": "インタラクティブなクライアント獲得ファネルの内訳。",
+    "module2_tag": "モジュール2/6",
+    "module2_title": "プロフィールをマーケティングする",
+    "module3_tag": "モジュール3/6",
+    "module4_tag": "モジュール4/6",
+    "module5_tag": "モジュール5/6",
+    "module6_tag": "モジュール6/6",
+    "next_module": "次のモジュール",
+    "previous": "過去",
+    "congratulations": "おめでとうございます!",
+    "completed_subtitle": "レッスンを終え、プロバイダーのスコアが上がりました。"
+  },
+  "outreach": {
+    "header_tag": "コーポレートパートナーアカデミー",
+    "header_title": "企業紹介の始め方",
+    "exit": "退場",
+    "next_module": "次のモジュール",
+    "previous": "過去",
+    "complete_and_refer": "企業を完成させて紹介する"
+  },
+  "landing": {
+    "tag": "マントラエグゼクティブパートナーシップ",
+    "title": "コーポレート・グロース・パートナー・プログラム",
+    "exit": "退場",
+    "why_wellness": "なぜ企業の健康が重要なのか"
+  },
+  "under_review": {
+    "title": "審査中の申請書",
+    "subtitle": "あなたのコーポレートパートナー申請は無事に提出されました。",
+    "back_to_dashboard": "ダッシュボードに戻る"
+  }
+}

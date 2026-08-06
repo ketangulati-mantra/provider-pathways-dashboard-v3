@@ -50,5 +50,12 @@
     "message": "Vi beklager ulempen. En teknisk feil oppsto da jeg prøvde å laste inn denne leksjonen.",
     "details": "Vis feildetaljer",
     "return": "Tilbake til dashbordet"
+  },
+  "buttons": {
+    "continue_later": "Fortsett senere",
+    "exit": "Utgang",
+    "next_module": "Neste modul",
+    "previous": "Tidligere",
+    "promotion_toolkit": "Fremmingsverktøykasse"
   }
 }

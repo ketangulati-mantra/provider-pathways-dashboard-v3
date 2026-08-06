@@ -50,5 +50,12 @@
     "message": "Onze excuses voor het ongemak. Er deed zich een technische fout voor tijdens het laden van deze les.",
     "details": "Foutgegevens bekijken",
     "return": "Terug naar dashboard"
+  },
+  "buttons": {
+    "continue_later": "Ga later verder",
+    "exit": "Exit",
+    "next_module": "Volgende module",
+    "previous": "Eerder",
+    "promotion_toolkit": "Promotietoolkit"
   }
 }

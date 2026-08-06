@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "login_title": "Admin Login",
+    "login_subtitle": "I-access ang Provider Pathways management portal",
+    "email_label": "Email Address",
+    "password_label": "Password",
+    "sign_in": "Mag-sign In",
+    "dashboard_title": "Dashboard ng Developer at Admin",
+    "users_management": "Pamamahala ng User",
+    "submissions_management": "Pamamahala ng Pagsusumite",
+    "logout": "Mag-log out",
+    "roles": {
+      "admin": "Admin",
+      "superadmin": "Super Admin",
+      "user": "User"
+    }
+  }
+}
