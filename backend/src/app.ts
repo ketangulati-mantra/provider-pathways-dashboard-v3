@@ -35,7 +35,8 @@ const apiPrefixes = [
   '/provider_pathways_dashboard_v1/api',
   '/provider_dashboard_v1/api',
   '/provider_pathways_v2_testing/api',
-  '/provider_pathways/api'
+  '/provider_pathways/api',
+  '/provider_pathway/api'
 ];
 
 apiPrefixes.forEach((prefix) => {
@@ -64,7 +65,8 @@ const subpaths = [
   '/provider_dashboard_v1',
   '/provider_pathways_dashboard_v1',
   '/provider_pathways_v2_testing',
-  '/provider_pathways'
+  '/provider_pathways',
+  '/provider_pathway'
 ];
 
 subpaths.forEach((subpath) => {

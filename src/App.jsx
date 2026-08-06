@@ -32,6 +32,8 @@ function App() {
       p = p.slice('/provider_pathways_v2_testing'.length) || '/';
     } else if (p.startsWith('/provider_pathways')) {
       p = p.slice('/provider_pathways'.length) || '/';
+    } else if (p.startsWith('/provider_pathway')) {
+      p = p.slice('/provider_pathway'.length) || '/';
     }
     return p || '/';
   };

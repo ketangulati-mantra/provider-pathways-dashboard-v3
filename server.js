@@ -33,7 +33,8 @@ const server = http.createServer((req, res) => {
     '/provider_pathways_dashboard_v1',
     '/provider_dashboard_v1',
     '/provider_pathways_v2_testing',
-    '/provider_pathways'
+    '/provider_pathways',
+    '/provider_pathway'
   ];
 
   for (const prefix of knownPrefixes) {
