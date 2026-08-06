@@ -110,7 +110,7 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     name: 'OCDMantra',
     tagline: 'OCDMantra Growth Academy',
     subtitle: 'Learn how to increase your visibility, attract ERP clients, and grow your OCDMantra listing through proven strategies.',
-    logo: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg',
+    logo: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785929926/ocdmantraicon_cnxa03.png',
     primaryColor: '#7c3aed',
     gradient: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
     listingBaseUrl: 'https://ocdmantra.com/list/therapist/',

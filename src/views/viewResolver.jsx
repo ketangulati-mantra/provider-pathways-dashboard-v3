@@ -157,9 +157,13 @@ export const resolveLessonView = ({ currentPath, currentService, onBack, activit
     return <Component onBack={onBack} />;
   }
 
-  // Dynamic path matching for /task/market-yourself/*
+  // Dynamic path matching for /task/market-yourself/* and /task/ocd-market-yourself/*
+  if (currentPath.startsWith('/task/ocd-market-yourself')) {
+    return <GrowYourPracticeAcademy onBack={onBack} brandKey="ocdmantra" />;
+  }
+
   if (currentPath.startsWith('/task/market-yourself')) {
-    return <GrowYourPracticeAcademy onBack={onBack} />;
+    return <GrowYourPracticeAcademy onBack={onBack} brandKey="therapymantra" />;
   }
 
   // Generic fallback if route matches a registered activity in activities config

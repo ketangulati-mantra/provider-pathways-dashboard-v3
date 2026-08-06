@@ -329,8 +329,12 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
       setUrlValidationError('Please paste a valid profile URL.');
       return;
     }
-    if (!clean.includes('therapymantra.co') && !clean.includes('therapists.therapymantra.co')) {
-      setUrlValidationError('URL must start with https://therapists.therapymantra.co/list/therapist/');
+    const isTherapyMantra = brand.id === 'therapymantra' && (clean.includes('therapymantra.co') || clean.includes('therapists.therapymantra.co'));
+    const isOCDMantra = brand.id === 'ocdmantra' && (clean.includes('ocdmantra.com') || clean.includes('ocdmantra.co'));
+    const isValidDomain = isTherapyMantra || isOCDMantra || (brand.listingBaseUrl && clean.includes(new URL(brand.listingBaseUrl).hostname));
+    
+    if (!isValidDomain) {
+      setUrlValidationError(`URL must start with ${brand.listingBaseUrl || 'https://ocdmantra.com/list/therapist/'}`);
       return;
     }
     setUrlValidationError('');

@@ -81,6 +81,15 @@ export const activities: Activity[] = [
     estimatedDuration: '10 min',
     route: '/task/market-yourself/therapy'
   },
+  {
+    lessonId: 'ocd-market-yourself',
+    activityId: 'ocd-growth',
+    services: ['therapy', 'psychiatry'],
+    title: 'grow your practice (ocdmantra)',
+    rewardPoints: 50,
+    estimatedDuration: '10 min',
+    route: '/task/ocd-market-yourself/therapy'
+  },
 
   {
     lessonId: 'share-linkedin',
