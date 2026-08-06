@@ -8,7 +8,7 @@ import {
   Play, Clock, Compass, ChevronLeft, Video, Upload, Calendar, Eye, ThumbsUp, ThumbsDown, UserCheck, Wand2,
   ChevronDown, ChevronUp, Camera, Mic, Sun, VideoIcon, Info, HeartHandshake, Activity, Moon, MapPin, Phone, Megaphone
 } from 'lucide-react';
-import { getCurrentUserId, MANTRA_CONFIG, completeLesson, goToDashboard } from '../../mantra';
+import { getCurrentUserId, MANTRA_CONFIG, completeLesson, goToDashboard, goBack } from '../../mantra';
 import { submitActivitySubmission } from '../../mantra/api';
 import { PLATFORM_CONFIGS } from '../../config/platformConfig';
 import ProviderContentStudio from './ProviderContentStudio';
@@ -157,6 +157,24 @@ const getProfileAuditItems = (brand) => {
     }
   ];
 };
+
+function EmbeddedVideoPlayer({ videoUrl, posterUrl }) {
+  if (!videoUrl) return null;
+
+  return (
+    <div style={{ borderRadius: '14px', overflow: 'hidden', border: '1px solid #e2e8f0', aspectRatio: '16/9', background: '#000000', position: 'relative' }}>
+      <video
+        controls
+        controlsList="nodownload"
+        playsInline
+        preload="metadata"
+        poster={posterUrl}
+        src={videoUrl}
+        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+      />
+    </div>
+  );
+}
 
 export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapymantra' }) {
   const brand = PLATFORM_CONFIGS[brandKey] || PLATFORM_CONFIGS.therapymantra;
@@ -485,7 +503,7 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
               <Megaphone size={13} /> Promotion Toolkit
             </button>
 
-            <button onClick={() => { if (onBack) onBack(); else goToDashboard(); }} style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#475569', fontWeight: 800, fontSize: '0.74rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <button onClick={() => goBack(onBack)} style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#475569', fontWeight: 800, fontSize: '0.74rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <ArrowLeft size={13} /> Continue Later
             </button>
           </div>
@@ -536,24 +554,15 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
             </div>
 
             {/* Embedded Learning Video */}
-            <div style={{ borderRadius: '14px', overflow: 'hidden', border: '1px solid #e2e8f0', aspectRatio: '16/9', background: '#000000', position: 'relative' }}>
-              <video
-                controls
-                controlsList="nodownload"
-                playsInline
-                preload="metadata"
-                poster={brand?.youtubeVideos?.gettingClientsPoster || 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785830152/thumnail_2_YT_ubtbev.jpg'}
-                src={brand?.youtubeVideos?.gettingClients || brand?.videos?.gettingClients || 'https://res.cloudinary.com/hxbamdqf/video/upload/v1785829768/vidssave.com_Getting_Clients_from_Mantra_Business_Growth_through_Platform_Visibility_1080P_o0lhmj.mp4'}
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              />
-            </div>
+            <EmbeddedVideoPlayer
+              title="Getting Clients from Mantra"
+              posterUrl={brand?.youtubeVideos?.gettingClientsPoster || 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785830152/thumnail_2_YT_ubtbev.jpg'}
+              videoUrl={brand?.youtubeVideos?.gettingClients || brand?.videos?.gettingClients || 'https://res.cloudinary.com/hxbamdqf/video/upload/v1785829768/vidssave.com_Getting_Clients_from_Mantra_Business_Growth_through_Platform_Visibility_1080P_o0lhmj.mp4'}
+            />
 
 
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
-              <button onClick={handlePrev} style={{ padding: '9px 18px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#334155', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <ChevronLeft size={16} /> Previous
-              </button>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
               <button onClick={handleNext} style={{ padding: '9px 20px', borderRadius: '10px', border: 'none', background: brand.primaryColor, color: '#ffffff', fontWeight: 900, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 Next Module <ChevronRight size={16} />
               </button>
@@ -613,17 +622,11 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
             </div>
 
             {/* Embedded Video: Market Your Profile */}
-            <div style={{ borderRadius: '14px', overflow: 'hidden', border: '1px solid #e2e8f0', aspectRatio: '16/9', background: '#000000', position: 'relative' }}>
-              <video
-                controls
-                controlsList="nodownload"
-                playsInline
-                preload="metadata"
-                poster={brand?.youtubeVideos?.marketProfilePoster || 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785830152/thumbnail_1_YT_t5egvr.jpg'}
-                src={brand?.youtubeVideos?.marketProfile || brand?.videos?.marketProfile || 'https://res.cloudinary.com/hxbamdqf/video/upload/v1785829769/Market_Your_Profile_1080P_v6wtcx.mp4'}
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              />
-            </div>
+            <EmbeddedVideoPlayer
+              title="Market Your Profile"
+              posterUrl={brand?.youtubeVideos?.marketProfilePoster || 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785830152/thumbnail_1_YT_t5egvr.jpg'}
+              videoUrl={brand?.youtubeVideos?.marketProfile || brand?.videos?.marketProfile || 'https://res.cloudinary.com/hxbamdqf/video/upload/v1785829769/Market_Your_Profile_1080P_v6wtcx.mp4'}
+            />
 
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
               <button onClick={handlePrev} style={{ padding: '9px 18px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#334155', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>

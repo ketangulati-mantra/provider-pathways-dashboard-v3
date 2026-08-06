@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { getCurrentService, getAvailableActivities, preserveQueryParams } from './mantra';
+import { getCurrentService, getAvailableActivities, preserveQueryParams, handleExit } from './mantra';
 import { resolveLessonView } from './views/viewResolver';
 import DeveloperLessonsPage from './views/DeveloperLessonsPage';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -10,6 +10,11 @@ function App() {
   const envBase = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
 
   const getPath = () => {
+    // Priority 1: Check window.location.hash for SPA client routes e.g. #/admin/login or #/admin/users
+    if (typeof window !== 'undefined' && window.location.hash && window.location.hash.startsWith('#/')) {
+      return window.location.hash.slice(1);
+    }
+
     let p = window.location.pathname;
     const base = envBase ? envBase.replace(/\/$/, '') : '';
     
@@ -53,11 +58,15 @@ function App() {
 
   // Custom router state listener
   useEffect(() => {
-    const handlePopState = () => {
+    const handleLocationChange = () => {
       setCurrentPath(getPath());
     };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
   }, []);
 
   const navigate = (path) => {
@@ -86,7 +95,7 @@ function App() {
       );
     }
 
-    const onBackCallback = () => navigate('/');
+    const onBackCallback = () => handleExit();
 
     // Use viewResolver to map route and service to appropriate lesson component
     const resolvedView = resolveLessonView({

@@ -50,7 +50,7 @@ export const Button = ({
   );
 };
 
-import { goToDashboard } from '../mantra/navigation';
+import { goToDashboard, goBack, handleExit, navigateToNativeScreen } from '../mantra/navigation';
 
 /* ==========================================================================
    2. LESSON HEADER COMPONENT
@@ -58,7 +58,8 @@ import { goToDashboard } from '../mantra/navigation';
 export const Header = ({
   title,
   progress = null,
-  points = null
+  points = null,
+  onBack
 }) => {
   const { t } = useTranslation('shared');
 
@@ -67,7 +68,7 @@ export const Header = ({
       <div className="academy-header-top">
         <button
           className="academy-header-back-btn"
-          onClick={goToDashboard}
+          onClick={() => goBack(onBack)}
           aria-label="Go back to dashboard"
         >
           <ArrowLeft size={20} />
@@ -813,7 +814,14 @@ export const CompletionScreen = ({
 
         <Button
           variant="primary"
-          onClick={onClose}
+          onClick={() => {
+            if (onClose) {
+              onClose();
+            } else {
+              navigateToNativeScreen('Home');
+              handleExit();
+            }
+          }}
           style={{ width: '100%', marginTop: '8px' }}
         >
           Take to portal

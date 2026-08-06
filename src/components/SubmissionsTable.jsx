@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { Search, RefreshCw, Download, FileSpreadsheet, Calendar, User, ExternalLink, Filter, ChevronRight, X, Sparkles, Database, Layers, CheckCircle2, ZoomIn, ZoomOut, RotateCcw, Clock, Eye, Mail, Image, FileText, Phone, Trash2, Plus } from 'lucide-react';
 import { fetchAllSubmissions, reviewSubmissionStatus } from '../mantra/api';
 import { useToast } from './Toast';
+import { useAuth } from '../auth/AuthContext';
 
 /* Interactive Photo Preview Modal with Zoom & Drag Support */
 function InteractiveImageModal({ imageUrl, onClose }) {
@@ -73,7 +74,7 @@ function InteractiveImageModal({ imageUrl, onClose }) {
   }, [onClose]);
 
   return ReactDOM.createPortal(
-    <div 
+    <div
       ref={containerRef}
       onClick={onClose}
       style={{
@@ -90,7 +91,7 @@ function InteractiveImageModal({ imageUrl, onClose }) {
       }}
     >
       {/* Top Floating Control Toolbar */}
-      <div 
+      <div
         onClick={(e) => e.stopPropagation()}
         style={{
           position: 'absolute',
@@ -193,21 +194,89 @@ function InteractiveImageModal({ imageUrl, onClose }) {
   );
 }
 
+const formatActivityTitle = (title, lessonId) => {
+  if (!title && !lessonId) return 'Mantra intro video';
+  const lower = (title || '').toLowerCase();
+  const lId = (lessonId || '').toLowerCase();
+
+  if (lower.includes('ocd') || lId.includes('ocd')) {
+    return 'OCD intro video';
+  }
+  if (lower.includes('physio') || lId.includes('physio')) {
+    return 'Physio intro video';
+  }
+  if (lower.includes('therapy') || lId.includes('therapy')) {
+    return 'Therapy intro video';
+  }
+  if (lower.includes('mantra') || lId.includes('market') || lId.includes('grow')) {
+    return 'Mantra intro video';
+  }
+  return title || 'Mantra intro video';
+};
+
 export default function SubmissionsTable() {
   const { showToast } = useToast();
+  const { admin: currentAdmin } = useAuth();
   const [submissions, setSubmissions] = useState([]);
   const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalRecords: 0 });
+  const [limit, setLimit] = useState(25);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedActivity, setSelectedActivity] = useState('all');
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
+  const [columnOrder, setColumnOrder] = useState(['user', 'service', 'country', 'dynamic', 'activity', 'submittedAt', 'status', 'reviewedBy', 'action']);
+  const [draggedColId, setDraggedColId] = useState(null);
 
-  const loadSubmissions = async (page = 1) => {
+  const tableScrollRef = useRef(null);
+  const scrollIntervalRef = useRef(null);
+  const [showLeftNav, setShowLeftNav] = useState(false);
+  const [showRightNav, setShowRightNav] = useState(false);
+
+  const checkScrollState = () => {
+    const el = tableScrollRef.current;
+    if (!el) return;
+    const canScrollLeft = el.scrollLeft > 5;
+    const canScrollRight = el.scrollLeft < (el.scrollWidth - el.clientWidth - 5);
+    setShowLeftNav(canScrollLeft);
+    setShowRightNav(canScrollRight);
+  };
+
+  const startHoverScroll = (direction) => {
+    stopHoverScroll();
+    const step = direction === 'right' ? 65 : -65;
+    scrollIntervalRef.current = setInterval(() => {
+      if (tableScrollRef.current) {
+        tableScrollRef.current.scrollLeft += step;
+      }
+    }, 16);
+  };
+
+  const stopHoverScroll = () => {
+    if (scrollIntervalRef.current) {
+      clearInterval(scrollIntervalRef.current);
+      scrollIntervalRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    const el = tableScrollRef.current;
+    if (!el) return;
+    checkScrollState();
+    el.addEventListener('scroll', checkScrollState);
+    window.addEventListener('resize', checkScrollState);
+    return () => {
+      el.removeEventListener('scroll', checkScrollState);
+      window.removeEventListener('resize', checkScrollState);
+      stopHoverScroll();
+    };
+  }, [submissions]);
+
+  const loadSubmissions = async (page = 1, currentLimit = limit) => {
     setLoading(true);
     const res = await fetchAllSubmissions({
       page,
-      limit: 50,
+      limit: currentLimit,
       search: searchQuery
     });
     setLoading(false);
@@ -223,8 +292,8 @@ export default function SubmissionsTable() {
   };
 
   useEffect(() => {
-    loadSubmissions(1);
-  }, []);
+    loadSubmissions(1, limit);
+  }, [limit]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -336,8 +405,11 @@ export default function SubmissionsTable() {
 
   // Filter submissions by selected activity, status, and reviewer
   const filteredSubmissions = submissions.filter(item => {
-    if (selectedActivity !== 'all' && item.lesson_id !== selectedActivity && item.submission_type !== selectedActivity) {
-      return false;
+    if (selectedActivity !== 'all') {
+      const formattedTitle = formatActivityTitle(item.activity_title, item.lesson_id);
+      if (item.lesson_id !== selectedActivity && item.activity_title !== selectedActivity && formattedTitle !== selectedActivity) {
+        return false;
+      }
     }
     const itemStatus = (item.status || 'pending').toLowerCase();
     if (selectedStatus !== 'all') {
@@ -358,9 +430,16 @@ export default function SubmissionsTable() {
     return true;
   });
 
-  // Unique activity list for filter dropdown
-  const uniqueActivities = Array.from(new Set(submissions.map(s => JSON.stringify({ lessonId: s.lesson_id, title: s.activity_title }))))
-    .map(str => JSON.parse(str));
+  // Dynamically extract unique activity options present in real table records
+  const uniqueActivitiesMap = new Map();
+  submissions.forEach(s => {
+    const formattedTitle = formatActivityTitle(s.activity_title, s.lesson_id);
+    const key = s.lesson_id || s.activity_title || formattedTitle;
+    if (key && !uniqueActivitiesMap.has(formattedTitle)) {
+      uniqueActivitiesMap.set(formattedTitle, { key, title: formattedTitle });
+    }
+  });
+  const uniqueActivities = Array.from(uniqueActivitiesMap.values());
 
   // Exclude redundant user info, P/V links & technical file upload metadata keys from main table
   const REDUNDANT_KEYS = [
@@ -390,11 +469,64 @@ export default function SubmissionsTable() {
     const keysArr = Array.from(keys);
     const regularKeys = keysArr.filter(k => !PROOF_KEYS.includes(k));
     const proofKeys = keysArr.filter(k => PROOF_KEYS.includes(k));
-    
+
     return [...regularKeys, ...proofKeys];
   };
 
   const dynamicKeys = getDynamicFormKeys();
+
+  // Column Drag & Drop Reordering state
+  const [columns, setColumns] = useState([]);
+
+  useEffect(() => {
+    const baseCols = [
+      { id: 'user', label: 'User / Email', width: '16%' },
+      { id: 'service', label: 'Service', width: '9%' },
+      { id: 'country', label: 'Country', width: '10%' },
+      ...dynamicKeys.map(k => ({ id: `dyn_${k}`, key: k, label: formatHeaderLabel(k) })),
+      { id: 'activity', label: 'Activity', width: '14%' },
+      { id: 'submittedAt', label: 'Submitted At', width: '13%' },
+      { id: 'status', label: 'Status', width: '12%' },
+      { id: 'reviewedBy', label: 'Reviewed By', width: '13%' },
+      { id: 'action', label: 'Action', width: '8%', align: 'right' }
+    ];
+
+    setColumns(prev => {
+      if (prev.length === 0) return baseCols;
+      // Preserve user reordered ids if present, append any new dynamic columns
+      const existingIds = prev.map(c => c.id);
+      const newCols = baseCols.filter(c => !existingIds.includes(c.id));
+      return [...prev.filter(c => baseCols.some(bc => bc.id === c.id)), ...newCols];
+    });
+  }, [submissions]);
+
+  const [draggedColumnIndex, setDraggedColumnIndex] = useState(null);
+
+  const handleColumnDragStart = (e, index) => {
+    setDraggedColumnIndex(index);
+    e.dataTransfer.setData('text/plain', String(index));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleColumnDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleColumnDrop = (e, dropIndex) => {
+    e.preventDefault();
+    const dragIndexStr = e.dataTransfer.getData('text/plain');
+    const dragIndex = dragIndexStr !== '' ? Number(dragIndexStr) : draggedColumnIndex;
+    if (dragIndex === null || dragIndex === dropIndex) {
+      setDraggedColumnIndex(null);
+      return;
+    }
+    const updated = [...columns];
+    const [movedItem] = updated.splice(dragIndex, 1);
+    updated.splice(dropIndex, 0, movedItem);
+    setColumns(updated);
+    setDraggedColumnIndex(null);
+  };
 
   const formatHeaderLabel = (key) => {
     if (key.toLowerCase() === 'city') return 'Country';
@@ -473,10 +605,10 @@ export default function SubmissionsTable() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
-      
+
       {/* Top Status Metrics Cards (Ultra-Compact) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
-        
+
         {/* Metric 1: Pending */}
         <div style={{ background: '#fffbeb', borderRadius: '8px', border: '1px solid #fde68a', padding: '6px 10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ width: '26px', height: '26px', borderRadius: '6px', background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -524,31 +656,31 @@ export default function SubmissionsTable() {
       </div>
 
       {/* Sleek Action & Filter Bar (Compact Height) */}
-      <div style={{ 
-        display: 'flex', 
-        flexWrap: 'wrap', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        gap: '10px', 
-        background: '#ffffff', 
-        padding: '10px 16px', 
-        borderRadius: '12px', 
-        border: '1px solid #e2e8f0', 
-        boxShadow: '0 2px 8px rgba(0,0,0,0.02)' 
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: '10px',
+        background: '#ffffff',
+        padding: '10px 16px',
+        borderRadius: '12px',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
       }}>
-        
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ 
-            width: '30px', 
-            height: '30px', 
-            borderRadius: '8px', 
-            background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)', 
-            color: '#ffffff', 
-            display: 'flex', 
-            alignItems: 'center', 
+          <div style={{
+            width: '30px',
+            height: '30px',
+            borderRadius: '8px',
+            background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+            color: '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
-            boxShadow: '0 2px 6px rgba(37, 99, 235, 0.2)' 
+            boxShadow: '0 2px 6px rgba(37, 99, 235, 0.2)'
           }}>
             <FileSpreadsheet size={15} style={{ display: 'block', margin: 'auto' }} />
           </div>
@@ -563,7 +695,7 @@ export default function SubmissionsTable() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          
+
           {/* Status Filter */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
             <Filter size={12} color="#64748b" />
@@ -572,11 +704,11 @@ export default function SubmissionsTable() {
               onChange={(e) => setSelectedStatus(e.target.value)}
               style={{ border: 'none', background: 'transparent', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, outline: 'none', cursor: 'pointer' }}
             >
-              <option value="all">All Statuses ({submissions.length})</option>
-              <option value="pending">Pending ({pendingCount})</option>
-              <option value="under_review">Under Review ({underReviewCount})</option>
-              <option value="reviewed">Reviewed ({reviewedCount})</option>
-              <option value="mail_sent">Mail Sent ({mailSentCount})</option>
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="under_review">Under Review</option>
+              <option value="reviewed">Reviewed</option>
+              <option value="mail_sent">Mail Sent</option>
             </select>
           </div>
 
@@ -612,7 +744,7 @@ export default function SubmissionsTable() {
             >
               <option value="all">All Activities</option>
               {uniqueActivities.map(act => (
-                <option key={act.lessonId} value={act.lessonId}>{act.title}</option>
+                <option key={act.title} value={act.title}>{act.title}</option>
               ))}
             </select>
           </div>
@@ -662,330 +794,553 @@ export default function SubmissionsTable() {
             Refresh
           </button>
 
-          {/* Export Button */}
-          <button
-            onClick={exportToCSV}
-            style={{
-              height: '28px',
-              padding: '0 12px',
-              borderRadius: '8px',
-              border: 'none',
-              background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
-              color: '#ffffff',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              fontSize: '0.76rem',
-              fontWeight: 800,
-              boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)'
-            }}
-          >
-            <Download size={12} /> Export CSV
-          </button>
+          {/* Export Button (Super Admin Only) */}
+          {(currentAdmin?.role === 'super_admin' || currentAdmin?.role === 'Super Admin') && (
+            <button
+              onClick={exportToCSV}
+              style={{
+                height: '28px',
+                padding: '0 12px',
+                borderRadius: '8px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                color: '#ffffff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                fontSize: '0.76rem',
+                fontWeight: 800,
+                boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)'
+              }}
+            >
+              <Download size={12} /> Export CSV
+            </button>
+          )}
 
         </div>
 
       </div>
 
-      {/* Main Operations Table (Compact Rows) */}
-      <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
-        <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.76rem' }}>
-          <thead>
-            <tr style={{ background: '#043263', borderBottom: '1px solid #03254c', color: '#ffffff', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: '0.04em' }}>
-              <th style={{ padding: '10px 14px', width: '18%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>User / Email</th>
-              <th style={{ padding: '10px 14px', width: '10%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Service</th>
-              <th style={{ padding: '10px 14px', width: '12%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Country</th>
-              
-              {/* Dynamically Generated Form Data Columns */}
-              {dynamicKeys.map(key => (
-                <th key={key} style={{ padding: '10px 14px', width: `${Math.floor(18 / Math.max(1, dynamicKeys.length))}%`, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {formatHeaderLabel(key)}
-                </th>
-              ))}
+      {/* Main Operations Table (Compact Rows with Hover Scroll Navigators) */}
+      <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', background: '#ffffff' }}>
+          
+          {/* Hover Scroll Navigator - LEFT */}
+          <div
+            onMouseEnter={() => startHoverScroll('left')}
+            onMouseLeave={stopHoverScroll}
+            onClick={() => {
+              if (tableScrollRef.current) tableScrollRef.current.scrollLeft -= 750;
+            }}
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: '44px',
+              zIndex: 20,
+              display: showLeftNav ? 'flex' : 'none',
+              alignItems: 'center',
+              justifyContent: 'flex-start',
+              background: 'linear-gradient(to right, rgba(241,245,249,0.85) 0%, rgba(241,245,249,0) 100%)',
+              cursor: 'pointer',
+              transition: 'opacity 0.2s ease',
+              pointerEvents: 'auto'
+            }}
+            title="Hover or Click to Scroll Left"
+          >
+            <div
+              style={{
+                width: '38px',
+                height: '64px',
+                borderTopRightRadius: '32px',
+                borderBottomRightRadius: '32px',
+                background: 'rgba(226, 232, 240, 0.9)',
+                backdropFilter: 'blur(4px)',
+                boxShadow: '2px 0 8px rgba(0,0,0,0.12)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#334155',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <ChevronRight size={22} style={{ transform: 'rotate(180deg)', strokeWidth: 3 }} />
+            </div>
+          </div>
 
-              <th style={{ padding: '10px 14px', width: '16%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Activity</th>
-              <th style={{ padding: '10px 14px', width: '14%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Submitted At</th>
-              <th style={{ padding: '10px 14px', width: '10%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Status</th>
-              <th style={{ padding: '10px 14px', width: '12%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Reviewed By</th>
-              <th style={{ padding: '10px 14px', width: '10%', whiteSpace: 'nowrap', textAlign: 'right' }}>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={7 + dynamicKeys.length} style={{ textAlign: 'center', padding: '24px 12px', color: '#64748b' }}>
-                  <RefreshCw size={18} style={{ margin: '0 auto 6px', color: '#2563eb' }} className="animate-spin" />
-                  <div style={{ fontWeight: 600, fontSize: '0.76rem' }}>Loading operations data...</div>
-                </td>
-              </tr>
-            ) : filteredSubmissions.length === 0 ? (
-              <tr>
-                <td colSpan={7 + dynamicKeys.length} style={{ textAlign: 'center', padding: '28px 12px', color: '#64748b' }}>
-                  <FileSpreadsheet size={26} style={{ margin: '0 auto 6px', color: '#cbd5e1' }} />
-                  <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.82rem' }}>No Submissions Found</div>
-                  <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '2px' }}>Try adjusting your filters or search terms</div>
-                </td>
-              </tr>
-            ) : (
-              filteredSubmissions.map((item) => {
-                const data = item.form_data || item.submission_data || {};
-                const fullName = data.fullName || data.name || item.user_id;
-                const email = data.email;
-                const country = data.country || data.countryName || data.city || 'United States';
-                const currentStatus = (item.status || 'pending').toLowerCase();
-                const statusStyle = STATUS_CONFIG[currentStatus] || STATUS_CONFIG.pending;
-                const currentReviewer = item.reviewed_by || 'Unassigned';
+          {/* Hover Scroll Navigator - RIGHT */}
+          <div
+            onMouseEnter={() => startHoverScroll('right')}
+            onMouseLeave={stopHoverScroll}
+            onClick={() => {
+              if (tableScrollRef.current) tableScrollRef.current.scrollLeft += 750;
+            }}
+            style={{
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: '44px',
+              zIndex: 20,
+              display: showRightNav ? 'flex' : 'none',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              background: 'linear-gradient(to left, rgba(241,245,249,0.85) 0%, rgba(241,245,249,0) 100%)',
+              cursor: 'pointer',
+              transition: 'opacity 0.2s ease',
+              pointerEvents: 'auto'
+            }}
+            title="Hover or Click to Scroll Right"
+          >
+            <div
+              style={{
+                width: '38px',
+                height: '64px',
+                borderTopLeftRadius: '32px',
+                borderBottomLeftRadius: '32px',
+                background: 'rgba(226, 232, 240, 0.9)',
+                backdropFilter: 'blur(4px)',
+                boxShadow: '-2px 0 8px rgba(0,0,0,0.12)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#334155',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <ChevronRight size={22} style={{ strokeWidth: 3 }} />
+            </div>
+          </div>
 
-                return (
-                  <tr 
-                    key={item.id} 
-                    style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s ease' }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+          <div ref={tableScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.76rem' }}>
+            <thead>
+              <tr style={{ background: '#043263', borderBottom: '1px solid #03254c', color: '#ffffff', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.66rem', letterSpacing: '0.04em' }}>
+                {columns.map((col, index) => (
+                  <th
+                    key={col.id}
+                    draggable
+                    onDragStart={(e) => handleColumnDragStart(e, index)}
+                    onDragOver={handleColumnDragOver}
+                    onDrop={(e) => handleColumnDrop(e, index)}
+                    onDragEnd={() => setDraggedColumnIndex(null)}
+                    style={{
+                      padding: '6px 10px',
+                      width: col.width || 'auto',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      cursor: 'grab',
+                      userSelect: 'none',
+                      textAlign: col.align || 'left',
+                      background: draggedColumnIndex === index ? '#1e4ed8' : 'transparent',
+                      borderLeft: draggedColumnIndex === index ? '2px solid #60a5fa' : 'none',
+                      transition: 'background 0.15s ease'
+                    }}
+                    title="Drag left or right to reorder column position"
                   >
-                    
-                    {/* Column 1: User / Email */}
-                    <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${fullName} (${email || ''})`}>
-                      <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.78rem', overflow: 'hidden', textOverflow: 'ellipsis' }}>{fullName}</div>
-                      {email && <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '0px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</div>}
-                    </td>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ opacity: 0.6, fontSize: '0.65rem', cursor: 'grab' }}>⋮⋮</span>
+                      {col.label}
+                    </span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={columns.length} style={{ textAlign: 'center', padding: '24px 12px', color: '#64748b' }}>
+                    <RefreshCw size={18} style={{ margin: '0 auto 6px', color: '#2563eb' }} className="animate-spin" />
+                    <div style={{ fontWeight: 600, fontSize: '0.76rem' }}>Loading operations data...</div>
+                  </td>
+                </tr>
+              ) : filteredSubmissions.length === 0 ? (
+                <tr>
+                  <td colSpan={columns.length} style={{ textAlign: 'center', padding: '28px 12px', color: '#64748b' }}>
+                    <FileSpreadsheet size={26} style={{ margin: '0 auto 6px', color: '#cbd5e1' }} />
+                    <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.82rem' }}>No Submissions Found</div>
+                    <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '2px' }}>Try adjusting your filters or search terms</div>
+                  </td>
+                </tr>
+              ) : (
+                filteredSubmissions.map((item) => {
+                  const data = item.form_data || item.submission_data || {};
+                  const fullName = data.fullName || data.name || item.user_id;
+                  const email = data.email;
+                  const country = data.country || data.countryName || data.city || 'United States';
+                  const currentStatus = (item.status || 'pending').toLowerCase();
+                  const statusStyle = STATUS_CONFIG[currentStatus] || STATUS_CONFIG.pending;
+                  const currentReviewer = item.reviewed_by || 'Unassigned';
 
-                    {/* Column 2: Service Context Badge */}
-                    <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {item.service ? (
-                        <span style={{ 
-                          padding: '1px 6px', 
-                          borderRadius: '4px', 
-                          background: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)', 
-                          color: '#7e22ce', 
-                          border: '1px solid #e9d5ff',
-                          fontSize: '0.68rem', 
-                          fontWeight: 700, 
-                          textTransform: 'capitalize',
-                          display: 'inline-block'
-                        }}>
-                          {item.service}
-                        </span>
-                      ) : (
-                        <span style={{ color: '#cbd5e1', fontSize: '0.72rem' }}>—</span>
-                      )}
-                    </td>
+                  return (
+                    <tr
+                      key={item.id}
+                      style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s ease' }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      {columns.map(col => {
+                        if (col.id === 'user') {
+                          return (
+                            <td key={col.id} style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${fullName} (${email || ''})`}>
+                              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.76rem', overflow: 'hidden', textOverflow: 'ellipsis' }}>{fullName}</div>
+                              {email && <div style={{ fontSize: '0.66rem', color: '#64748b', marginTop: '0px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</div>}
+                            </td>
+                          );
+                        }
 
-                    {/* Column 3: Country */}
-                    <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      <span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#334155' }}>
-                        {country}
-                      </span>
-                    </td>
-
-                    {/* Dynamic Form Field Columns */}
-                    {dynamicKeys.map(key => {
-                      const val = data[key];
-                      const isImage = PROOF_KEYS.includes(key);
-
-                      if (isImage && val) {
-                        const isVideo = key === 'videoUrl' || (typeof val === 'string' && (val.includes('/video/') || val.endsWith('.mp4') || val.endsWith('.webm')));
-                        return (
-                          <td key={key} style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
-                            {isVideo ? (
-                              <a
-                                href={val}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                  padding: '2px 6px',
+                        if (col.id === 'service') {
+                          return (
+                            <td key={col.id} style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {item.service ? (
+                                <span style={{
+                                  padding: '1px 6px',
                                   borderRadius: '4px',
-                                  border: '1px solid #bfdbfe',
-                                  background: '#eff6ff',
-                                  color: '#2563eb',
-                                  fontSize: '0.68rem',
-                                  fontWeight: 700,
-                                  cursor: 'pointer',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '3px',
-                                  textDecoration: 'none'
-                                }}
-                              >
-                                <ExternalLink size={11} /> Video
-                              </a>
-                            ) : (
-                              <button
-                                onClick={() => setPreviewImage(val)}
-                                style={{
-                                  padding: '2px 6px',
-                                  borderRadius: '4px',
-                                  border: '1px solid #e9d5ff',
-                                  background: '#faf5ff',
+                                  background: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)',
                                   color: '#7e22ce',
+                                  border: '1px solid #e9d5ff',
                                   fontSize: '0.68rem',
+                                  fontWeight: 700,
+                                  textTransform: 'capitalize',
+                                  display: 'inline-block'
+                                }}>
+                                  {item.service}
+                                </span>
+                              ) : (
+                                <span style={{ color: '#cbd5e1', fontSize: '0.72rem' }}>—</span>
+                              )}
+                            </td>
+                          );
+                        }
+
+                        if (col.id === 'country') {
+                          return (
+                            <td key={col.id} style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#334155' }}>
+                                {country}
+                              </span>
+                            </td>
+                          );
+                        }
+
+                        if (col.id.startsWith('dyn_')) {
+                          const key = col.key;
+                          const val = data[key];
+                          const isImage = PROOF_KEYS.includes(key);
+
+                          if (isImage && val) {
+                            const isVideo = key === 'videoUrl' || (typeof val === 'string' && (val.includes('/video/') || val.endsWith('.mp4') || val.endsWith('.webm')));
+                            return (
+                              <td key={col.id} style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                                {isVideo ? (
+                                  <a
+                                    href={val}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                      padding: '2px 6px',
+                                      borderRadius: '4px',
+                                      border: '1px solid #bfdbfe',
+                                      background: '#eff6ff',
+                                      color: '#2563eb',
+                                      fontSize: '0.68rem',
+                                      fontWeight: 700,
+                                      cursor: 'pointer',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '3px',
+                                      textDecoration: 'none'
+                                    }}
+                                  >
+                                    <ExternalLink size={11} /> Video
+                                  </a>
+                                ) : (
+                                  <button
+                                    onClick={() => setPreviewImage(val)}
+                                    style={{
+                                      padding: '2px 6px',
+                                      borderRadius: '4px',
+                                      border: '1px solid #e9d5ff',
+                                      background: '#faf5ff',
+                                      color: '#7e22ce',
+                                      fontSize: '0.68rem',
+                                      fontWeight: 700,
+                                      cursor: 'pointer',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '3px'
+                                    }}
+                                  >
+                                    <Image size={11} /> Proof
+                                  </button>
+                                )}
+                              </td>
+                            );
+                          }
+
+                          return (
+                            <td key={col.id} style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={String(val || '')}>
+                              {val !== undefined && val !== null && val !== '' ? (
+                                <span style={{ color: '#334155', fontWeight: 600 }}>{String(val)}</span>
+                              ) : (
+                                <span style={{ color: '#cbd5e1' }}>—</span>
+                              )}
+                            </td>
+                          );
+                        }
+
+                        if (col.id === 'activity') {
+                          return (
+                            <td key={col.id} style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={formatActivityTitle(item.activity_title, item.lesson_id)}>
+                              <div style={{ fontSize: '0.74rem', fontWeight: 600, color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {(item.activity_title === 'TherapyMantra' || item.lesson_id === 'grow-your-practice' || item.lesson_id === 'market-yourself' || item.activity_title?.toLowerCase().includes('therapymantra')) ? (
+                                  <a
+                                    href={`/provider_pathways_dashboard_v3/task/market-yourself/${encodeURIComponent(item.service || 'therapy')}`}
+                                    style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 700 }}
+                                  >
+                                    {formatActivityTitle(item.activity_title, item.lesson_id)}
+                                  </a>
+                                ) : (
+                                  formatActivityTitle(item.activity_title, item.lesson_id)
+                                )}
+                              </div>
+                            </td>
+                          );
+                        }
+
+                        if (col.id === 'submittedAt') {
+                          return (
+                            <td key={col.id} style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: '0.74rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {formatDate(item.created_at || data.submittedAt || data.uploadedAt)}
+                            </td>
+                          );
+                        }
+
+                        if (col.id === 'status') {
+                          return (
+                            <td key={col.id} style={{ padding: '6px 8px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                              <select
+                                value={currentStatus === 'approved' ? 'reviewed' : currentStatus}
+                                onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                                style={{
+                                  padding: '2px 6px',
+                                  borderRadius: '6px',
+                                  border: `1px solid ${statusStyle.border}`,
+                                  background: statusStyle.bg,
+                                  color: statusStyle.color,
+                                  fontWeight: 800,
+                                  fontSize: '0.70rem',
+                                  cursor: 'pointer',
+                                  outline: 'none',
+                                  width: '100%',
+                                  minWidth: '105px'
+                                }}
+                              >
+                                <option value="pending">Pending</option>
+                                <option value="under_review">Under Review</option>
+                                <option value="reviewed">Reviewed</option>
+                                <option value="mail_sent">Mail Sent</option>
+                              </select>
+                            </td>
+                          );
+                        }
+
+                        if (col.id === 'reviewedBy') {
+                          return (
+                            <td key={col.id} style={{ padding: '6px 8px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                              <select
+                                value={currentReviewer}
+                                onChange={(e) => handleReviewerChange(item.id, e.target.value)}
+                                style={{
+                                  padding: '2px 6px',
+                                  borderRadius: '6px',
+                                  border: '1px solid #cbd5e1',
+                                  background: currentReviewer !== 'Unassigned' ? '#eff6ff' : '#f8fafc',
+                                  color: currentReviewer !== 'Unassigned' ? '#1d4ed8' : '#64748b',
+                                  fontWeight: 700,
+                                  fontSize: '0.70rem',
+                                  cursor: 'pointer',
+                                  outline: 'none',
+                                  width: '100%',
+                                  minWidth: '110px'
+                                }}
+                              >
+                                {reviewerOptions.map(r => (
+                                  <option key={r} value={r}>{r}</option>
+                                ))}
+                                <option value="__ADD_NEW__">+ Add Reviewer...</option>
+                                <option value="__MANAGE__">⚙️ Manage / Delete Reviewers...</option>
+                              </select>
+                            </td>
+                          );
+                        }
+
+                        if (col.id === 'action') {
+                          return (
+                            <td key={col.id} style={{ padding: '6px 10px', verticalAlign: 'middle', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                              <button
+                                onClick={() => setSelectedSubmission(item)}
+                                style={{
+                                  padding: '3px 8px',
+                                  borderRadius: '6px',
+                                  border: '1px solid #cbd5e1',
+                                  background: '#ffffff',
+                                  color: '#2563eb',
+                                  fontSize: '0.72rem',
                                   fontWeight: 700,
                                   cursor: 'pointer',
                                   display: 'inline-flex',
                                   alignItems: 'center',
-                                  gap: '3px'
+                                  gap: '2px'
                                 }}
                               >
-                                <Image size={11} /> Proof
+                                View <ChevronRight size={11} />
                               </button>
-                            )}
-                          </td>
-                        );
-                      }
+                            </td>
+                          );
+                        }
 
-                      return (
-                        <td key={key} style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={String(val || '')}>
-                          {val !== undefined && val !== null && val !== '' ? (
-                            <span style={{ color: '#334155', fontWeight: 600 }}>{String(val)}</span>
-                          ) : (
-                            <span style={{ color: '#cbd5e1' }}>—</span>
-                          )}
-                        </td>
-                      );
-                    })}
+                        return null;
+                      })}
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+          </div>
 
-                    {/* Activity Name */}
-                    <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.activity_title}>
-                      <div style={{ fontSize: '0.74rem', fontWeight: 600, color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {(item.activity_title === 'TherapyMantra' || item.lesson_id === 'grow-your-practice' || item.lesson_id === 'market-yourself' || item.activity_title?.toLowerCase().includes('therapymantra')) ? (
-                          <a 
-                            href={`/provider_pathways_dashboard_v3/task/market-yourself/${encodeURIComponent(item.service || 'therapy')}`} 
-                            style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 700 }}
-                          >
-                            Marketing(TM)
-                          </a>
-                        ) : (
-                          item.activity_title
-                        )}
-                      </div>
-                    </td>
+          {/* Pagination Footer Controls */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 16px',
+              borderTop: '1px solid #e2e8f0',
+              background: '#f8fafc',
+              borderBottomLeftRadius: '12px',
+              borderBottomRightRadius: '12px',
+              flexWrap: 'wrap',
+              gap: '10px'
+            }}
+          >
+            {/* Items Per Page Selector */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#475569', fontWeight: 600 }}>
+              <span>Rows per page:</span>
+              <select
+                value={limit}
+                onChange={(e) => {
+                  const newLimit = Number(e.target.value);
+                  setLimit(newLimit);
+                  loadSubmissions(1, newLimit);
+                }}
+                style={{
+                  padding: '3px 8px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  fontSize: '0.76rem',
+                  fontWeight: 700,
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value={25}>25 records</option>
+                <option value={50}>50 records</option>
+                <option value={100}>100 records</option>
+              </select>
+            </div>
 
-                    {/* Submitted At */}
-                    <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: '0.74rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {formatDate(item.created_at || data.submittedAt || data.uploadedAt)}
-                    </td>
+            {/* Page Information & Navigation */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <span style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 600 }}>
+                Page <strong style={{ color: '#0f172a' }}>{pagination.currentPage || 1}</strong> of <strong style={{ color: '#0f172a' }}>{pagination.totalPages || 1}</strong>
+                {pagination.totalRecords ? ` (${pagination.totalRecords} total records)` : ''}
+              </span>
 
-                    {/* Status Column with Interactive Selector */}
-                    <td style={{ padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
-                      <select
-                        value={currentStatus === 'approved' ? 'reviewed' : currentStatus}
-                        onChange={(e) => handleStatusChange(item.id, e.target.value)}
-                        style={{
-                          padding: '2px 6px',
-                          borderRadius: '6px',
-                          border: `1px solid ${statusStyle.border}`,
-                          background: statusStyle.bg,
-                          color: statusStyle.color,
-                          fontWeight: 800,
-                          fontSize: '0.72rem',
-                          cursor: 'pointer',
-                          outline: 'none'
-                        }}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="under_review">Under Review</option>
-                        <option value="reviewed">Reviewed</option>
-                        <option value="mail_sent">Mail Sent</option>
-                      </select>
-                    </td>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button
+                  onClick={() => loadSubmissions((pagination.currentPage || 1) - 1)}
+                  disabled={loading || (pagination.currentPage || 1) <= 1}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                    background: (pagination.currentPage || 1) <= 1 ? '#f1f5f9' : '#ffffff',
+                    color: (pagination.currentPage || 1) <= 1 ? '#94a3b8' : '#334155',
+                    fontSize: '0.74rem',
+                    fontWeight: 700,
+                    cursor: (pagination.currentPage || 1) <= 1 ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  Previous
+                </button>
 
-                    {/* Reviewed By Column with Interactive Selector */}
-                    <td style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
-                      <select
-                        value={currentReviewer}
-                        onChange={(e) => handleReviewerChange(item.id, e.target.value)}
-                        style={{
-                          padding: '2px 6px',
-                          borderRadius: '6px',
-                          border: '1px solid #cbd5e1',
-                          background: currentReviewer !== 'Unassigned' ? '#eff6ff' : '#f8fafc',
-                          color: currentReviewer !== 'Unassigned' ? '#1d4ed8' : '#64748b',
-                          fontWeight: 700,
-                          fontSize: '0.72rem',
-                          cursor: 'pointer',
-                          outline: 'none',
-                          maxWidth: '110px'
-                        }}
-                      >
-                        {reviewerOptions.map(r => (
-                          <option key={r} value={r}>{r}</option>
-                        ))}
-                        <option value="__ADD_NEW__">+ Add Reviewer...</option>
-                        <option value="__MANAGE__">⚙️ Manage / Delete Reviewers...</option>
-                      </select>
-                    </td>
-
-                    {/* Action View Button */}
-                    <td style={{ padding: '6px 10px', verticalAlign: 'middle', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      <button
-                        onClick={() => setSelectedSubmission(item)}
-                        style={{
-                          padding: '3px 8px',
-                          borderRadius: '6px',
-                          border: '1px solid #cbd5e1',
-                          background: '#ffffff',
-                          color: '#2563eb',
-                          fontSize: '0.72rem',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '2px'
-                        }}
-                      >
-                        View <ChevronRight size={11} />
-                      </button>
-                    </td>
-
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                <button
+                  onClick={() => loadSubmissions((pagination.currentPage || 1) + 1)}
+                  disabled={loading || (pagination.currentPage || 1) >= (pagination.totalPages || 1)}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                    background: (pagination.currentPage || 1) >= (pagination.totalPages || 1) ? '#f1f5f9' : '#ffffff',
+                    color: (pagination.currentPage || 1) >= (pagination.totalPages || 1) ? '#94a3b8' : '#334155',
+                    fontSize: '0.74rem',
+                    fontWeight: 700,
+                    cursor: (pagination.currentPage || 1) >= (pagination.totalPages || 1) ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
       {/* MODAL 1: Interactive Zoom & Drag Image Proof Viewer */}
       {previewImage && (
-        <InteractiveImageModal 
-          imageUrl={previewImage} 
-          onClose={() => setPreviewImage(null)} 
+        <InteractiveImageModal
+          imageUrl={previewImage}
+          onClose={() => setPreviewImage(null)}
         />
       )}
 
       {/* MODAL 2: Premium Centered Screen Record Popup Portal */}
       {selectedSubmission && ReactDOM.createPortal(
-        <div 
+        <div
           onClick={() => setSelectedSubmission(null)}
-          style={{ 
-            position: 'fixed', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
-            bottom: 0, 
-            width: '100vw', 
-            height: '100vh', 
-            backgroundColor: 'rgba(15, 23, 42, 0.75)', 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(15, 23, 42, 0.75)',
             backdropFilter: 'blur(8px)',
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            zIndex: 9999999, 
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999999,
             padding: '20px'
           }}
         >
-          <div 
+          <div
             onClick={(e) => e.stopPropagation()}
-            style={{ 
-              background: '#ffffff', 
-              borderRadius: '20px', 
-              width: '100%', 
-              maxWidth: '560px', 
-              maxHeight: '85vh', 
-              display: 'flex', 
-              flexDirection: 'column', 
-              padding: '0', 
+            style={{
+              background: '#ffffff',
+              borderRadius: '20px',
+              width: '100%',
+              maxWidth: '560px',
+              maxHeight: '85vh',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '0',
               boxShadow: '0 25px 50px -12px rgba(15, 23, 42, 0.4)',
               border: '1px solid #e2e8f0',
               position: 'relative',
@@ -994,7 +1349,7 @@ export default function SubmissionsTable() {
           >
             {/* Gradient Top Accent Bar */}
             <div style={{ height: '4px', background: 'linear-gradient(90deg, #2563eb, #7c3aed, #ec4899)' }}></div>
-            
+
             {/* Modal Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1010,8 +1365,8 @@ export default function SubmissionsTable() {
                   </div>
                 </div>
               </div>
-              <button 
-                onClick={() => setSelectedSubmission(null)} 
+              <button
+                onClick={() => setSelectedSubmission(null)}
                 style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '50%', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', transition: 'all 0.15s' }}
               >
                 <X size={15} />
@@ -1020,7 +1375,7 @@ export default function SubmissionsTable() {
 
             {/* Modal Body */}
             <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '14px', padding: '16px 20px', background: '#fcfcfd' }}>
-              
+
               {/* Card 1: User Profile Header Card */}
               {(() => {
                 const data = selectedSubmission.form_data || selectedSubmission.submission_data || {};
@@ -1067,10 +1422,12 @@ export default function SubmissionsTable() {
 
                     {/* Card 2: Activity & Review Status Details */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                      
+
                       <div style={{ background: '#ffffff', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
                         <div style={{ fontSize: '0.64rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Activity Name</div>
-                        <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', marginTop: '3px' }}>{selectedSubmission.activity_title}</div>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', marginTop: '3px' }}>
+                          {formatActivityTitle(selectedSubmission.activity_title, selectedSubmission.lesson_id)}
+                        </div>
                         <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <Clock size={11} /> {submittedDate}
                         </div>
@@ -1132,9 +1489,9 @@ export default function SubmissionsTable() {
                   </h4>
                   <div style={{ background: '#faf5ff', padding: '10px 14px', borderRadius: '10px', border: '1px solid #e9d5ff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <img 
-                        src={selectedSubmission.form_data?.screenshotUrl || selectedSubmission.form_data?.imageUrl} 
-                        alt="Proof" 
+                      <img
+                        src={selectedSubmission.form_data?.screenshotUrl || selectedSubmission.form_data?.imageUrl}
+                        alt="Proof"
                         onClick={() => setPreviewImage(selectedSubmission.form_data?.screenshotUrl || selectedSubmission.form_data?.imageUrl)}
                         style={{ width: '60px', height: '44px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
                       />
@@ -1143,9 +1500,9 @@ export default function SubmissionsTable() {
                         <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '1px' }}>Click thumbnail to open zoom viewer</div>
                       </div>
                     </div>
-                    <button 
+                    <button
                       type="button"
-                      onClick={() => setPreviewImage(selectedSubmission.form_data?.screenshotUrl || selectedSubmission.form_data?.imageUrl)} 
+                      onClick={() => setPreviewImage(selectedSubmission.form_data?.screenshotUrl || selectedSubmission.form_data?.imageUrl)}
                       style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid #e9d5ff', background: '#ffffff', color: '#7e22ce', fontWeight: 700, fontSize: '0.74rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
                     >
                       <Image size={12} /> View Image <ExternalLink size={11} />
@@ -1180,7 +1537,6 @@ export default function SubmissionsTable() {
                             </div>
                             <div>
                               <div style={{ fontSize: '0.74rem', fontWeight: 700, color: '#1d4ed8' }}>Provider Introduction Video</div>
-                              <div style={{ fontSize: '0.66rem', color: '#64748b', marginTop: '1px' }}>Hosted on Cloudinary</div>
                             </div>
                           </div>
                           <a
@@ -1210,8 +1566,8 @@ export default function SubmissionsTable() {
 
             {/* Modal Footer */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '12px 20px', background: '#ffffff', borderTop: '1px solid #e2e8f0' }}>
-              <button 
-                onClick={() => setSelectedSubmission(null)} 
+              <button
+                onClick={() => setSelectedSubmission(null)}
                 style={{ padding: '6px 20px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)', color: '#ffffff', fontWeight: 800, cursor: 'pointer', fontSize: '0.78rem', boxShadow: '0 2px 8px rgba(37,99,235,0.2)' }}
               >
                 Close Record
@@ -1225,29 +1581,29 @@ export default function SubmissionsTable() {
 
       {/* MODAL 3: Manage & Delete Reviewers Modal */}
       {isManagingReviewers && ReactDOM.createPortal(
-        <div 
-          onClick={() => setIsManagingReviewers(false)} 
-          style={{ 
-            position: 'fixed', 
-            inset: 0, 
-            background: 'rgba(15, 23, 42, 0.65)', 
-            backdropFilter: 'blur(6px)', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            zIndex: 9999999, 
+        <div
+          onClick={() => setIsManagingReviewers(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999999,
             padding: '20px'
           }}
         >
-          <div 
+          <div
             onClick={(e) => e.stopPropagation()}
-            style={{ 
-              background: '#ffffff', 
-              borderRadius: '16px', 
-              width: '100%', 
-              maxWidth: '440px', 
-              display: 'flex', 
-              flexDirection: 'column', 
+            style={{
+              background: '#ffffff',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '440px',
+              display: 'flex',
+              flexDirection: 'column',
               boxShadow: '0 20px 40px -10px rgba(15, 23, 42, 0.35)',
               border: '1px solid #e2e8f0',
               overflow: 'hidden'
@@ -1266,8 +1622,8 @@ export default function SubmissionsTable() {
                   <div style={{ fontSize: '0.68rem', color: '#64748b' }}>Add or remove reviewer names from your team list</div>
                 </div>
               </div>
-              <button 
-                onClick={() => setIsManagingReviewers(false)} 
+              <button
+                onClick={() => setIsManagingReviewers(false)}
                 style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}
               >
                 <X size={14} />
@@ -1279,7 +1635,7 @@ export default function SubmissionsTable() {
               <label style={{ fontSize: '0.68rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
                 Add New Reviewer
               </label>
-              <form 
+              <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleAddReviewer();
@@ -1332,15 +1688,15 @@ export default function SubmissionsTable() {
                 Active Reviewers ({reviewerOptions.length})
               </div>
               {reviewerOptions.map((reviewer) => (
-                <div 
-                  key={reviewer} 
-                  style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between', 
-                    background: '#f8fafc', 
-                    padding: '8px 12px', 
-                    borderRadius: '8px', 
+                <div
+                  key={reviewer}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: '#f8fafc',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
                     border: '1px solid #f1f5f9',
                     fontSize: '0.78rem'
                   }}
@@ -1383,8 +1739,8 @@ export default function SubmissionsTable() {
 
             {/* Modal Footer */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '12px 18px', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
-              <button 
-                onClick={() => setIsManagingReviewers(false)} 
+              <button
+                onClick={() => setIsManagingReviewers(false)}
                 style={{ padding: '6px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontWeight: 700, cursor: 'pointer', fontSize: '0.76rem' }}
               >
                 Done

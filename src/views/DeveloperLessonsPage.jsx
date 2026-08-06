@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, BookOpen, Database, Menu, GraduationCap, Building2, Clock, ArrowRight, Filter, X, ChevronRight } from 'lucide-react';
+import { Search, BookOpen, Database, Menu, GraduationCap, Building2, Clock, ArrowRight, Filter, X, ChevronRight, LogOut, ShieldCheck } from 'lucide-react';
 import SubmissionsTable from '../components/SubmissionsTable';
 import CampusAdminDashboard from '../components/admin/CampusAdminDashboard';
 import CorporateAdminDashboard from '../components/admin/CorporateAdminDashboard';
 import { activities as mantraActivities, getCurrentService, setServiceContext, preserveQueryParams, SUPPORTED_SERVICES } from '../mantra';
+import { useAuth } from '../auth/AuthContext';
 
 const MANTRA_LOGO_URL = 'https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg';
 
 export default function DeveloperLessonsPage({ onNavigate }) {
+  const { admin: currentAdmin, logout } = useAuth();
   const [selectedService, setSelectedService] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('submissions');
@@ -168,38 +170,38 @@ export default function DeveloperLessonsPage({ onNavigate }) {
           <div 
             onClick={(e) => e.stopPropagation()}
             style={{
-              width: '300px',
+              width: '250px',
               maxWidth: '85vw',
               height: '100%',
               background: '#ffffff',
               boxShadow: '8px 0 30px rgba(0,0,0,0.15)',
               display: 'flex',
               flexDirection: 'column',
-              padding: '24px 20px',
-              gap: '24px',
+              padding: '16px 14px',
+              gap: '16px',
               position: 'relative'
             }}
           >
             {/* Sidebar Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid #e2e8f0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <img 
                   src={MANTRA_LOGO_URL} 
                   alt="Mantra Care" 
-                  style={{ height: '28px', objectFit: 'contain' }}
+                  style={{ height: '22px', objectFit: 'contain' }}
                 />
               </div>
               <button 
                 onClick={() => setIsSidebarOpen(false)}
-                style={{ background: '#f1f5f9', border: 'none', borderRadius: '8px', padding: '6px', cursor: 'pointer', color: '#64748b' }}
+                style={{ background: '#f1f5f9', border: 'none', borderRadius: '6px', padding: '4px', cursor: 'pointer', color: '#64748b' }}
               >
-                <X size={18} />
+                <X size={15} />
               </button>
             </div>
 
             {/* Nav Menu Items */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 8px 4px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 6px 4px' }}>
                 Platform Modules
               </div>
 
@@ -208,24 +210,24 @@ export default function DeveloperLessonsPage({ onNavigate }) {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justify: 'space-between',
-                  padding: '12px 16px',
-                  borderRadius: '12px',
+                  justifyContent: 'space-between',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
                   border: 'none',
                   background: activeTab === 'submissions' ? '#043263' : '#f8fafc',
                   color: activeTab === 'submissions' ? '#ffffff' : '#334155',
-                  fontWeight: 800,
-                  fontSize: '0.9rem',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
                   cursor: 'pointer',
-                  boxShadow: activeTab === 'submissions' ? '0 4px 14px rgba(4, 50, 99, 0.25)' : 'none',
+                  boxShadow: activeTab === 'submissions' ? '0 2px 8px rgba(4, 50, 99, 0.2)' : 'none',
                   transition: 'all 0.15s ease'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Database size={18} color={activeTab === 'submissions' ? '#ffffff' : '#043263'} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Database size={15} color={activeTab === 'submissions' ? '#ffffff' : '#043263'} />
                   <span>Form Submissions</span>
                 </div>
-                <ChevronRight size={16} opacity={0.6} />
+                <ChevronRight size={14} opacity={0.6} />
               </button>
 
               <button
@@ -233,24 +235,24 @@ export default function DeveloperLessonsPage({ onNavigate }) {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justify: 'space-between',
-                  padding: '12px 16px',
-                  borderRadius: '12px',
+                  justifyContent: 'space-between',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
                   border: 'none',
                   background: activeTab === 'campus_admin' ? '#043263' : '#f8fafc',
                   color: activeTab === 'campus_admin' ? '#ffffff' : '#334155',
-                  fontWeight: 800,
-                  fontSize: '0.9rem',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
                   cursor: 'pointer',
-                  boxShadow: activeTab === 'campus_admin' ? '0 4px 14px rgba(4, 50, 99, 0.25)' : 'none',
+                  boxShadow: activeTab === 'campus_admin' ? '0 2px 8px rgba(4, 50, 99, 0.2)' : 'none',
                   transition: 'all 0.15s ease'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <GraduationCap size={18} color={activeTab === 'campus_admin' ? '#ffffff' : '#043263'} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <GraduationCap size={15} color={activeTab === 'campus_admin' ? '#ffffff' : '#043263'} />
                   <span>Campus Program</span>
                 </div>
-                <ChevronRight size={16} opacity={0.6} />
+                <ChevronRight size={14} opacity={0.6} />
               </button>
 
               <button
@@ -258,24 +260,24 @@ export default function DeveloperLessonsPage({ onNavigate }) {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justify: 'space-between',
-                  padding: '12px 16px',
-                  borderRadius: '12px',
+                  justifyContent: 'space-between',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
                   border: 'none',
                   background: activeTab === 'corporate_admin' ? '#043263' : '#f8fafc',
                   color: activeTab === 'corporate_admin' ? '#ffffff' : '#334155',
-                  fontWeight: 800,
-                  fontSize: '0.9rem',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
                   cursor: 'pointer',
-                  boxShadow: activeTab === 'corporate_admin' ? '0 4px 14px rgba(4, 50, 99, 0.25)' : 'none',
+                  boxShadow: activeTab === 'corporate_admin' ? '0 2px 8px rgba(4, 50, 99, 0.2)' : 'none',
                   transition: 'all 0.15s ease'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Building2 size={18} color={activeTab === 'corporate_admin' ? '#ffffff' : '#043263'} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Building2 size={15} color={activeTab === 'corporate_admin' ? '#ffffff' : '#043263'} />
                   <span>EAP Interests</span>
                 </div>
-                <ChevronRight size={16} opacity={0.6} />
+                <ChevronRight size={14} opacity={0.6} />
               </button>
 
               <button
@@ -283,24 +285,99 @@ export default function DeveloperLessonsPage({ onNavigate }) {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justify: 'space-between',
-                  padding: '12px 16px',
-                  borderRadius: '12px',
+                  justifyContent: 'space-between',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
                   border: 'none',
                   background: activeTab === 'lessons' ? '#043263' : '#f8fafc',
                   color: activeTab === 'lessons' ? '#ffffff' : '#334155',
-                  fontWeight: 800,
-                  fontSize: '0.9rem',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
                   cursor: 'pointer',
-                  boxShadow: activeTab === 'lessons' ? '0 4px 14px rgba(4, 50, 99, 0.25)' : 'none',
+                  boxShadow: activeTab === 'lessons' ? '0 2px 8px rgba(4, 50, 99, 0.2)' : 'none',
                   transition: 'all 0.15s ease'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <BookOpen size={18} color={activeTab === 'lessons' ? '#ffffff' : '#043263'} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <BookOpen size={15} color={activeTab === 'lessons' ? '#ffffff' : '#043263'} />
                   <span>Pathways ({filteredActivities.length})</span>
                 </div>
-                <ChevronRight size={16} opacity={0.6} />
+                <ChevronRight size={14} opacity={0.6} />
+              </button>
+
+              {/* Super Admin Only: Admin Management Navigation (Last Option) */}
+              {(currentAdmin?.role === 'super_admin' || currentAdmin?.role === 'Super Admin') && (
+                <button
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    window.location.href = '#/admin/users';
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: '#f3e8ff',
+                    color: '#7e22ce',
+                    fontWeight: 700,
+                    fontSize: '0.82rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <ShieldCheck size={15} color="#7e22ce" />
+                    <span>Admin Management</span>
+                  </div>
+                  <ChevronRight size={14} opacity={0.6} />
+                </button>
+              )}
+            </div>
+
+            {/* LOGGED IN USER INFO & SIGN-OUT AT SIDEBAR BOTTOM */}
+            <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {currentAdmin && (
+                <div style={{ padding: '8px 10px', borderRadius: '8px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {currentAdmin.name}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {currentAdmin.email}
+                  </div>
+                  <div style={{ marginTop: '3px' }}>
+                    <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#2563eb', background: '#eff6ff', padding: '1px 5px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                      {currentAdmin.role === 'super_admin' || currentAdmin.role === 'Super Admin' ? 'Super Admin' : 'Admin'}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={async () => {
+                  setIsSidebarOpen(false);
+                  await logout();
+                  window.location.href = '#/admin/login';
+                }}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #fecaca',
+                  background: '#fef2f2',
+                  color: '#dc2626',
+                  fontWeight: 700,
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  transition: 'background 0.15s ease'
+                }}
+              >
+                <LogOut size={14} /> Sign Out
               </button>
             </div>
           </div>

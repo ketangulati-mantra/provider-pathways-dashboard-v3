@@ -3,6 +3,7 @@ import {
   Building2, HeartHandshake, ShieldCheck, TrendingUp, Users, Award,
   CheckCircle2, ArrowRight, ArrowLeft, HelpCircle, Briefcase, Network, Sparkles, ChevronDown
 } from 'lucide-react';
+import { goBack } from '../../mantra';
 
 // ─── Step Page Data ─────────────────────────────────────────────────────────────
 
@@ -271,7 +272,7 @@ export default function CorporateLandingPage({ onExpressInterest, onOptOut, onBa
           alt="Mantra Logo"
           style={{ height: '28px', width: 'auto', display: 'block' }}
         />
-        <button onClick={onOptOut} style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#475569', fontWeight: 700, fontSize: '0.74rem', cursor: 'pointer' }}>
+        <button onClick={() => { if (onOptOut) onOptOut(); else goBack(onBack); }} style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#475569', fontWeight: 700, fontSize: '0.74rem', cursor: 'pointer' }}>
           Exit
         </button>
       </div>

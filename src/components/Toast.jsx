@@ -87,4 +87,14 @@ export const ToastProvider = ({ children }) => {
   );
 };
 
-export const useToast = () => useContext(ToastContext) || { showToast: () => {} };
+/**
+ * @typedef {'success' | 'error' | 'info'} ToastType
+ * @typedef {(message: string, type?: ToastType, duration?: number) => void} ShowToastFn
+ */
+
+/**
+ * @returns {{ showToast: ShowToastFn }}
+ */
+export const useToast = () => useContext(ToastContext) || { showToast: (message, type = 'success', duration = 3500) => {} };
+
+

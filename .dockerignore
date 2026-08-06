@@ -4,19 +4,21 @@ node_modules
 .pnp.js
 
 # Build output
-dist
 .next
+dist
 out
 
 # Version control
 .git
 .gitignore
 
-# Environment variables (Safety first - ignore all env files in docker builds)
-.env
-.env*
-backend/.env
-backend/.env*
+# Environment variables (safety first!)
+# Only allow a standard .env if you strictly commit public config there.
+# Always ignore local overrides containing secrets.
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # IDE / editor
 .vscode
@@ -37,7 +39,7 @@ coverage
 .DS_Store
 Thumbs.db
 
-# Docker config
+# Docker config itself, avoid cache invalidation when only config changes
 Dockerfile
 docker-compose.yml
 README.md

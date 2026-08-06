@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getCurrentUserId, MANTRA_CONFIG } from '../../mantra';
+import { getCurrentUserId, MANTRA_CONFIG, goBack } from '../../mantra';
 import {
   CheckCircle2, Circle, ArrowRight, ArrowLeft, Lock, BookOpen, Clock, Target,
   Award, Sparkles, ChevronRight, ChevronDown, Play, GraduationCap, BarChart3,
@@ -612,7 +612,7 @@ export default function CorporateLearningAcademy({ onBack }) {
 
         {/* Back Button */}
         <div style={{ padding: '10px 12px', borderTop: '1px solid #e2e8f0' }}>
-          <button onClick={onBack} style={{
+          <button onClick={() => goBack(onBack)} style={{
             width: '100%', padding: '7px', borderRadius: '8px', border: '1px solid #cbd5e1',
             background: '#fff', color: '#475569', fontWeight: 700, fontSize: '0.74rem', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'

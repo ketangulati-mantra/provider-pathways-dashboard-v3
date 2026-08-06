@@ -21,7 +21,13 @@ const getWebhookContext = () => {
 export const getCurrentUserId = (): string => {
   if (typeof window === 'undefined') return 'anonymous_user';
   const params = new URLSearchParams(window.location.search);
-  return params.get('user_id') || params.get('userId') || localStorage.getItem('mantra_user_id') || 'anonymous_user';
+  return (
+    sessionStorage.getItem('user_id') ||
+    params.get('user_id') ||
+    params.get('userId') ||
+    localStorage.getItem('mantra_user_id') ||
+    'anonymous_user'
+  );
 };
 
 /**

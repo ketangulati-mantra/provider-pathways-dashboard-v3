@@ -2,6 +2,9 @@ import React from 'react';
 import LessonTemplate from './LessonTemplate';
 import DeveloperLessonsPage from './DeveloperLessonsPage';
 import IntroductionLessonPage from './IntroductionLessonPage';
+import AdminLoginPage from './AdminLoginPage';
+import AdminUsersPage from './AdminUsersPage';
+import { ProtectedRoute } from '../auth/ProtectedRoute';
 import MobileAppLessonPage from './MobileAppLessonPage';
 import UsingMantraLessonPage from './UsingMantraLessonPage';
 import PremiumProviderLessonPage from './PremiumProviderLessonPage';
@@ -73,6 +76,10 @@ import GrowYourPracticeAcademy from '../components/corporate/GrowYourPracticeAca
  * Can specify default Component or service-specific overrides.
  */
 const ROUTE_VIEW_REGISTRY = {
+  '/admin/login': { default: AdminLoginPage },
+  '/admin/dashboard': { default: (props) => <ProtectedRoute><DeveloperLessonsPage {...props} /></ProtectedRoute> },
+  '/admin/users': { default: (props) => <ProtectedRoute requireSuperAdmin><AdminUsersPage {...props} /></ProtectedRoute> },
+  '/admin': { default: (props) => <ProtectedRoute><DeveloperLessonsPage {...props} /></ProtectedRoute> },
   '/meal-plans': { default: MealPlansLessonPage },
   '/task/meal-plans': { default: MealPlansLessonPage },
   '/task/diet-auto-responses': { default: DietAutoResponsesLessonPage },
@@ -110,20 +117,17 @@ const ROUTE_VIEW_REGISTRY = {
   '/task/market-yourself/coach': { default: (props) => <GrowYourPracticeAcademy {...props} brandKey="mantracare" /> },
   '/task/market-yourself/doctor': { default: (props) => <GrowYourPracticeAcademy {...props} brandKey="mantracare" /> },
   '/task/mantra-market-yourself': { default: (props) => <GrowYourPracticeAcademy {...props} brandKey="mantracare" /> },
-  '/task/grow-your-practice': { default: GrowYourPracticeAcademy },
   '/task/share-linkedin': { default: ShareLinkedinLessonPage },
   '/task/show-achievements': { default: ShowAchievementsLessonPage },
   '/task/getting-paid': { default: GettingPaidLessonPage },
   '/task/intern-program': { default: TherapyInternProgramLessonPage },
-  '/task/session-notes': { default: TherapyNotesLessonPage },
   '/task/therapy-notes': { default: TherapyNotesLessonPage },
   '/task/couple-therapy': { default: CoupleTherapyLessonPage },
-  '/task/creating-pathway': { default: CreatingPathwayLessonPage, yoga: YogaPathwayLessonPage },
-  '/task/canned-responses': { default: CannedResponsesLessonPage, diet: DietAutoResponsesLessonPage },
-  '/task/mantra-assessments': { default: MantraAssessmentsLessonPage },
+  '/task/creating-pathway': { default: CreatingPathwayLessonPage },
+  '/task/canned-responses': { default: CannedResponsesLessonPage },
+  '/task/assessments': { default: MantraAssessmentsLessonPage },
   '/task/support-hotline': { default: SupportHotlineLessonPage },
   '/task/corporate-eap': { default: CorporateEapLessonPage },
-  '/task/corporate-growth-partner': { default: CorporateEapLessonPage },
   '/task/community-management': { default: CommunityManagementLessonPage },
   '/task/content-creation': { default: ContentCreationLessonPage },
   '/task/campus-awareness': { default: CampusAwarenessLessonPage },

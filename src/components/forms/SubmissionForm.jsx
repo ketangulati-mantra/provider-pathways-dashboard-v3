@@ -246,7 +246,7 @@ export default function SubmissionForm({
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              onClick={triggerFileInput}
+              onClick={triggerFileSelect}
               style={{
                 border: isDragging ? '2px dashed #0284c7' : '2px dashed #cbd5e1',
                 borderRadius: '12px',

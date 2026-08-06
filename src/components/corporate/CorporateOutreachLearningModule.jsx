@@ -6,7 +6,7 @@ import {
   MessageSquare, UserCheck, Video, XCircle, AlertTriangle, Eye, RefreshCw, ExternalLink, X, Play,
   ChevronRight, Lock, BookOpen, Layers, Clock
 } from 'lucide-react';
-import { getCurrentUserId, MANTRA_CONFIG, completeLesson } from '../../mantra';
+import { getCurrentUserId, MANTRA_CONFIG, completeLesson, goBack } from '../../mantra';
 
 const API_BASE = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null ? MANTRA_CONFIG.apiBaseUrl : (import.meta.env.PROD ? '' : 'http://localhost:5000');
 
@@ -604,14 +604,12 @@ export default function CorporateOutreachLearningModule({ onBack, onComplete }) 
             </div>
           </div>
 
-          {onBack && (
-            <button
-              onClick={onBack}
-              style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#475569', fontWeight: 800, fontSize: '0.76rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0, marginLeft: 'auto' }}
-            >
-              <ArrowLeft size={13} /> Exit
-            </button>
-          )}
+          <button
+            onClick={() => goBack(onBack)}
+            style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#475569', fontWeight: 800, fontSize: '0.76rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0, marginLeft: 'auto' }}
+          >
+            <ArrowLeft size={13} /> Exit
+          </button>
         </div>
       </div>
 
@@ -691,21 +689,22 @@ export default function CorporateOutreachLearningModule({ onBack, onComplete }) 
             </div>
 
             {/* Bottom Next/Prev Action Controls Bar */}
-            <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <button
-                onClick={handlePrevModule}
-                disabled={activeModuleIndex === 0}
-                style={{
-                  padding: '8px 16px', borderRadius: '8px',
-                  border: '1px solid #cbd5e1', background: '#ffffff',
-                  color: activeModuleIndex === 0 ? '#cbd5e1' : '#334155',
-                  fontWeight: 800, fontSize: '0.78rem',
-                  cursor: activeModuleIndex === 0 ? 'not-allowed' : 'pointer',
-                  display: 'flex', alignItems: 'center', gap: '6px'
-                }}
-              >
-                <ArrowLeft size={14} /> Previous
-              </button>
+            <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '12px 14px', display: 'flex', justifyContent: activeModuleIndex > 0 ? 'space-between' : 'flex-end', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              {activeModuleIndex > 0 && (
+                <button
+                  onClick={handlePrevModule}
+                  style={{
+                    padding: '8px 16px', borderRadius: '8px',
+                    border: '1px solid #cbd5e1', background: '#ffffff',
+                    color: '#334155',
+                    fontWeight: 800, fontSize: '0.78rem',
+                    cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '6px'
+                  }}
+                >
+                  <ArrowLeft size={14} /> Previous
+                </button>
+              )}
 
               <button
                 onClick={handleNextModule}

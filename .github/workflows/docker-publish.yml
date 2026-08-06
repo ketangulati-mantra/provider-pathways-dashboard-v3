@@ -27,7 +27,4 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          tags: |
-            bunker.mantracare.com/lovable/provider_pathways_dashboard_v3:1.0
-            bunker.mantracare.com/lovable/provider_pathways_dashboard_v3:latest
-            bunker.mantracare.com/lovable/provider_pathways_dashboard_v3:${{ github.sha }}
+          tags: bunker.mantracare.com/lovable/provider_pathways:1.0

@@ -15,7 +15,9 @@ export interface PlatformConfig {
   lessonId: string;
   youtubeVideos: {
     gettingClients: string;
+    gettingClientsPoster?: string;
     marketProfile: string;
+    marketProfilePoster?: string;
   };
   supportedPlatforms: Array<{
     id: string;
@@ -120,8 +122,10 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     activityId: 'ocd-growth',
     lessonId: 'ocd-market-yourself',
     youtubeVideos: {
-      gettingClients: 'https://www.youtube.com/embed/VMWKdPGYoN4',
-      marketProfile: 'https://www.youtube.com/embed/PvvqTeCUmWE'
+      gettingClients: 'https://res.cloudinary.com/hxbamdqf/video/upload/v1785829768/vidssave.com_Getting_Clients_from_Mantra_Business_Growth_through_Platform_Visibility_1080P_o0lhmj.mp4',
+      gettingClientsPoster: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785830152/thumnail_2_YT_ubtbev.jpg',
+      marketProfile: 'https://res.cloudinary.com/hxbamdqf/video/upload/v1785829769/Market_Your_Profile_1080P_v6wtcx.mp4',
+      marketProfilePoster: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785830152/thumbnail_1_YT_t5egvr.jpg'
     },
     supportedPlatforms: [
       {
@@ -157,8 +161,10 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     activityId: 'physio-growth',
     lessonId: 'physio-market-yourself',
     youtubeVideos: {
-      gettingClients: 'https://www.youtube.com/embed/VMWKdPGYoN4',
-      marketProfile: 'https://www.youtube.com/embed/PvvqTeCUmWE'
+      gettingClients: 'https://res.cloudinary.com/hxbamdqf/video/upload/v1785829768/vidssave.com_Getting_Clients_from_Mantra_Business_Growth_through_Platform_Visibility_1080P_o0lhmj.mp4',
+      gettingClientsPoster: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785830152/thumnail_2_YT_ubtbev.jpg',
+      marketProfile: 'https://res.cloudinary.com/hxbamdqf/video/upload/v1785829769/Market_Your_Profile_1080P_v6wtcx.mp4',
+      marketProfilePoster: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785830152/thumbnail_1_YT_t5egvr.jpg'
     },
     supportedPlatforms: [],
     shareTemplates: {
@@ -180,8 +186,10 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     activityId: 'pride-growth',
     lessonId: 'pride-market-yourself',
     youtubeVideos: {
-      gettingClients: 'https://www.youtube.com/embed/VMWKdPGYoN4',
-      marketProfile: 'https://www.youtube.com/embed/PvvqTeCUmWE'
+      gettingClients: 'https://res.cloudinary.com/hxbamdqf/video/upload/v1785829768/vidssave.com_Getting_Clients_from_Mantra_Business_Growth_through_Platform_Visibility_1080P_o0lhmj.mp4',
+      gettingClientsPoster: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785830152/thumnail_2_YT_ubtbev.jpg',
+      marketProfile: 'https://res.cloudinary.com/hxbamdqf/video/upload/v1785829769/Market_Your_Profile_1080P_v6wtcx.mp4',
+      marketProfilePoster: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785830152/thumbnail_1_YT_t5egvr.jpg'
     },
     supportedPlatforms: [],
     shareTemplates: {

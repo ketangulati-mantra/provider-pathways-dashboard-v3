@@ -18,6 +18,8 @@ export const config = {
   port: targetPort,
   databaseUrl: process.env.DATABASE_URL || DEFAULT_DB_URL,
   nodeEnv: process.env.NODE_ENV || 'development',
+  jwtSecret: process.env.JWT_SECRET || 'mantracare_admin_jwt_super_secret_key_2026',
+  cookieSecret: process.env.COOKIE_SECRET || 'mantracare_cookie_secret_key_2026',
   cloudinary: {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME || 'hxbamdqf',
     apiKey: process.env.CLOUDINARY_API_KEY || '945291215694863',

@@ -1,6 +1,14 @@
 import { MANTRA_CONFIG } from './config';
 import { getLesson } from './api';
 
+declare global {
+  interface Window {
+    ReactNativeWebView?: {
+      postMessage: (message: string) => void;
+    };
+  }
+}
+
 /**
  * Centrally preserves all active URL query parameters (service, upa_id, uid, locale, etc.)
  * when navigating to a new path or route.
@@ -38,33 +46,76 @@ export const preserveQueryParams = (targetPath: string): string => {
 };
 
 /**
- * Handles exit actions by navigating back to the Dashboard (/).
+ * Centrally detects execution context and handles exit / back actions:
+ * 1. React Native WebView -> window.ReactNativeWebView.postMessage({ action: "exit" })
+ * 2. iframe inside web/provider portal -> window.parent.postMessage({ action: "exit" }, "https://provider.mantracare.com")
+ * 3. Standalone browser -> window.location.href = "https://provider.mantracare.com"
  */
 export const handleExit = () => {
-  goToLesson('/');
+  if (typeof window === 'undefined') return;
+
+  // 1. React Native WebView
+  if (window.ReactNativeWebView) {
+    window.ReactNativeWebView.postMessage(
+      JSON.stringify({ action: "exit" })
+    );
+    return;
+  }
+
+  // 2. iframe inside web.mantracare.com
+  if (window.parent !== window) {
+    try {
+      window.parent.postMessage(
+        { action: "exit" },
+        "https://provider.mantracare.com"
+      );
+    } catch (e) {
+      console.warn('[Navigation] PostMessage to parent window failed:', e);
+    }
+    return;
+  }
+
+  // 3. Standalone browser
+  window.location.href = "https://provider.mantracare.com";
 };
 
 /**
- * Handles back routing, navigating back to Dashboard (/).
+ * Navigates to a specific screen inside the native React Native app (e.g. after task completion)
+ */
+export const navigateToNativeScreen = (screen: string = 'Home', params?: Record<string, any>) => {
+  if (typeof window === 'undefined') return;
+  if (window.ReactNativeWebView) {
+    window.ReactNativeWebView.postMessage(
+      JSON.stringify({
+        action: 'navigate',
+        screen,
+        params,
+      })
+    );
+  }
+};
+
+/**
+ * Handles back routing, delegating to handleExit.
  */
 export const goBack = (onBackCallback?: () => void) => {
   if (onBackCallback) {
     onBackCallback();
   } else {
-    goToDashboard();
+    handleExit();
   }
 };
 
 /**
- * Redirects back to the Dashboard (/).
+ * Redirects back to Dashboard / Exit.
  */
 export const goToDashboard = () => {
-  goToLesson('/');
+  handleExit();
 };
 
 /**
- * Navigates popstate router to the selected task route pathway,
- * automatically preserving query parameters.
+ * Navigates popstate router to the selected task route pathway within the app,
+ * preserving query parameters.
  */
 export const goToLesson = (route: string) => {
   if (typeof window === 'undefined') return;
@@ -79,5 +130,3 @@ export const goToLesson = (route: string) => {
   window.history.replaceState(null, '', targetUrl);
   window.dispatchEvent(new Event('popstate'));
 };
-
-
