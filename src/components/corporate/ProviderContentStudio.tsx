@@ -70,7 +70,10 @@ export default function ProviderContentStudio({
     return clean;
   };
 
-  // State for form fields
+  // Always start with the entry form open when modal opens
+  const [isEditing, setIsEditing] = useState<boolean>(true);
+
+  // State for form fields - start clean/empty unless saved in localStorage for this session
   const [formData, setFormData] = useState<ProviderAssets>(() => {
     let saved = null;
     try {
@@ -79,28 +82,24 @@ export default function ProviderContentStudio({
     } catch (e) { }
 
     return {
-      name: (saved?.name || providerAssets?.name || '').trim(),
-      specialization: sanitizeSpecialization(saved?.specialization || providerAssets?.specialization),
-      profileUrl: (saved?.profileUrl || providerAssets?.profileUrl || '').trim()
+      name: (saved?.name || '').trim(),
+      specialization: sanitizeSpecialization(saved?.specialization),
+      profileUrl: (saved?.profileUrl || '').trim()
     };
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  // If provider data is empty or generic default, open entry form first!
-  const [isEditing, setIsEditing] = useState<boolean>(() => {
-    let saved = null;
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) saved = JSON.parse(stored);
-    } catch (e) { }
-    const hasCustomName = Boolean((saved?.name || providerAssets?.name || '').trim());
-    const hasCustomUrl = Boolean((saved?.profileUrl || providerAssets?.profileUrl || '').trim());
-    return !hasCustomName || !hasCustomUrl;
-  });
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [selectedPlatformId, setSelectedPlatformId] = useState<string>('linkedin');
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Reset to form view whenever isOpen turns true
+  useEffect(() => {
+    if (isOpen) {
+      setIsEditing(true);
+    }
+  }, [isOpen]);
 
   // Mobile Navigation Stack state ('platforms' | 'templates' | 'preview')
   const [mobileStep, setMobileStep] = useState<MobileStep>('platforms');
@@ -115,53 +114,12 @@ export default function ProviderContentStudio({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Sync external providerAssets if passed & not editing
-  useEffect(() => {
-    if (!isEditing) {
-      setFormData(prev => ({
-        name: (providerAssets?.name || prev.name || '').trim(),
-        specialization: sanitizeSpecialization(providerAssets?.specialization) || prev.specialization || '',
-        profileUrl: (providerAssets?.profileUrl || prev.profileUrl || '').trim()
-      }));
-    }
-  }, [providerAssets?.name, providerAssets?.specialization, providerAssets?.profileUrl]);
-
-  // Fetch DB saved user details on mount if local is empty
-  useEffect(() => {
-    async function fetchSavedUserData() {
-      if (!userId) return;
-      try {
-        const res = await fetch(`${API_BASE}/api/users/${encodeURIComponent(userId)}`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && json.data && json.data.promotion_toolkit_data) {
-            const dbData = json.data.promotion_toolkit_data;
-            if (dbData.name || dbData.specialization || dbData.profileUrl) {
-              const updated = {
-                name: dbData.name || formData.name || '',
-                specialization: sanitizeSpecialization(dbData.specialization || dbData.designation) || formData.specialization || '',
-                profileUrl: dbData.profileUrl || formData.profileUrl || ''
-              };
-              setFormData(updated);
-              try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-              } catch (e) { }
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('[Promotion Toolkit] DB fetch notice:', e);
-      }
-    }
-    fetchSavedUserData();
-  }, [userId]);
-
   const hasAllFields =
     Boolean(formData.name && formData.name.trim()) &&
     Boolean(formData.specialization && formData.specialization.trim()) &&
     Boolean(formData.profileUrl && formData.profileUrl.trim());
 
-  const showPersonalizationForm = !hasAllFields || isEditing;
+  const showPersonalizationForm = isEditing || !hasAllFields;
 
   const handleSaveForm = async (e: React.FormEvent) => {
     e.preventDefault();
