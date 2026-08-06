@@ -60,7 +60,7 @@ export default function ProviderContentStudio({
   if (!isOpen) return null;
 
   const userId = getCurrentUserId();
-  const platforms = getPromotionPlatforms();
+  const platforms = getPromotionPlatforms(brandName);
 
   const STORAGE_KEY = `pp_promotion_toolkit_${userId}`;
 

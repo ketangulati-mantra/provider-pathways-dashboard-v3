@@ -278,6 +278,184 @@ My name is {{providerName}} and as a {{specialization}}, I regularly address the
   }
 };
 
+const OCD_TEMPLATES: Record<string, PlatformConfig> = {
+  linkedin: {
+    id: 'linkedin',
+    name: 'LinkedIn',
+    description: 'Professional networking & ERP clinical focus',
+    iconName: 'Share2',
+    color: '#0a66c2',
+    webUrl: 'https://www.linkedin.com/feed/',
+    templates: [
+      {
+        id: 'li-ocd-1',
+        title: '1. ERP Practice Announcement',
+        category: 'Announcement',
+        content: `I am pleased to announce that I am now offering specialized Exposure and Response Prevention (ERP) consultations through OCDMantra.
+
+My name is {{providerName}} and I specialize in {{specialization}}. OCD requires evidence-based, specialized care, and partnering with OCDMantra allows me to support individuals navigating Obsessive-Compulsive Disorder with structured ERP protocols.
+
+If you or someone in your network is seeking specialized OCD therapy, view my profile & availability here:
+
+{{profileUrl}}`
+      },
+      {
+        id: 'li-ocd-2',
+        title: '2. ERP & OCD Clinical Insight',
+        category: 'Thought Leadership',
+        content: `Standard talk therapy can often accidentally reinforce OCD compulsions. Evidence-based treatment like Exposure & Response Prevention (ERP) is the gold standard for long-term recovery.
+
+As an OCD specialist focusing on {{specialization}}, I help clients systematically face anxiety triggers without engaging in compulsive rituals.
+
+I have opened dedicated ERP consultation slots on OCDMantra. Learn more or schedule a session:
+
+{{profileUrl}}`
+      },
+      {
+        id: 'li-ocd-3',
+        title: '3. Understanding Compulsions & ERP',
+        category: 'Education',
+        content: `Breaking free from the OCD cycle requires stepping away from reassurance-seeking and embracing uncertainty with ERP tools.
+
+My name is {{providerName}}, and I am committed to delivering compassionate, evidence-based ERP therapy.
+
+View my clinical bio and open ERP consultation slots on OCDMantra:
+
+{{profileUrl}}`
+      }
+    ]
+  },
+  instagram: {
+    id: 'instagram',
+    name: 'Instagram',
+    description: 'Visual ERP tips, reels & OCD education',
+    iconName: 'Globe',
+    color: '#c026d3',
+    webUrl: 'https://www.instagram.com/',
+    templates: [
+      {
+        id: 'ig-ocd-1',
+        title: 'Feed Caption - ERP Focus',
+        category: 'Feed',
+        content: `Recovery from OCD is possible with evidence-based Exposure & Response Prevention (ERP) 🧠✨
+
+As an OCD specialist in {{specialization}}, I'm now accepting virtual ERP consultations on OCDMantra.
+
+Book a direct 1-on-1 session below 👇
+{{profileUrl}}`
+      },
+      {
+        id: 'ig-ocd-2',
+        title: 'Story Text - OCD Support',
+        category: 'Story',
+        content: `Struggling with intrusive thoughts or compulsions? 💭
+I'm {{providerName}}, specializing in ERP therapy. Virtual consultations are open on OCDMantra.
+
+🔗 Tap to view profile & book:
+{{profileUrl}}`
+      },
+      {
+        id: 'ig-ocd-3',
+        title: 'Bio Example - OCD Specialist',
+        category: 'Bio',
+        content: `{{providerName}} | {{specialization}}
+🧠 ERP Therapy for OCD on OCDMantra
+👇 Schedule an online consultation
+{{profileUrl}}`
+      }
+    ]
+  },
+  facebook: {
+    id: 'facebook',
+    name: 'Facebook',
+    description: 'OCD community & family support posts',
+    iconName: 'Share2',
+    color: '#2563eb',
+    webUrl: 'https://www.facebook.com/',
+    templates: [
+      {
+        id: 'fb-ocd-1',
+        title: 'OCD Support Announcement',
+        category: 'Community',
+        content: `Hello everyone,
+
+I wanted to share that I am currently offering specialized online ERP therapy for Obsessive-Compulsive Disorder (OCD) through OCDMantra.
+
+My name is {{providerName}} and I work with clients seeking evidence-based tools for intrusive thoughts, contamination fears, and compulsive behaviors.
+
+View my profile and book a session directly here:
+
+{{profileUrl}}`
+      }
+    ]
+  },
+  whatsapp: {
+    id: 'whatsapp',
+    name: 'WhatsApp',
+    description: 'Direct status updates & OCD client inquiries',
+    iconName: 'MessageSquare',
+    color: '#16a34a',
+    webUrl: 'https://web.whatsapp.com/',
+    templates: [
+      {
+        id: 'wa-ocd-1',
+        title: 'Business About / Description',
+        category: 'Profile Info',
+        content: `{{providerName}} — {{specialization}} | ERP Therapy on OCDMantra: {{profileUrl}}`
+      },
+      {
+        id: 'wa-ocd-2',
+        title: 'Status Update',
+        category: 'Status',
+        content: `Now accepting online ERP therapy appointments for OCD on OCDMantra.
+
+Book here:
+{{profileUrl}}`
+      }
+    ]
+  },
+  twitter: {
+    id: 'twitter',
+    name: 'Twitter / X',
+    description: 'OCD advocacy & short ERP tips',
+    iconName: 'FileText',
+    color: '#0284c7',
+    webUrl: 'https://x.com/',
+    templates: [
+      {
+        id: 'tw-ocd-1',
+        title: 'ERP & OCD Advocacy',
+        category: 'Short Post',
+        content: `Compulsions offer temporary relief, but ERP offers long-term recovery. As an OCD therapist specializing in {{specialization}}, my virtual consultation slots are open on OCDMantra:
+
+{{profileUrl}}`
+      }
+    ]
+  },
+  reddit: {
+    id: 'reddit',
+    name: 'Reddit',
+    description: 'r/OCD educational advice & ERP attribution',
+    iconName: 'MessageSquare',
+    color: '#ea580c',
+    webUrl: 'https://www.reddit.com/',
+    templates: [
+      {
+        id: 'rd-ocd-1',
+        title: 'r/OCD Educational Response Ending',
+        category: 'Guidelines & Ending',
+        content: `[PROVIDE A DETAILED, HELPFUL ERP EXPLANATION FIRST - DO NOT SPAM.]
+
+---
+RECOMMENDED CLOSING ATTRIBUTION:
+"Learning to sit with anxiety without executing compulsions takes guidance and practice.
+
+My name is {{providerName}}, and as a {{specialization}}, I focus on ERP for OCD. If you're seeking structured virtual sessions, you can view my profile on OCDMantra: {{profileUrl}}"`
+      }
+    ]
+  }
+};
+
 /**
  * Replace placeholders in template text strictly without fake fallbacks
  */
@@ -295,11 +473,10 @@ export function interpolateTemplate(
   let result = templateText
     .replaceAll('{{providerName}}', providerName)
     .replaceAll('{{name}}', providerName)
-    .replaceAll('{{specialization}}', specialization)
+    .replaceAll('{{specialization}}', specialization || (brandName.toLowerCase().includes('ocd') ? 'OCD & ERP Specialist' : 'Specialist'))
     .replaceAll('{{profileUrl}}', profileUrl);
 
-  // Replace default brand name if a specific brand like OCDMantra or PhysioMantra is requested
-  if (brandName && brandName !== 'TherapyMantra') {
+  if (brandName && brandName !== 'TherapyMantra' && !result.includes(brandName)) {
     result = result.replaceAll('TherapyMantra', brandName);
   }
 
@@ -307,8 +484,12 @@ export function interpolateTemplate(
 }
 
 /**
- * Get all available promotion platform configurations
+ * Get all available promotion platform configurations for a brand
  */
-export function getPromotionPlatforms(): PlatformConfig[] {
+export function getPromotionPlatforms(brandName: string = 'TherapyMantra'): PlatformConfig[] {
+  const isOCD = brandName.toLowerCase().includes('ocd');
+  if (isOCD) {
+    return Object.values(OCD_TEMPLATES);
+  }
   return Object.values(DEFAULT_TEMPLATES);
 }

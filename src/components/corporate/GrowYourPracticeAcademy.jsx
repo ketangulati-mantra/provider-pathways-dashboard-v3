@@ -343,7 +343,7 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
     const isTherapyMantra = brand.id === 'therapymantra' && (clean.includes('therapymantra.co') || clean.includes('therapists.therapymantra.co'));
     const isOCDMantra = brand.id === 'ocdmantra' && (clean.includes('ocdmantra.com') || clean.includes('ocdmantra.co'));
     const isValidDomain = isTherapyMantra || isOCDMantra || (brand.listingBaseUrl && clean.includes(new URL(brand.listingBaseUrl).hostname));
-    
+
     if (!isValidDomain) {
       setUrlValidationError(`URL must start with ${brand.listingBaseUrl || 'https://ocdmantra.com/list/therapist/'}`);
       return;
@@ -948,7 +948,7 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '32px 24px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }} className="animate-fade-in">
             {isCompleted ? (
               <div style={{ textAlign: 'center', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-                          <div>
+                <div>
                   <h2 style={{ margin: '0 0 6px', fontSize: '1.5rem', fontWeight: 900, color: '#0f172a' }}>Growth Academy Completed!</h2>
                   <p style={{ margin: 0, fontSize: '0.86rem', color: '#64748b' }}>
                     Congratulations! You have completed the {brand.name} Growth Academy and earned <strong>+15 Reward Points</strong>.
@@ -1114,7 +1114,7 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
                   {/* Video File Upload */}
                   <div>
                     <label style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0f172a', display: 'block', marginBottom: '4px' }}>
-                      Video File Upload (Will be uploaded to Cloudinary)
+                      Video File Upload
                     </label>
                     <input
                       type="file"
