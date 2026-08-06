@@ -13,7 +13,7 @@ ENV PORT=80
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server.js ./server.js
-COPY --from=builder /app/public ./public 2>/dev/null || true
+COPY --from=builder /app/public ./public
 
 EXPOSE 80
 CMD ["node", "server.js"]
