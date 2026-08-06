@@ -8,12 +8,15 @@ const REWARD_POINTS = 0;
 
 const coachConfig = {
   certificateTitle: 'Certificate of Completion',
-  programName: 'EXECUTIVE & LIFE COACHING PROGRAM',
+  programName: 'Mantra Coach Provider Program',
   awardText: 'This certificate is proudly awarded to',
   completionText: 'for successfully completing the',
   courseName: 'Coach Provider Pathway',
   quote: '"Coaching is unlocking a person\'s potential to maximize their own performance. Thank you for empowering clients to achieve their highest goals."',
-  authorizedBy: 'MantraCare Coaching Program',
+  authorizedBy: 'Mantra Coach Program',
+  signatureText: 'Mantra Coach',
+  stampText: 'Mantra Coach Stamp Verified',
+  logoUrl: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785998579/mantra_coach_logo_n0sv35.png',
   footer: 'Empowering potential and personal growth. | mantracare.org',
   certificateIdPrefix: 'MC-CPP',
   congratsBadge: '🎉 COACH PROVIDER PATHWAY COMPLETE',

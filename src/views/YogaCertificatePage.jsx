@@ -4,18 +4,21 @@ import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import { CompletionScreen } from '../components';
 
 const LESSON_ID = 'yoga-certificate';
-const REWARD_POINTS = 20;
+const REWARD_POINTS = 0;
 
 const yogaConfig = {
   certificateTitle: 'Certificate of Completion',
-  programName: 'YOGA PROVIDER PROGRAM',
+  programName: 'YogaMantra Provider Program',
   awardText: 'This certificate is proudly awarded to',
   completionText: 'for successfully completing the',
   courseName: 'Yoga Provider Pathway',
   quote: '"Yoga is the journey of the self, through the self, to the self. Thank you for guiding others toward balance, strength, and mindful living."',
-  authorizedBy: 'MantraCare Yoga Program',
-  footer: 'Nurturing mind, body, and spirit. | mantracare.org',
-  certificateIdPrefix: 'MC-YPP',
+  authorizedBy: 'YogaMantra Program',
+  signatureText: 'YogaMantra',
+  stampText: 'YogaMantra Stamp Verified',
+  logoUrl: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785998802/yoga_mantra_logo_at9zvl.png',
+  footer: 'Nurturing mind, body, and spirit. | yogamantra.com',
+  certificateIdPrefix: 'YM-YPP',
   congratsBadge: '🧘 YOGA PROVIDER PATHWAY COMPLETE',
   congratsHeading: 'You did it!',
   congratsDescription: 'Completing the Yoga Provider Pathway takes dedication and commitment. Enter your name to generate your certificate.',

@@ -376,7 +376,7 @@ export const activities: Activity[] = [
     activityId: '',
     services: ['yoga'],
     title: 'Download Your Yoga Provider Pathway Certificate',
-    rewardPoints: 20,
+    rewardPoints: 0,
     estimatedDuration: '2 min',
     route: '/task/yoga-certificate'
   },
@@ -439,7 +439,7 @@ export const activities: Activity[] = [
     activityId: '',
     services: ['diet'],
     title: 'Download Your Diet Provider Pathway Certificate',
-    rewardPoints: 20,
+    rewardPoints: 0,
     estimatedDuration: '2 min',
     route: '/task/diet-certificate'
   },

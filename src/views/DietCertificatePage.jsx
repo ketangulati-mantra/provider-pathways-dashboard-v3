@@ -4,18 +4,21 @@ import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import { CompletionScreen } from '../components';
 
 const LESSON_ID = 'diet-certificate';
-const REWARD_POINTS = 20;
+const REWARD_POINTS = 0;
 
 const dietConfig = {
   certificateTitle: 'Certificate of Completion',
-  programName: 'DIET & NUTRITION PROVIDER PROGRAM',
+  programName: 'Mantra Fit Provider Program',
   awardText: 'This certificate is proudly awarded to',
   completionText: 'for successfully completing the',
   courseName: 'Diet Provider Pathway',
   quote: '"Nourishing the body is an act of care. Thank you for guiding clients toward healthier lifestyles, balanced nutrition, and lifelong wellness."',
-  authorizedBy: 'MantraCare Diet & Nutrition Program',
+  authorizedBy: 'Mantra Fit Program',
+  signatureText: 'Mantra Fit',
+  stampText: 'Mantra Fit Stamp Verified',
+  logoUrl: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1785998748/mantra_fit_logo_tjacxh.png',
   footer: 'Empowering health through nutrition. | mantracare.org',
-  certificateIdPrefix: 'MC-DPP',
+  certificateIdPrefix: 'MF-DPP',
   congratsBadge: '🎉 DIET PROVIDER PATHWAY COMPLETE',
   congratsHeading: 'You did it!',
   congratsDescription: 'Completing the Diet Provider Pathway takes real courage. Enter your name to receive your certificate.',
