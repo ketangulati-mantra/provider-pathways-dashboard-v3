@@ -68,7 +68,14 @@ export const goToDashboard = () => {
  */
 export const goToLesson = (route: string) => {
   if (typeof window === 'undefined') return;
-  const targetUrl = preserveQueryParams(route);
+
+  const currentPathname = window.location.pathname;
+  const subpathMatch = currentPathname.match(/^(\/[^\/]+)/);
+  const currentSubpath = (subpathMatch && subpathMatch[1] && !subpathMatch[1].startsWith('/task')) ? subpathMatch[1] : '';
+
+  const fullPath = route === '/' ? (currentSubpath || '/') : ((currentSubpath + route).replace('//', '/'));
+  const targetUrl = preserveQueryParams(fullPath);
+
   window.history.replaceState(null, '', targetUrl);
   window.dispatchEvent(new Event('popstate'));
 };
