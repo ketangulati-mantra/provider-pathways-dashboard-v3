@@ -26,9 +26,21 @@ const MIME_TYPES = {
 const server = http.createServer((req, res) => {
   let reqPath = req.url.split('?')[0];
 
-  // Strip subpath /provider_pathways prefix if present
-  if (reqPath.startsWith('/provider_pathways')) {
-    reqPath = reqPath.slice('/provider_pathways'.length) || '/';
+  // Strip known subpath prefixes if present (longest prefix first with boundary check)
+  const knownPrefixes = [
+    '/provider_pathways_dashboard_v3',
+    '/provider_pathways_dashboard_v2',
+    '/provider_pathways_dashboard_v1',
+    '/provider_dashboard_v1',
+    '/provider_pathways_v2_testing',
+    '/provider_pathways'
+  ];
+
+  for (const prefix of knownPrefixes) {
+    if (reqPath === prefix || reqPath.startsWith(prefix + '/')) {
+      reqPath = reqPath.slice(prefix.length) || '/';
+      break;
+    }
   }
 
   let filePath = path.join(DIST_DIR, reqPath === '/' ? 'index.html' : reqPath);
