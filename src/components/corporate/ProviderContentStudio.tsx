@@ -452,7 +452,6 @@ export default function ProviderContentStudio({
                   type="url"
                   value={formData.profileUrl || ''}
                   onChange={e => setFormData({ ...formData, profileUrl: e.target.value })}
-                  placeholder={`https://${brandName.toLowerCase().replace(/\s+/g, '')}.com/list/therapist/your-profile`}
                   style={{
                     width: '100%',
                     padding: '12px 14px',
