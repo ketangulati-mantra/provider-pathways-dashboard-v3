@@ -3,6 +3,7 @@ import './App.css';
 import { getCurrentService, getAvailableActivities, preserveQueryParams, handleExit } from './mantra';
 import { resolveLessonView } from './views/viewResolver';
 import DeveloperLessonsPage from './views/DeveloperLessonsPage';
+import GrowYourPracticeAcademy from './components/corporate/GrowYourPracticeAcademy';
 import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
@@ -90,18 +91,19 @@ function App() {
 
   // Render view based on route path and service context
   const renderView = () => {
-    // Directly open Dashboard at root / or /dev
-    if (currentPath === '/' || currentPath === '/dev') {
-      return (
-        <DeveloperLessonsPage
-          onNavigate={navigate}
-        />
-      );
-    }
-
     const onBackCallback = () => handleExit();
 
-    // Use viewResolver to map route and service to appropriate lesson component
+    // Admin Dashboard explicit route (/admin or /dev)
+    if (currentPath === '/admin' || currentPath === '/dev' || currentPath === '/admin/dashboard') {
+      return resolveLessonView({
+        currentPath: '/admin/dashboard',
+        currentService,
+        onBack: onBackCallback,
+        activities: availableActivities
+      });
+    }
+
+    // Use viewResolver to map route and service to appropriate lesson/activity component
     const resolvedView = resolveLessonView({
       currentPath,
       currentService,
@@ -113,12 +115,13 @@ function App() {
       return resolvedView;
     }
 
-    // Default Fallback: Directly open Dashboard
-    return (
-      <DeveloperLessonsPage
-        onNavigate={navigate}
-      />
-    );
+    // Default Fallback for Activity URLs (Root / or /provider_activity): User Activity View
+    return resolveLessonView({
+      currentPath: '/',
+      currentService,
+      onBack: onBackCallback,
+      activities: availableActivities
+    }) || <GrowYourPracticeAcademy onBack={onBackCallback} />;
   };
 
   return (

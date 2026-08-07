@@ -230,12 +230,13 @@ export default function ProviderContentStudio({
         position: 'fixed',
         inset: 0,
         zIndex: 999999,
-        background: 'rgba(15, 23, 42, 0.75)',
-        backdropFilter: 'blur(6px)',
+        background: 'rgba(15, 23, 42, 0.78)',
+        backdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: isMobile ? '0' : '20px'
+        padding: isMobile ? '0' : '24px 16px',
+        boxSizing: 'border-box'
       }}
       className="animate-fade-in"
     >
@@ -244,14 +245,16 @@ export default function ProviderContentStudio({
           background: '#ffffff',
           borderRadius: isMobile ? '0' : '24px',
           width: '100%',
-          maxWidth: isMobile ? '100%' : '1050px',
+          maxWidth: isMobile ? '100%' : (showPersonalizationForm ? '660px' : '1080px'),
           height: isMobile ? '100vh' : 'auto',
-          maxHeight: isMobile ? '100vh' : '90vh',
+          maxHeight: isMobile ? '100vh' : '88vh',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
           overflow: 'hidden',
-          border: isMobile ? 'none' : '1px solid #e2e8f0'
+          border: isMobile ? 'none' : '1px solid rgba(226, 232, 240, 0.8)',
+          margin: 'auto',
+          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
         }}
       >
         {/* Header Bar */}
@@ -371,28 +374,29 @@ export default function ProviderContentStudio({
         {showPersonalizationForm ? (
           <div
             style={{
-              padding: isMobile ? '20px 16px' : '32px 28px',
+              padding: isMobile ? '24px 18px' : '36px 36px',
               overflowY: 'auto',
               display: 'flex',
               flexDirection: 'column',
-              gap: '20px',
+              alignItems: 'center',
+              gap: '24px',
               background: '#ffffff',
               flex: 1
             }}
           >
-            <div>
-              <h3 style={{ margin: '0 0 4px', fontSize: isMobile ? '1.15rem' : '1.25rem', fontWeight: 900, color: '#0f172a' }}>
+            <div style={{ textAlign: 'center', maxWidth: '540px', width: '100%' }}>
+              <h3 style={{ margin: '0 0 6px', fontSize: isMobile ? '1.2rem' : '1.4rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>
                 Let's personalize your marketing templates
               </h3>
-              <p style={{ margin: 0, fontSize: '0.84rem', color: '#64748b', lineHeight: 1.5 }}>
+              <p style={{ margin: 0, fontSize: '0.88rem', color: '#64748b', lineHeight: 1.5 }}>
                 We'll use these details to generate ready-to-copy promotional content for your {brandName} profile.
               </p>
             </div>
 
-            <form onSubmit={handleSaveForm} style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '640px' }}>
+            <form onSubmit={handleSaveForm} style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '540px', width: '100%' }}>
               {/* Provider Name */}
               <div>
-                <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0f172a', display: 'block', marginBottom: '6px' }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0f172a', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Provider Name *
                 </label>
                 <input
@@ -402,17 +406,19 @@ export default function ProviderContentStudio({
                   placeholder="e.g. Dr. Sarah Watson"
                   style={{
                     width: '100%',
-                    padding: '12px 14px',
+                    padding: '13px 16px',
                     minHeight: '48px',
                     borderRadius: '12px',
-                    border: formErrors.name ? '1px solid #ef4444' : '1px solid #cbd5e1',
-                    fontSize: '0.9rem',
+                    border: formErrors.name ? '1.5px solid #ef4444' : '1.5px solid #cbd5e1',
+                    fontSize: '0.92rem',
+                    color: '#0f172a',
                     boxSizing: 'border-box',
-                    outline: 'none'
+                    outline: 'none',
+                    transition: 'border-color 0.2s, box-shadow 0.2s'
                   }}
                 />
                 {formErrors.name && (
-                  <div style={{ fontSize: '0.74rem', color: '#dc2626', fontWeight: 700, marginTop: '4px' }}>
+                  <div style={{ fontSize: '0.76rem', color: '#dc2626', fontWeight: 700, marginTop: '4px' }}>
                     ⚠️ {formErrors.name}
                   </div>
                 )}
@@ -420,7 +426,7 @@ export default function ProviderContentStudio({
 
               {/* Designation / Specialization */}
               <div>
-                <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0f172a', display: 'block', marginBottom: '6px' }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0f172a', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Designation / Specialization *
                 </label>
                 <input
@@ -430,38 +436,41 @@ export default function ProviderContentStudio({
                   placeholder="e.g. Clinical Psychologist"
                   style={{
                     width: '100%',
-                    padding: '12px 14px',
+                    padding: '13px 16px',
                     minHeight: '48px',
                     borderRadius: '12px',
-                    border: formErrors.specialization ? '1px solid #ef4444' : '1px solid #cbd5e1',
-                    fontSize: '0.9rem',
+                    border: formErrors.specialization ? '1.5px solid #ef4444' : '1.5px solid #cbd5e1',
+                    fontSize: '0.92rem',
+                    color: '#0f172a',
                     boxSizing: 'border-box',
-                    outline: 'none'
+                    outline: 'none',
+                    transition: 'border-color 0.2s, box-shadow 0.2s'
                   }}
                 />
                 {formErrors.specialization && (
-                  <div style={{ fontSize: '0.74rem', color: '#dc2626', fontWeight: 700, marginTop: '4px' }}>
+                  <div style={{ fontSize: '0.76rem', color: '#dc2626', fontWeight: 700, marginTop: '4px' }}>
                     ⚠️ {formErrors.specialization}
                   </div>
                 )}
 
                 {/* Quick Suggestion Chips */}
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '10px' }}>
                   {SPECIALIZATION_SUGGESTIONS.map((sug, idx) => (
                     <button
                       key={idx}
                       type="button"
                       onClick={() => setFormData({ ...formData, specialization: sug })}
                       style={{
-                        padding: '6px 12px',
+                        padding: '6px 14px',
                         minHeight: '36px',
-                        borderRadius: '8px',
-                        border: '1px solid #e2e8f0',
+                        borderRadius: '20px',
+                        border: formData.specialization === sug ? '1.5px solid #2563eb' : '1px solid #e2e8f0',
                         background: formData.specialization === sug ? '#eff6ff' : '#f8fafc',
-                        color: formData.specialization === sug ? '#2563eb' : '#475569',
-                        fontSize: '0.76rem',
+                        color: formData.specialization === sug ? '#1d4ed8' : '#475569',
+                        fontSize: '0.78rem',
                         fontWeight: 700,
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
                       }}
                     >
                       {sug}
@@ -472,47 +481,51 @@ export default function ProviderContentStudio({
 
               {/* Profile URL */}
               <div>
-                <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0f172a', display: 'block', marginBottom: '6px' }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0f172a', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   {brandName} Profile URL *
                 </label>
                 <input
                   type="url"
                   value={formData.profileUrl || ''}
                   onChange={e => setFormData({ ...formData, profileUrl: e.target.value })}
+                  placeholder="https://mantracare.org/provider/your-name"
                   style={{
                     width: '100%',
-                    padding: '12px 14px',
+                    padding: '13px 16px',
                     minHeight: '48px',
                     borderRadius: '12px',
-                    border: formErrors.profileUrl ? '1px solid #ef4444' : '1px solid #cbd5e1',
-                    fontSize: '0.9rem',
+                    border: formErrors.profileUrl ? '1.5px solid #ef4444' : '1.5px solid #cbd5e1',
+                    fontSize: '0.92rem',
+                    color: '#0f172a',
                     boxSizing: 'border-box',
-                    outline: 'none'
+                    outline: 'none',
+                    transition: 'border-color 0.2s, box-shadow 0.2s'
                   }}
                 />
                 {formErrors.profileUrl && (
-                  <div style={{ fontSize: '0.74rem', color: '#dc2626', fontWeight: 700, marginTop: '4px' }}>
+                  <div style={{ fontSize: '0.76rem', color: '#dc2626', fontWeight: 700, marginTop: '4px' }}>
                     ⚠️ {formErrors.profileUrl}
                   </div>
                 )}
               </div>
 
               {/* Action Buttons */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingTop: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', paddingTop: '12px' }}>
                 {hasAllFields && (
                   <button
                     type="button"
                     onClick={() => setIsEditing(false)}
                     style={{
-                      padding: '12px 22px',
+                      padding: '12px 24px',
                       minHeight: '48px',
                       borderRadius: '12px',
-                      border: '1px solid #cbd5e1',
+                      border: '1.5px solid #cbd5e1',
                       background: '#ffffff',
                       color: '#475569',
                       fontWeight: 800,
-                      fontSize: '0.86rem',
-                      cursor: 'pointer'
+                      fontSize: '0.88rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
                     }}
                   >
                     Cancel
@@ -523,21 +536,22 @@ export default function ProviderContentStudio({
                   type="submit"
                   disabled={isSaving}
                   style={{
-                    padding: '12px 28px',
+                    padding: '14px 32px',
                     minHeight: '48px',
-                    flex: isMobile ? 1 : 'none',
+                    width: isMobile ? '100%' : 'auto',
                     borderRadius: '12px',
                     border: 'none',
                     background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
                     color: '#ffffff',
                     fontWeight: 900,
-                    fontSize: '0.88rem',
+                    fontSize: '0.92rem',
                     cursor: isSaving ? 'not-allowed' : 'pointer',
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
-                    boxShadow: '0 4px 14px rgba(37,99,235,0.3)'
+                    boxShadow: '0 4px 14px rgba(37,99,235,0.35)',
+                    transition: 'transform 0.15s ease, box-shadow 0.15s ease'
                   }}
                 >
                   <Save size={18} /> {isSaving ? 'Saving Details...' : 'Continue to Toolkit'}
