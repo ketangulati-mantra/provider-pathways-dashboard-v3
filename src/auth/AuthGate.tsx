@@ -12,20 +12,7 @@ export function AuthGate({ children }: AuthGateProps) {
   const [state, setState] = useState<HandshakeState>('pending');
 
   useEffect(() => {
-    // 1. Exempt Admin Dashboard / Login routes from user pathway token handshake
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
-    const path = typeof window !== 'undefined' ? window.location.pathname : '';
-    const isAdminRoute = hash.startsWith('#/admin') || path.startsWith('/admin');
-
-    if (isAdminRoute) {
-      setState('authenticated');
-      return;
-    }
-
-    // 2. Check if user_id or admin_user is already authenticated in sessionStorage
-    const existingUserId = sessionStorage.getItem('user_id') || sessionStorage.getItem('admin_user');
-
-    // 3. Extract token parameter from URL query string or hash string
     const params = new URLSearchParams(window.location.search);
     let token = params.get('token');
 
@@ -37,7 +24,7 @@ export function AuthGate({ children }: AuthGateProps) {
       }
     }
 
-    // 4. Perform POST Handshake Protocol if token is provided
+    // 1. Process optional token handshake if provided in URL
     if (token) {
       fetch('https://api.mantracare.com/user/user-info', {
         method: 'POST',
@@ -50,57 +37,33 @@ export function AuthGate({ children }: AuthGateProps) {
         })
         .then((data) => {
           const userId = data.user_id || data.id || data.data?.user_id;
-          if (!userId) {
-            throw new Error('Invalid user_id payload returned from handshake API');
+          if (userId) {
+            sessionStorage.setItem('user_id', String(userId));
+            if (data) sessionStorage.setItem('user_info', JSON.stringify(data));
           }
 
-          // Session isolation: Store user_id in sessionStorage
-          sessionStorage.setItem('user_id', String(userId));
-          if (data) {
-            sessionStorage.setItem('user_info', JSON.stringify(data));
-          }
-
-          // Optional DB upsert initialization for new user records
-          try {
-            fetch('/api/user/initialize', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ user_id: userId, profile_data: data }),
-            }).catch(() => {});
-          } catch (e) {}
-
-          // Immediately clean token from address bar without page reload
           const cleanParams = new URLSearchParams(window.location.search);
           cleanParams.delete('token');
           const cleanSearch = cleanParams.toString() ? `?${cleanParams.toString()}` : '';
           const cleanUrl = window.location.pathname + cleanSearch + window.location.hash;
           window.history.replaceState({}, '', cleanUrl);
-
           setState('authenticated');
         })
-        .catch((err) => {
-          console.error('[AuthGate] Authentication handshake error:', err);
-          setState('failed');
+        .catch(() => {
+          // Continue loading activity page even if optional token handshake fails
+          setState('authenticated');
         });
       return;
     }
 
-    // 5. If user_id exists in sessionStorage, pass through
-    if (existingUserId) {
-      setState('authenticated');
-      return;
-    }
-
-    // 6. Check for explicit user_id, userId, uid, or upa_id URL query parameters
+    // 2. Store direct query parameter user_id if present
     const directUserId = params.get('user_id') || params.get('userId') || params.get('uid') || params.get('upa_id');
     if (directUserId) {
       sessionStorage.setItem('user_id', directUserId);
-      setState('authenticated');
-      return;
     }
 
-    // 7. Require explicit user authentication via in-app Auth Screen
-    setState('failed');
+    // 3. Activity URLs are open to all users - pass through immediately
+    setState('authenticated');
   }, []);
 
   if (state === 'failed') {
