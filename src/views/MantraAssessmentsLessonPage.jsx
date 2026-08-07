@@ -10,7 +10,7 @@ import { completeLesson, goToDashboard } from '../mantra';
 import { CheckCircle2, Clock, Award, Share2, CheckSquare, FilePlus, DollarSign, TrendingUp } from 'lucide-react';
 
 const LESSON_ID     = 'mantra-assessments';
-const LESSON_TITLE  = 'Mantra Assessments';
+const LESSON_TITLE  = 'Sharing Mantra Assessments';
 const REWARD_POINTS = 5;
 
 const FEATURES = [

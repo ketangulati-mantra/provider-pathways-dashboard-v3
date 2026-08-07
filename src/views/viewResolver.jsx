@@ -130,6 +130,9 @@ const ROUTE_VIEW_REGISTRY = {
   '/task/creating-pathway': { default: CreatingPathwayLessonPage },
   '/task/canned-responses': { default: CannedResponsesLessonPage },
   '/task/assessments': { default: MantraAssessmentsLessonPage },
+  '/task/mantra-assessments': { default: MantraAssessmentsLessonPage },
+  '/task/sharing-mantra-assessments': { default: MantraAssessmentsLessonPage },
+  '/task/sharing-assessments': { default: MantraAssessmentsLessonPage },
   '/task/support-hotline': { default: SupportHotlineLessonPage },
   '/task/corporate-eap': { default: CorporateEapLessonPage },
   '/task/community-management': { default: CommunityManagementLessonPage },
@@ -183,6 +186,10 @@ export const resolveLessonView = ({ currentPath, currentService, onBack, activit
 
   if (currentPath.includes('session-notes') || currentPath.includes('therapy-notes') || currentPath.includes('session-note')) {
     return <TherapyNotesLessonPage onBack={onBack} />;
+  }
+
+  if (currentPath.includes('assessments')) {
+    return <MantraAssessmentsLessonPage onBack={onBack} />;
   }
 
   // Generic fallback if route matches a registered activity in activities config
