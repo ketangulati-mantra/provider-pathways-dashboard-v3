@@ -124,6 +124,8 @@ const ROUTE_VIEW_REGISTRY = {
   '/task/getting-paid': { default: GettingPaidLessonPage },
   '/task/intern-program': { default: TherapyInternProgramLessonPage },
   '/task/therapy-notes': { default: TherapyNotesLessonPage },
+  '/task/session-notes': { default: TherapyNotesLessonPage },
+  '/task/session-note': { default: TherapyNotesLessonPage },
   '/task/couple-therapy': { default: CoupleTherapyLessonPage },
   '/task/creating-pathway': { default: CreatingPathwayLessonPage },
   '/task/canned-responses': { default: CannedResponsesLessonPage },
@@ -177,6 +179,10 @@ export const resolveLessonView = ({ currentPath, currentService, onBack, activit
 
   if (currentPath.startsWith('/task/market-yourself')) {
     return <GrowYourPracticeAcademy onBack={onBack} brandKey="therapymantra" />;
+  }
+
+  if (currentPath.includes('session-notes') || currentPath.includes('therapy-notes') || currentPath.includes('session-note')) {
+    return <TherapyNotesLessonPage onBack={onBack} />;
   }
 
   // Generic fallback if route matches a registered activity in activities config
