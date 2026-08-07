@@ -119,21 +119,62 @@ export const GLOBAL_CITIES: GlobalCity[] = [
 ];
 
 /**
- * IP-based Geo Location Fetcher
+ * IP-based Geo Location Fetcher with multi-source fallback
  */
 export async function fetchUserCountryByIP(): Promise<Country> {
+  // Source 1: GeoJS (Fastest, High Availability, No Rate-Limit, CORS Enabled)
   try {
-    const res = await fetch('https://ipapi.co/json/');
+    const res = await fetch('https://get.geojs.io/v1/ip/geo.json');
     if (res.ok) {
       const data = await res.json();
-      const countryCode = data.country_code;
-      const found = COUNTRIES.find(c => c.code === countryCode);
-      if (found) return found;
+      if (data && data.country_code) {
+        const found = COUNTRIES.find(c => c.code === data.country_code);
+        if (found) return found;
+      }
     }
-  } catch (err) {
-    console.warn('[LocationData] IP geo fetch warning:', err);
-  }
-  // Fallback to India (+91)
+  } catch (err) {}
+
+  // Source 2: DB-IP
+  try {
+    const res = await fetch('https://api.db-ip.com/v2/free/self');
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.countryCode) {
+        const found = COUNTRIES.find(c => c.code === data.countryCode);
+        if (found) return found;
+      }
+    }
+  } catch (err) {}
+
+  // Source 3: IPWhois
+  try {
+    const res = await fetch('https://ipwho.is/');
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.country_code) {
+        const found = COUNTRIES.find(c => c.code === data.country_code);
+        if (found) return found;
+      }
+    }
+  } catch (err) {}
+
+  // Source 4: Browser Timezone Heuristic
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    if (tz.includes('New_York') || tz.includes('Los_Angeles') || tz.includes('Chicago')) {
+      const us = COUNTRIES.find(c => c.code === 'US');
+      if (us) return us;
+    }
+    if (tz.includes('London')) {
+      const gb = COUNTRIES.find(c => c.code === 'GB');
+      if (gb) return gb;
+    }
+    if (tz.includes('Kolkata') || tz.includes('India')) {
+      const inC = COUNTRIES.find(c => c.code === 'IN');
+      if (inC) return inC;
+    }
+  } catch (err) {}
+
   return COUNTRIES[0];
 }
 
