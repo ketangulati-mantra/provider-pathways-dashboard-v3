@@ -486,6 +486,70 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
     }
   };
 
+  const handleSkipVideo = async () => {
+    try {
+      setIsSubmitting(true);
+      const phoneStr = videoFormData.phone.trim() ? `${selectedCountry.dialCode} ${videoFormData.phone.trim()}` : '';
+
+      // 1. Record submission as skipped_video
+      await submitActivitySubmission({
+        userId,
+        lessonId: brand.lessonId || 'grow-your-practice',
+        activityTitle: brand.name || 'Grow Your Practice Video Submission',
+        submissionType: 'skipped_video',
+        formData: {
+          name: videoFormData.name || 'Provider',
+          email: videoFormData.email || '',
+          phone: phoneStr,
+          country: selectedCountry.name,
+          countryCode: selectedCountry.dialCode,
+          profileUrl: activeProfileUrl,
+          service: brand.submissionService || 'therapy',
+          skippedVideo: true,
+          submittedAt: new Date().toISOString()
+        }
+      });
+
+      // 2. Trigger /api/activities/complete endpoint
+      await fetch(`${API_BASE}/api/activities/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          service: brand.submissionService || 'therapy',
+          activityId: brand.activityId,
+          lessonId: brand.lessonId,
+          metadata: {
+            profileUrl: activeProfileUrl,
+            skippedVideo: true,
+            completedAt: new Date().toISOString()
+          }
+        })
+      });
+
+      // 3. Save progress in DB
+      await fetch(`${API_BASE}/api/activities/progress`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          lessonId: brand.lessonId || 'grow-your-practice',
+          currentStep: TOTAL_STEPS - 1,
+          totalSteps: TOTAL_STEPS
+        })
+      });
+
+      setIsCompleted(true);
+      setShowCompletionModal(true);
+    } catch (err) {
+      console.error('[GrowYourPracticeAcademy] Skip Video Error:', err);
+      setIsCompleted(true);
+      setShowCompletionModal(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }} className="animate-fade-in">
 
@@ -502,6 +566,10 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#fef3c7', color: '#b45309', border: '1px solid #fcd34d', borderRadius: '20px', padding: '4px 10px', fontSize: '0.74rem', fontWeight: 800 }}>
+              <span>🏅</span> +50 Pts
+            </div>
+
             <button onClick={() => setIsStudioOpen(true)} style={{ padding: '6px 12px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#ffffff', fontWeight: 800, fontSize: '0.74rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', boxShadow: '0 2px 8px rgba(37,99,235,0.25)' }}>
               <Megaphone size={13} /> {t('buttons.promotion_toolkit', 'Promotion Toolkit')}
             </button>
@@ -1168,9 +1236,47 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
                     <button type="button" onClick={handlePrev} style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#334155', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
                       <ChevronLeft size={15} /> Previous
                     </button>
-                    <button type="submit" disabled={isSubmitting} style={{ padding: '9px 16px', borderRadius: '8px', border: 'none', background: brand.gradient, color: '#ffffff', fontWeight: 800, fontSize: '0.8rem', cursor: isSubmitting ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', opacity: isSubmitting ? 0.7 : 1, boxShadow: '0 4px 12px rgba(37,99,235,0.25)', flexShrink: 0 }}>
-                      <span>{isSubmitting ? 'Submitting...' : 'Submit Video & Finish'}</span> <CheckCircle2 size={15} />
-                    </button>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={handleSkipVideo}
+                        disabled={isSubmitting}
+                        style={{
+                          padding: '9px 16px',
+                          borderRadius: '8px',
+                          border: '1.5px solid #cbd5e1',
+                          background: '#f8fafc',
+                          color: '#475569',
+                          fontWeight: 800,
+                          fontSize: '0.8rem',
+                          cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          whiteSpace: 'nowrap',
+                          transition: 'all 0.15s ease',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#e2e8f0';
+                          e.currentTarget.style.color = '#0f172a';
+                          e.currentTarget.style.borderColor = '#94a3b8';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#f8fafc';
+                          e.currentTarget.style.color = '#475569';
+                          e.currentTarget.style.borderColor = '#cbd5e1';
+                        }}
+                      >
+                        <span>Skip Video & Finish</span>
+                        <ChevronRight size={15} color="#475569" />
+                      </button>
+
+                      <button type="submit" disabled={isSubmitting} style={{ padding: '9px 16px', borderRadius: '8px', border: 'none', background: brand.gradient, color: '#ffffff', fontWeight: 800, fontSize: '0.8rem', cursor: isSubmitting ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', opacity: isSubmitting ? 0.7 : 1, boxShadow: '0 4px 12px rgba(37,99,235,0.25)', flexShrink: 0 }}>
+                        <span>{isSubmitting ? 'Submitting...' : 'Submit Video & Finish'}</span> <CheckCircle2 size={15} />
+                      </button>
+                    </div>
                   </div>
                 </form>
               </>
@@ -1200,7 +1306,7 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
       {/* COMPLETION CELEBRATION MODAL */}
       {showCompletionModal && (
         <CompletionScreen
-          points={15}
+          points={50}
           title="Congratulations!"
           subtitle="You completed the lesson and boosted your provider score."
           onClose={async () => {
