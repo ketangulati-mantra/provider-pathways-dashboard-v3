@@ -1,4 +1,5 @@
 import React, { useEffect, useState, type ReactNode } from 'react';
+import { handleExit } from '../mantra/navigation';
 
 type HandshakeState = 'pending' | 'authenticated' | 'failed';
 
@@ -79,7 +80,7 @@ export function AuthGate({ children }: AuthGateProps) {
         .catch((err) => {
           console.error('[AuthGate] Authentication handshake error:', err);
           setState('failed');
-          window.location.href = '/token';
+          handleExit();
         });
       return;
     }
@@ -90,17 +91,25 @@ export function AuthGate({ children }: AuthGateProps) {
       return;
     }
 
-    // 6. Check for direct user_id, userId, or uid URL query parameters or localStorage
-    const directUserId = params.get('user_id') || params.get('userId') || params.get('uid') || localStorage.getItem('mantra_user_id');
+    // 6. Check for direct user_id, userId, uid, or upa_id URL query parameters or localStorage
+    const directUserId = params.get('user_id') || params.get('userId') || params.get('uid') || params.get('upa_id') || localStorage.getItem('mantra_user_id');
     if (directUserId) {
       sessionStorage.setItem('user_id', directUserId);
       setState('authenticated');
       return;
     }
 
-    // 7. Development mode or direct pathway access fallback: default provider session
-    sessionStorage.setItem('user_id', 'provider_guest');
-    setState('authenticated');
+    // 7. Development mode bypass for local testing
+    if (import.meta.env.DEV || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))) {
+      console.warn('[AuthGate] Dev Mode: No token provided. Initializing dev session.');
+      sessionStorage.setItem('user_id', 'dev_user_123');
+      setState('authenticated');
+      return;
+    }
+
+    // 8. Enforce authentication: Redirect unauthenticated requests to Provider Portal
+    setState('failed');
+    handleExit();
   }, []);
 
   if (state !== 'authenticated') {
