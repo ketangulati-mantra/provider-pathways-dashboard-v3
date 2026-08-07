@@ -76,8 +76,8 @@ import GrowYourPracticeAcademy from '../components/corporate/GrowYourPracticeAca
  * Can specify default Component or service-specific overrides.
  */
 const ROUTE_VIEW_REGISTRY = {
-  '/': { default: GrowYourPracticeAcademy },
-  '/provider_activity': { default: GrowYourPracticeAcademy },
+  '/': { default: IntroductionLessonPage },
+  '/provider_activity': { default: IntroductionLessonPage },
   '/admin/login': { default: AdminLoginPage },
   '/admin/dashboard': { default: (props) => <ProtectedRoute><DeveloperLessonsPage {...props} /></ProtectedRoute> },
   '/admin/users': { default: (props) => <ProtectedRoute requireSuperAdmin><AdminUsersPage {...props} /></ProtectedRoute> },

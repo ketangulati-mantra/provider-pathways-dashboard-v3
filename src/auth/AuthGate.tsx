@@ -56,14 +56,23 @@ export function AuthGate({ children }: AuthGateProps) {
       return;
     }
 
-    // 2. Store direct query parameter user_id if present
+    // 2. Check if user is authenticated via sessionStorage
+    const existingUserId = sessionStorage.getItem('user_id') || sessionStorage.getItem('admin_user');
+    if (existingUserId) {
+      setState('authenticated');
+      return;
+    }
+
+    // 3. Check for explicit user_id, userId, uid, or upa_id URL query parameters
     const directUserId = params.get('user_id') || params.get('userId') || params.get('uid') || params.get('upa_id');
     if (directUserId) {
       sessionStorage.setItem('user_id', directUserId);
+      setState('authenticated');
+      return;
     }
 
-    // 3. Activity URLs are open to all users - pass through immediately
-    setState('authenticated');
+    // 4. Require authentication via Auth Screen (AdminLoginPage)
+    setState('failed');
   }, []);
 
   if (state === 'failed') {
