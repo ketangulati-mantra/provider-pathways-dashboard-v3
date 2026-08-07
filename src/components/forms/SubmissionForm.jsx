@@ -33,7 +33,7 @@ export default function SubmissionForm({
   const { showToast } = useToast();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [countryCode, setCountryCode] = useState('+91');
+  const [countryCode, setCountryCode] = useState('');
   const [phone, setPhone] = useState('');
   const [emailError, setEmailError] = useState('');
   const [phoneError, setPhoneError] = useState('');

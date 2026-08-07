@@ -16,15 +16,15 @@ export default function PhoneInputWithCountry({
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  // Auto-detect country code by IP if not set
+  // Auto-detect country code by IP on mount
   useEffect(() => {
-    if (!countryCode) {
-      detectCountryCodeByIP().then(code => {
-        if (setCountryCode && code) {
-          setCountryCode(code);
-        }
-      });
-    }
+    let isMounted = true;
+    detectCountryCodeByIP().then(code => {
+      if (isMounted && setCountryCode && code) {
+        setCountryCode(code);
+      }
+    });
+    return () => { isMounted = false; };
   }, []);
 
   // Close dropdown on outside click
@@ -104,7 +104,6 @@ export default function PhoneInputWithCountry({
             borderBottomLeftRadius: '10px'
           }}
         >
-          <span style={{ fontSize: '1.05rem', lineHeight: 1 }}>{selectedCountry.flag}</span>
           <span>{selectedCountry.code}</span>
           <span style={{ color: '#2563eb' }}>{selectedCountry.dialCode}</span>
           <ChevronDown size={14} style={{ color: '#64748b', transition: 'transform 0.2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0)' }} />
