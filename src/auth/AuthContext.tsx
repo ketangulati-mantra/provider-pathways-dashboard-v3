@@ -112,6 +112,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (res.ok && data.success && data.admin) {
         setAdmin(data.admin);
         setIsAuthenticated(true);
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.setItem('user_id', data.admin.email || String(data.admin.id));
+          sessionStorage.setItem('admin_user', JSON.stringify(data.admin));
+        }
         setError(null);
         return { success: true };
       } else {

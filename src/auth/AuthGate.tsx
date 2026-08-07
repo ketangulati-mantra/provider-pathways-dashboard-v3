@@ -1,5 +1,6 @@
 import React, { useEffect, useState, type ReactNode } from 'react';
 import { handleExit } from '../mantra/navigation';
+import AdminLoginPage from '../views/AdminLoginPage';
 
 type HandshakeState = 'pending' | 'authenticated' | 'failed';
 
@@ -21,8 +22,8 @@ export function AuthGate({ children }: AuthGateProps) {
       return;
     }
 
-    // 2. Check if user_id is already authenticated in sessionStorage
-    const existingUserId = sessionStorage.getItem('user_id');
+    // 2. Check if user_id or admin_user is already authenticated in sessionStorage
+    const existingUserId = sessionStorage.getItem('user_id') || sessionStorage.getItem('admin_user');
 
     // 3. Extract token parameter from URL query string or hash string
     const params = new URLSearchParams(window.location.search);
@@ -80,7 +81,6 @@ export function AuthGate({ children }: AuthGateProps) {
         .catch((err) => {
           console.error('[AuthGate] Authentication handshake error:', err);
           setState('failed');
-          handleExit();
         });
       return;
     }
@@ -91,26 +91,21 @@ export function AuthGate({ children }: AuthGateProps) {
       return;
     }
 
-    // 6. Check for direct user_id, userId, uid, or upa_id URL query parameters or localStorage
-    const directUserId = params.get('user_id') || params.get('userId') || params.get('uid') || params.get('upa_id') || localStorage.getItem('mantra_user_id');
+    // 6. Check for explicit user_id, userId, uid, or upa_id URL query parameters
+    const directUserId = params.get('user_id') || params.get('userId') || params.get('uid') || params.get('upa_id');
     if (directUserId) {
       sessionStorage.setItem('user_id', directUserId);
       setState('authenticated');
       return;
     }
 
-    // 7. Development mode bypass for local testing
-    if (import.meta.env.DEV || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))) {
-      console.warn('[AuthGate] Dev Mode: No token provided. Initializing dev session.');
-      sessionStorage.setItem('user_id', 'dev_user_123');
-      setState('authenticated');
-      return;
-    }
-
-    // 8. Enforce authentication: Redirect unauthenticated requests to Provider Portal
+    // 7. Require explicit user authentication via in-app Auth Screen
     setState('failed');
-    handleExit();
   }, []);
+
+  if (state === 'failed') {
+    return <AdminLoginPage />;
+  }
 
   if (state !== 'authenticated') {
     return <FullScreenLoader />;

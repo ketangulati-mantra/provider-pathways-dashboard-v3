@@ -244,17 +244,19 @@ export default function SubmissionsTable() {
 
   const startHoverScroll = (direction) => {
     stopHoverScroll();
-    const step = direction === 'right' ? 65 : -65;
-    scrollIntervalRef.current = setInterval(() => {
+    const speed = direction === 'right' ? 12 : -12;
+    const scrollStep = () => {
       if (tableScrollRef.current) {
-        tableScrollRef.current.scrollLeft += step;
+        tableScrollRef.current.scrollLeft += speed;
       }
-    }, 16);
+      scrollIntervalRef.current = requestAnimationFrame(scrollStep);
+    };
+    scrollIntervalRef.current = requestAnimationFrame(scrollStep);
   };
 
   const stopHoverScroll = () => {
     if (scrollIntervalRef.current) {
-      clearInterval(scrollIntervalRef.current);
+      cancelAnimationFrame(scrollIntervalRef.current);
       scrollIntervalRef.current = null;
     }
   };
@@ -830,7 +832,7 @@ export default function SubmissionsTable() {
             onMouseEnter={() => startHoverScroll('left')}
             onMouseLeave={stopHoverScroll}
             onClick={() => {
-              if (tableScrollRef.current) tableScrollRef.current.scrollLeft -= 750;
+              if (tableScrollRef.current) tableScrollRef.current.scrollBy({ left: -450, behavior: 'smooth' });
             }}
             style={{
               position: 'absolute',
@@ -874,7 +876,7 @@ export default function SubmissionsTable() {
             onMouseEnter={() => startHoverScroll('right')}
             onMouseLeave={stopHoverScroll}
             onClick={() => {
-              if (tableScrollRef.current) tableScrollRef.current.scrollLeft += 750;
+              if (tableScrollRef.current) tableScrollRef.current.scrollBy({ left: 450, behavior: 'smooth' });
             }}
             style={{
               position: 'absolute',
@@ -913,7 +915,7 @@ export default function SubmissionsTable() {
             </div>
           </div>
 
-          <div ref={tableScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'smooth' }}>
+          <div ref={tableScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.76rem' }}>
             <thead>
               <tr style={{ background: '#043263', borderBottom: '1px solid #03254c', color: '#ffffff', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.66rem', letterSpacing: '0.04em' }}>

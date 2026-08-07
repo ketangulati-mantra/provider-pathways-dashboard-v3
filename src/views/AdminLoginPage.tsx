@@ -32,7 +32,10 @@ export default function AdminLoginPage() {
     setIsSubmitting(false);
 
     if (result.success) {
-      window.location.href = '#/admin/dashboard';
+      sessionStorage.setItem('user_id', email.trim());
+      sessionStorage.setItem('admin_user', JSON.stringify({ email: email.trim() }));
+      window.location.hash = '#/admin/dashboard';
+      window.location.reload();
     } else {
       setErrorMessage(result.error || 'Invalid email or password.');
     }
