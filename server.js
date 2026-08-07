@@ -28,6 +28,7 @@ const server = http.createServer((req, res) => {
 
   // Strip known subpath prefixes if present (longest prefix first with boundary check)
   const knownPrefixes = [
+    '/app/content/provider_pathways',
     '/provider_pathways_dashboard_v3',
     '/provider_pathways_dashboard_v2',
     '/provider_pathways_dashboard_v1',

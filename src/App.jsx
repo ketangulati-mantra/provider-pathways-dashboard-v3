@@ -11,9 +11,10 @@ function App() {
   const envBase = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
 
   const getPath = () => {
-    // Priority 1: Check window.location.hash for SPA client routes e.g. #/admin/login or #/admin/users
+    // Priority 1: Check window.location.hash for SPA client routes e.g. #/admin/login or #/task/introduction?lang=fr
     if (typeof window !== 'undefined' && window.location.hash && window.location.hash.startsWith('#/')) {
-      return window.location.hash.slice(1);
+      const rawHash = window.location.hash.slice(1);
+      return rawHash.split('?')[0];
     }
 
     let p = window.location.pathname;
@@ -21,6 +22,8 @@ function App() {
     
     if (base && p.startsWith(base)) {
       p = p.slice(base.length) || '/';
+    } else if (p.startsWith('/app/content/provider_pathways')) {
+      p = p.slice('/app/content/provider_pathways'.length) || '/';
     } else if (p.startsWith('/provider_pathways_dashboard_v3')) {
       p = p.slice('/provider_pathways_dashboard_v3'.length) || '/';
     } else if (p.startsWith('/provider_pathways_dashboard_v2')) {

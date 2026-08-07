@@ -50,9 +50,30 @@ const normalizeLanguage = (lng) => {
   return clean.split('-')[0];
 };
 
+const hashQueryDetector = {
+  name: 'hashQueryDetector',
+  lookup() {
+    if (typeof window === 'undefined') return undefined;
+    const searchParams = new URLSearchParams(window.location.search);
+    let lang = searchParams.get('lang');
+    if (!lang && window.location.hash.includes('lang=')) {
+      const qIdx = window.location.hash.indexOf('?');
+      if (qIdx !== -1) {
+        const hashParams = new URLSearchParams(window.location.hash.slice(qIdx));
+        lang = hashParams.get('lang');
+      }
+    }
+    return lang ? normalizeLanguage(lang) : undefined;
+  },
+  cacheUserLanguage() {}
+};
+
+const detector = new LanguageDetector();
+detector.addDetector(hashQueryDetector);
+
 i18n
-  // Configure language detection to check querystring ?lang=xx
-  .use(LanguageDetector)
+  // Configure language detection to check querystring ?lang=xx and hash ?lang=xx
+  .use(detector)
   // Enable dynamic imports for namespaces using Vite's dynamic import with automatic fallback
   .use(
     resourcesToBackend((language, namespace) => {
@@ -68,9 +89,8 @@ i18n
     fallbackLng: 'en',
     load: 'languageOnly',
     
-    // We will let LanguageDetector handle querystring resolution
     detection: {
-      order: ['querystring', 'localStorage', 'navigator'],
+      order: ['hashQueryDetector', 'querystring', 'localStorage', 'navigator'],
       lookupQuerystring: 'lang',
       caches: ['localStorage'],
     },
