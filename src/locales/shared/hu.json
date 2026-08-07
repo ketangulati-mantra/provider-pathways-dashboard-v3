@@ -57,5 +57,9 @@
     "next_module": "Következő modul",
     "previous": "Korábbi",
     "promotion_toolkit": "Promóciós eszköztár"
+  },
+  "introduction": {
+    "title": "Bevezetés a Mantra platformba",
+    "description": "Ez a videó elmagyarázza, hogyan hozhatnak létre a terapeuták, coachok, orvosok és wellness szakértők ingyenes profilt a MantraCare-en. Ismerje meg szakmai profiljának beállítását és a globális ügyfelekkel való kapcsolatteremtést."
   }
 }

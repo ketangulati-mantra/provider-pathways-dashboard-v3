@@ -1,14 +1,14 @@
 {
   "header": {
-    "points_earned": "+{{poeng}} Poeng"
+    "points_earned": "+{{points}} Poeng"
   },
   "progress": {
     "lesson_progress": "Fremgang i leksjonen",
-    "completed": "{{prosent}}% fullført"
+    "completed": "{{percent}}% fullført"
   },
   "overview": {
     "default_title": "Om denne leksjonen",
-    "points": "{{poeng}} Poeng"
+    "points": "{{points}} Poeng"
   },
   "video": {
     "lesson_duration": "Videoleksjon • {{duration}}",
@@ -42,7 +42,7 @@
     "title": "Gratulerer!",
     "subtitle": "Du fullførte leksjonen og økte behandlerscoren din.",
     "earned": "Du har fortjent:",
-    "points": "{{poeng}} Leverandørpoeng",
+    "points": "{{points}} Leverandørpoeng",
     "continue": "Fortsett til dashbordet"
   },
   "error": {
@@ -57,5 +57,9 @@
     "next_module": "Neste modul",
     "previous": "Tidligere",
     "promotion_toolkit": "Fremmingsverktøykasse"
+  },
+  "introduction": {
+    "title": "Introduksjon til Mantra-plattformen",
+    "description": "Denne videoen forklarer hvordan terapeuter, coacher, leger og helseeksperter kan opprette en gratis profil på MantraCare. Lær hvordan du setter opp din profil og kobler deg til klienter globalt."
   }
 }

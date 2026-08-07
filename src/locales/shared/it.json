@@ -11,7 +11,7 @@
     "points": "{{points}} Punti"
   },
   "video": {
-    "lesson_duration": "Lezione video • {{durazione}}",
+    "lesson_duration": "Lezione video • {{duration}}",
     "streaming": "Video in streaming...",
     "simulation": "La simulazione sta giocando. Clicca su reset per guardare di nuovo.",
     "reset": "Reset Video"
@@ -57,5 +57,9 @@
     "next_module": "Modulo successivo",
     "previous": "Precedente",
     "promotion_toolkit": "Kit di Strumenti per la Promozione"
+  },
+  "introduction": {
+    "title": "Introduzione alla piattaforma Mantra",
+    "description": "Questo video spiega come terapeuti, coach, medici ed esperti di benessere possono creare un profilo gratuito su MantraCare. Scopri come configurare il tuo profilo professionale e connetterti con clienti in tutto il mondo."
   }
 }

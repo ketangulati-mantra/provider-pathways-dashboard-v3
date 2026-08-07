@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Header,
   VideoSection,
@@ -10,11 +11,9 @@ import { useLessonCompletion } from '../hooks/useLessonCompletion';
 
 // Lesson constants
 const LESSON_ID = 'introduction';
-const LESSON_TITLE = 'Introduction to Mantra Platform';
 const REWARD_POINTS = 5;
 
 const VIDEO = {
-  title: 'Introduction to Mantra Platform',
   duration: '4 min',
   posterUrl: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1784698444/intro-to-mantra-thumbnail_gc7iso.jpg',
   videoUrl: 'https://vimeo.com/1149587565?fl=pl&fe=cm'
@@ -44,6 +43,10 @@ const QUIZ_QUESTIONS = [
 ];
 
 export default function IntroductionLessonPage({ onBack }) {
+  const { t } = useTranslation('shared');
+  const lessonTitle = t('introduction.title', 'Introduction to Mantra Platform');
+  const lessonDesc = t('introduction.description', 'This video explains how therapists, coaches, doctors, and wellness experts can create a free listing on MantraCare. Learn how to set up your professional profile, showcase your expertise, and start connecting with clients globally — all at zero cost.');
+
   const {
     videoWatched,
     quizDone,
@@ -56,7 +59,7 @@ export default function IntroductionLessonPage({ onBack }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-app)' }} className="animate-fade-in">
-      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} points={REWARD_POINTS} />
+      <Header title={lessonTitle} onBack={onBack} progress={lessonProgress} points={REWARD_POINTS} />
 
       <main className="academy-main-container" style={{
         flex: 1, padding: '40px 24px 80px', maxWidth: '800px', margin: '0 auto', width: '100%',
@@ -66,17 +69,17 @@ export default function IntroductionLessonPage({ onBack }) {
         {/* Lesson Information */}
         <section>
           <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '2.2rem', fontWeight: 800, margin: '0 0 16px', color: '#0f172a' }}>
-            {LESSON_TITLE}
+            {lessonTitle}
           </h1>
           <p style={{ fontSize: '1.05rem', color: '#475569', lineHeight: '1.6', margin: 0 }}>
-            This video explains how therapists, coaches, doctors, and wellness experts can create a free listing on MantraCare. Learn how to set up your professional profile, showcase your expertise, and start connecting with clients globally — all at zero cost.
+            {lessonDesc}
           </p>
         </section>
 
         {/* Video Section */}
         <section>
           <VideoSection
-            title={VIDEO.title}
+            title={lessonTitle}
             duration={VIDEO.duration}
             posterUrl={VIDEO.posterUrl}
             videoUrl={VIDEO.videoUrl}

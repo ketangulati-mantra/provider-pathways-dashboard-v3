@@ -4,14 +4,14 @@
   },
   "progress": {
     "lesson_progress": "Progrès des leçons",
-    "completed": "{{ %}} % terminé"
+    "completed": "{{percent}} % terminé"
   },
   "overview": {
     "default_title": "À propos de cette leçon",
     "points": "{{points}} Points"
   },
   "video": {
-    "lesson_duration": "Leçon vidéo • {{durée}}",
+    "lesson_duration": "Leçon vidéo • {{duration}}",
     "streaming": "Vidéo en streaming...",
     "simulation": "La simulation est en cours. Cliquez sur réinitialiser pour regarder à nouveau.",
     "reset": "Réinitialisation de la vidéo"
@@ -57,5 +57,9 @@
     "next_module": "Module suivant",
     "previous": "Précédent",
     "promotion_toolkit": "Boîte à outils de promotion"
+  },
+  "introduction": {
+    "title": "Présentation de la plateforme Mantra",
+    "description": "Cette vidéo explique comment les thérapeutes, coaches, médecins et experts en bien-être peuvent créer une fiche gratuite sur MantraCare. Découvrez comment configurer votre profil professionnel et vous connecter avec des clients dans le monde entier."
   }
 }

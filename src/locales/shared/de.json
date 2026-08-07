@@ -1,14 +1,14 @@
 {
   "header": {
-    "points_earned": "+{{punkt}} Punkte"
+    "points_earned": "+{{points}} Punkte"
   },
   "progress": {
     "lesson_progress": "Fortschritt der Lektion",
-    "completed": "{{prozent}}% abgeschlossen"
+    "completed": "{{percent}}% abgeschlossen"
   },
   "overview": {
     "default_title": "Über diese Lektion",
-    "points": "{{punkt}} Punkte"
+    "points": "{{points}} Punkte"
   },
   "video": {
     "lesson_duration": "Video-Lektion • {{duration}}",
@@ -42,7 +42,7 @@
     "title": "Herzlichen Glückwunsch!",
     "subtitle": "Du hast die Lektion abgeschlossen und deine Leistungspunktzahl verbessert.",
     "earned": "Du hast verdient:",
-    "points": "{{punkt}} Anbieterpunkte",
+    "points": "{{points}} Anbieterpunkte",
     "continue": "Weiter zum Dashboard"
   },
   "error": {
@@ -57,5 +57,9 @@
     "next_module": "Nächstes Modul",
     "previous": "Früher",
     "promotion_toolkit": "Beförderungs-Werkzeugkasten"
+  },
+  "introduction": {
+    "title": "Einführung in die Mantra-Plattform",
+    "description": "Dieses Video erklärt, wie Therapeuten, Coaches, Ärzte und Wellness-Experten einen kostenlosen Eintrag auf MantraCare erstellen können. Erfahren Sie, wie Sie Ihr professionelles Profil einrichten und sich weltweit mit Kunden vernetzen."
   }
 }

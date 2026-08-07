@@ -1,6 +1,6 @@
 {
   "header": {
-    "points_earned": "+{{điểm}} điểm"
+    "points_earned": "+{{points}} điểm"
   },
   "progress": {
     "lesson_progress": "Tiến trình bài học",
@@ -8,7 +8,7 @@
   },
   "overview": {
     "default_title": "Giới thiệu về bài học này",
-    "points": "{{điểm}} Điểm"
+    "points": "{{points}} Điểm"
   },
   "video": {
     "lesson_duration": "Bài học video • {{duration}}",
@@ -42,7 +42,7 @@
     "title": "Xin chúc mừng!",
     "subtitle": "Bạn đã hoàn thành bài học và tăng điểm nhà cung cấp của mình.",
     "earned": "Bạn đã kiếm được:",
-    "points": "{{điểm}} Điểm nhà cung cấp",
+    "points": "{{points}} Điểm nhà cung cấp",
     "continue": "Tiếp tục đến Bảng điều khiển"
   },
   "error": {
@@ -57,5 +57,9 @@
     "next_module": "Mô-đun tiếp theo",
     "previous": "Trước đây",
     "promotion_toolkit": "Bộ công cụ quảng bá"
+  },
+  "introduction": {
+    "title": "Giới thiệu về Nền tảng Mantra",
+    "description": "Video này giải thích cách các chuyên gia trị liệu, huấn luyện viên, bác sĩ và chuyên gia chăm sóc sức khỏe có thể tạo hồ sơ miễn phí trên MantraCare. Tìm hiểu cách thiết lập hồ sơ chuyên nghiệp của bạn và kết nối với khách hàng trên toàn cầu."
   }
 }

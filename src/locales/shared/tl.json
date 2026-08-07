@@ -1,14 +1,14 @@
 {
   "header": {
-    "points_earned": "+{{puntos}} pts"
+    "points_earned": "+{{points}} pts"
   },
   "progress": {
     "lesson_progress": "Pag-unlad ng Aralin",
-    "completed": "{{porsyento}}% Nakumpleto"
+    "completed": "{{percent}}% Nakumpleto"
   },
   "overview": {
     "default_title": "Tungkol sa Araling ito",
-    "points": "{{puntos}} Mga puntos"
+    "points": "{{points}} Mga puntos"
   },
   "video": {
     "lesson_duration": "Aralin sa Video • {{duration}}",
@@ -42,7 +42,7 @@
     "title": "Binabati kita!",
     "subtitle": "Nakumpleto mo ang aralin at pinalakas ang iyong provider score.",
     "earned": "Nakuha mo:",
-    "points": "{{puntos}} Mga Puntos ng Provider",
+    "points": "{{points}} Mga Puntos ng Provider",
     "continue": "Magpatuloy sa Dashboard"
   },
   "error": {
@@ -57,5 +57,9 @@
     "next_module": "Susunod na Module",
     "previous": "Nakaraan",
     "promotion_toolkit": "Toolkit para sa Promosyon"
+  },
+  "introduction": {
+    "title": "Panimula sa Mantra Platform",
+    "description": "Ipinapaliwanag ng video na ito kung paano makakalikha ang mga therapist, coach, doktor, at wellness expert ng libreng profile sa MantraCare. Alamin kung paano i-set up ang iyong propesyonal na profile at kumonekta sa mga kliyente sa buong mundo."
   }
 }

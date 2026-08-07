@@ -1,20 +1,24 @@
 {
   "header": {
-    "points_earned": "+{{puntos}} Pts"
+    "points_earned": "+{{points}} Pts"
   },
   "progress": {
     "lesson_progress": "Progreso de la lección",
-    "completed": "{{%}}% Completado"
+    "completed": "{{percent}}% Completado"
   },
   "overview": {
     "default_title": "Sobre esta lección",
     "points": "{{points}} Puntos"
   },
   "video": {
-    "lesson_duration": "Lección en vídeo • {{duración}}",
+    "lesson_duration": "Lección en vídeo • {{duration}}",
     "streaming": "Vídeo en streaming...",
     "simulation": "La simulación está en marcha. Haz clic en restablecer para volver a ver.",
     "reset": "Reiniciar vídeo"
+  },
+  "introduction": {
+    "title": "Introducción a la plataforma Mantra",
+    "description": "Este video explica cómo terapeutas, coaches, médicos y expertos en bienestar pueden crear un perfil gratuito en MantraCare. Aprende a configurar tu perfil profesional, mostrar tu experiencia y conectarte con clientes a nivel global, todo sin costo."
   },
   "scenario": {
     "badge": "Escenario del cliente",

@@ -11,7 +11,7 @@
     "points": "{{points}} Puncte"
   },
   "video": {
-    "lesson_duration": "Lecție video • {{durată}}",
+    "lesson_duration": "Lecție video • {{duration}}",
     "streaming": "Video în streaming...",
     "simulation": "Simularea se joacă. Apasă pe reset ca să urmărești din nou.",
     "reset": "Resetare video"
@@ -57,5 +57,9 @@
     "next_module": "Următorul modul",
     "previous": "Anterior",
     "promotion_toolkit": "Trusa de Promovare"
+  },
+  "introduction": {
+    "title": "Introducere în platforma Mantra",
+    "description": "Acest videoclip explică modul în care terapeuții, coachii, mecii și experții în wellness pot crea un profil gratuit pe MantraCare. Află cum să îți configurezi profilul profesional și să te conectezi cu clienți din întreaga lume."
   }
 }

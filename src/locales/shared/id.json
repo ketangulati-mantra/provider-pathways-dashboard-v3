@@ -1,17 +1,17 @@
 {
   "header": {
-    "points_earned": "+{{poin}} Poin"
+    "points_earned": "+{{points}} Poin"
   },
   "progress": {
     "lesson_progress": "Kemajuan Pelajaran",
-    "completed": "{{persen}}% Selesai"
+    "completed": "{{percent}}% Selesai"
   },
   "overview": {
     "default_title": "Tentang Pelajaran ini",
-    "points": "{{poin}} Poin"
+    "points": "{{points}} Poin"
   },
   "video": {
-    "lesson_duration": "Pelajaran Video • {{durasi}}",
+    "lesson_duration": "Pelajaran Video • {{duration}}",
     "streaming": "Video Streaming...",
     "simulation": "Simulasi sedang dimainkan. Klik atur ulang untuk menonton lagi.",
     "reset": "Atur ulang Video"
@@ -42,7 +42,7 @@
     "title": "Selamat!",
     "subtitle": "Anda menyelesaikan pelajaran dan meningkatkan skor penyedia Anda.",
     "earned": "Anda Mendapatkan:",
-    "points": "{{poin}} Poin Penyedia",
+    "points": "{{points}} Poin Penyedia",
     "continue": "Lanjutkan ke Dasbor"
   },
   "error": {
@@ -57,5 +57,9 @@
     "next_module": "Modul Berikutnya",
     "previous": "Sebelumnya",
     "promotion_toolkit": "Paket Alat Promosi"
+  },
+  "introduction": {
+    "title": "Pengantar Platform Mantra",
+    "description": "Video ini menjelaskan bagaimana terapis, pelatih, dokter, dan pakar kesehatan dapat membuat profil gratis di MantraCare. Pelajari cara menyiapkan profil profesional Anda dan terhubung dengan klien secara global."
   }
 }

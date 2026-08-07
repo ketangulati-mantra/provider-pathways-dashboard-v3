@@ -8,7 +8,7 @@
   },
   "overview": {
     "default_title": "このレッスンについて",
-    "points": "{{ポイント}}ポイント"
+    "points": "{{points}}ポイント"
   },
   "video": {
     "lesson_duration": "ビデオレッスン • {{duration}}",
@@ -42,7 +42,7 @@
     "title": "おめでとうございます!",
     "subtitle": "レッスンを終え、プロバイダーのスコアが上がりました。",
     "earned": "あなたが獲得したもの:",
-    "points": "{{ポイント}}プロバイダーポイント",
+    "points": "{{points}}プロバイダーポイント",
     "continue": "ダッシュボードへ続ける"
   },
   "error": {
@@ -57,5 +57,9 @@
     "next_module": "次のモジュール",
     "previous": "過去",
     "promotion_toolkit": "プロモーションツールキット"
+  },
+  "introduction": {
+    "title": "Mantraプラットフォームのご紹介",
+    "description": "この動画では、セラピスト、コーチ、医師、ウェルネスエキスパートがMantraCareで無料リスティングを作成する方法を説明します。プロフィールの設定方法や、世界中のクライアントと接続する方法をご覧ください。"
   }
 }

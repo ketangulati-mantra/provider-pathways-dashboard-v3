@@ -3,12 +3,51 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import resourcesToBackend from 'i18next-resources-to-backend';
 
-// Normalize language codes (e.g. 'en-US' -> 'en', 'es-ES' -> 'es') while preserving 'zh-Hans' and 'zh-Hant'
+const LANGUAGE_ALIASES = {
+  hindi: 'hi',
+  french: 'fr',
+  japanese: 'ja',
+  german: 'de',
+  spanish: 'es',
+  chinese: 'zh-Hans',
+  mandarin: 'zh-Hans',
+  cantonese: 'zh-Hant',
+  portuguese: 'pt',
+  italian: 'it',
+  russian: 'ru',
+  turkish: 'tr',
+  korean: 'ko',
+  dutch: 'nl',
+  polish: 'pl',
+  indonesian: 'id',
+  malay: 'ms',
+  vietnamese: 'vi',
+  thai: 'th',
+  hebrew: 'he',
+  urdu: 'ur',
+  tamil: 'ta',
+  telugu: 'te',
+  bengali: 'bn',
+  swedish: 'sv',
+  norwegian: 'no',
+  danish: 'da',
+  finnish: 'fi',
+  hungarian: 'hu',
+  romanian: 'ro',
+  czech: 'cs',
+  greek: 'el',
+  tagalog: 'tl',
+  filipino: 'tl'
+};
+
+// Normalize language codes (e.g. 'en-US' -> 'en', 'es-ES' -> 'es', 'hindi' -> 'hi') while preserving 'zh-Hans' and 'zh-Hant'
 const normalizeLanguage = (lng) => {
   if (!lng) return 'en';
-  if (lng === 'zh-TW' || lng === 'zh-Hant') return 'zh-Hant';
-  if (lng === 'zh-CN' || lng === 'zh-Hans' || lng === 'zh') return 'zh-Hans';
-  return lng.split('-')[0];
+  const clean = lng.trim().toLowerCase();
+  if (LANGUAGE_ALIASES[clean]) return LANGUAGE_ALIASES[clean];
+  if (clean === 'zh-tw' || clean === 'zh-hant') return 'zh-Hant';
+  if (clean === 'zh-cn' || clean === 'zh-hans' || clean === 'zh') return 'zh-Hans';
+  return clean.split('-')[0];
 };
 
 i18n

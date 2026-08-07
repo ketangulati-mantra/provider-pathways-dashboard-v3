@@ -1,6 +1,6 @@
 {
   "header": {
-    "points_earned": "+{{puan}} Puanlar"
+    "points_earned": "+{{points}} Puanlar"
   },
   "progress": {
     "lesson_progress": "Ders İlerlemesi",
@@ -8,7 +8,7 @@
   },
   "overview": {
     "default_title": "Bu Ders hakkında",
-    "points": "{{puan}} Puanlar"
+    "points": "{{points}} Puanlar"
   },
   "video": {
     "lesson_duration": "Video Dersi • {{duration}}",
@@ -42,7 +42,7 @@
     "title": "Tebrikler!",
     "subtitle": "Dersi tamamladın ve sağlayıcı puanını yükselttin.",
     "earned": "Şunları Kazandınız:",
-    "points": "{{puan}} Sağlayıcı Puanları",
+    "points": "{{points}} Sağlayıcı Puanları",
     "continue": "Kontrol Paneline Devam Et"
   },
   "error": {
@@ -57,5 +57,9 @@
     "next_module": "Sonraki Modül",
     "previous": "Önceki",
     "promotion_toolkit": "Promosyon Araç Seti"
+  },
+  "introduction": {
+    "title": "Mantra Platformuna Giriş",
+    "description": "Bu video, terapistlerin, koçların, doktorların ve uzmanların MantraCare üzerinde nasıl ücretsiz profil oluşturabileceğini açıklamaktadır. Profesyonel profilinizi oluşturmayı ve dünya genelindeki danışanlarla bağlantı kurmayı öğrenin."
   }
 }

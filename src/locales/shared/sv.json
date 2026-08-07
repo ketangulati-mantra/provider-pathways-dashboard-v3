@@ -1,6 +1,6 @@
 {
   "header": {
-    "points_earned": "+{{poäng}} Poäng"
+    "points_earned": "+{{points}} Poäng"
   },
   "progress": {
     "lesson_progress": "Lektionsframsteg",
@@ -8,7 +8,7 @@
   },
   "overview": {
     "default_title": "Om denna lektion",
-    "points": "{{poäng}} Poäng"
+    "points": "{{points}} Poäng"
   },
   "video": {
     "lesson_duration": "Videolektion • {{duration}}",
@@ -42,7 +42,7 @@
     "title": "Grattis!",
     "subtitle": "Du har slutfört lektionen och höjt din vårdgivares poäng.",
     "earned": "Du har förtjänat:",
-    "points": "{{poäng}} Leverantörspoäng",
+    "points": "{{points}} Leverantörspoäng",
     "continue": "Fortsätt till instrumentpanelen"
   },
   "error": {
@@ -57,5 +57,9 @@
     "next_module": "Nästa modul",
     "previous": "Tidigare",
     "promotion_toolkit": "Marknadsföringsverktygslåda"
+  },
+  "introduction": {
+    "title": "Introduktion till Mantra-plattformen",
+    "description": "Den här videon förklarar hur terapeuter, coacher, läkare och friskvårdsexperter kan skapa en gratis profil på MantraCare. Lär dig hvordan du ställer in din profil och får kontakt med klienter globalt."
   }
 }

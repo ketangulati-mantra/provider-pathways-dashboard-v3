@@ -1,6 +1,6 @@
 {
   "header": {
-    "points_earned": "+{{pisteet}} Pts"
+    "points_earned": "+{{points}} Pts"
   },
   "progress": {
     "lesson_progress": "Oppitunnin eteneminen",
@@ -57,5 +57,9 @@
     "next_module": "Seuraava moduuli",
     "previous": "Edellinen",
     "promotion_toolkit": "Markkinointityökalupakki"
+  },
+  "introduction": {
+    "title": "Johdatus Mantra-alustaan",
+    "description": "Tämä video selittää, kuinka terapeutit, valmentajat, lääkärit ja hyvinvointiasiantuntijat voivat luoda ilmaisen profiilin MantraCareen. Opi määrittämään ammatillinen profiilisi ja verkostoitumaan asiakkaiden kanssa maailmanlaajuisesti."
   }
 }

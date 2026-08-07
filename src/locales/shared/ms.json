@@ -1,14 +1,14 @@
 {
   "header": {
-    "points_earned": "+{{mata}} mata"
+    "points_earned": "+{{points}} mata"
   },
   "progress": {
     "lesson_progress": "Kemajuan Pelajaran",
-    "completed": "{{peratus}}% Selesai"
+    "completed": "{{percent}}% Selesai"
   },
   "overview": {
     "default_title": "Mengenai Pelajaran ini",
-    "points": "{{mata}} Mata"
+    "points": "{{points}} Mata"
   },
   "video": {
     "lesson_duration": "Pelajaran Video • {{duration}}",
@@ -42,7 +42,7 @@
     "title": "Tahniah!",
     "subtitle": "Anda menyelesaikan pelajaran dan meningkatkan skor pembekal anda.",
     "earned": "Anda Memperolehi:",
-    "points": "{{mata}} Mata Pembekal",
+    "points": "{{points}} Mata Pembekal",
     "continue": "Teruskan ke Papan Pemuka"
   },
   "error": {
@@ -57,5 +57,9 @@
     "next_module": "Modul Seterusnya",
     "previous": "Sebelumnya",
     "promotion_toolkit": "Kit Alat Promosi"
+  },
+  "introduction": {
+    "title": "Pengenalan kepada Platform Mantra",
+    "description": "Video ini menerangkan cara pakar terapi, jurulatih, doktor dan pakar kesejahteraan boleh membuat penyenaraian percuma di MantraCare. Ketahui cara menetapkan profil profesional anda dan berhubung dengan pelanggan secara global."
   }
 }
