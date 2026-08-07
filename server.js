@@ -49,8 +49,23 @@ const server = http.createServer((req, res) => {
 
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {
-      // Fallback to index.html for SPA client-side routing
-      filePath = path.join(DIST_DIR, 'index.html');
+      const ext = path.extname(reqPath).toLowerCase();
+      if (ext && MIME_TYPES[ext]) {
+        const filename = path.basename(reqPath);
+        const inAssets = path.join(DIST_DIR, 'assets', filename);
+        const inDist = path.join(DIST_DIR, filename);
+
+        if (fs.existsSync(inAssets)) {
+          filePath = inAssets;
+        } else if (fs.existsSync(inDist)) {
+          filePath = inDist;
+        } else {
+          filePath = path.join(DIST_DIR, 'index.html');
+        }
+      } else {
+        // Fallback to index.html for SPA client-side routing
+        filePath = path.join(DIST_DIR, 'index.html');
+      }
     }
 
     const ext = path.extname(filePath).toLowerCase();

@@ -76,12 +76,23 @@ subpaths.forEach((subpath) => {
   app.use(subpath, express.static(distPath));
 });
 
+import fs from 'fs';
+
 // Fallback to index.html for SPA routing (only if not requesting a file with extension)
 app.get('*', (req, res, next) => {
   if (req.path.includes('/api/')) return next();
   
-  // If request has a file extension (e.g. .js, .css, .png) and reached here, return 404 instead of index.html
+  // If request has a file extension (e.g. .js, .css, .png) and reached here, attempt smart fallback from dist/assets
   if (/\.[a-zA-Z0-9]+$/.test(req.path)) {
+    const filename = path.basename(req.path);
+    const inAssets = path.join(distPath, 'assets', filename);
+    const inDist = path.join(distPath, filename);
+
+    if (fs.existsSync(inAssets)) {
+      return res.sendFile(inAssets);
+    } else if (fs.existsSync(inDist)) {
+      return res.sendFile(inDist);
+    }
     return res.status(404).send('Asset not found');
   }
   
