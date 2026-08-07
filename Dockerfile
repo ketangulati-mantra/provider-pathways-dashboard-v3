@@ -21,7 +21,7 @@ RUN cd backend && npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=5000
+ENV PORT=80
 
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/backend/package*.json ./backend/
@@ -32,5 +32,5 @@ COPY --from=builder /app/backend/dist ./backend/dist
 RUN npm i --only=production
 RUN cd backend && npm i --only=production
 
-EXPOSE 5000
+EXPOSE 80
 CMD ["node", "backend/dist/server.js"]
