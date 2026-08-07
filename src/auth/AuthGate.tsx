@@ -13,8 +13,16 @@ export function AuthGate({ children }: AuthGateProps) {
 
   useEffect(() => {
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
+    const path = typeof window !== 'undefined' ? window.location.pathname : '';
     const params = new URLSearchParams(window.location.search);
     let token = params.get('token');
+
+    // 1. Activity / Task URLs are open to non-logged-in end users (e.g. /#/task/* or /#/meal-plans)
+    const isActivityRoute = hash.includes('/task/') || hash.includes('/meal-plans') || path.includes('/task/') || path.includes('/meal-plans');
+    if (isActivityRoute) {
+      setState('authenticated');
+      return;
+    }
 
     if (!token && hash.includes('token=')) {
       const queryIdx = hash.indexOf('?');
