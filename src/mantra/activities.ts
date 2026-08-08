@@ -91,6 +91,15 @@ export const activities: Activity[] = [
     route: '/task/ocd-market-yourself/therapy'
   },
   {
+    lessonId: 'ocd-certificate',
+    activityId: 'ocd-certificate',
+    services: ['therapy', 'psychiatry', 'ocd'],
+    title: 'Download Your OCD Provider Pathway Certificate',
+    rewardPoints: 0,
+    estimatedDuration: '1 min',
+    route: '/task/ocd-certificate'
+  },
+  {
     lessonId: 'physio-market-yourself',
     activityId: 'physio-growth',
     services: ['physiotherapy'],
