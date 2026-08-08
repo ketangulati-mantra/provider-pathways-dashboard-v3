@@ -1,5 +1,5 @@
-import { MANTRA_CONFIG } from './config';
-import { getLesson } from './api';
+import { MANTRA_CONFIG } from "./config";
+import { getLesson } from "./api";
 
 declare global {
   interface Window {
@@ -14,27 +14,27 @@ declare global {
  * when navigating to a new path or route.
  */
 export const preserveQueryParams = (targetPath: string): string => {
-  if (typeof window === 'undefined' || !window.location) {
+  if (typeof window === "undefined" || !window.location) {
     return targetPath;
   }
 
-  const [pathname, targetQuery] = targetPath.split('?');
-  const currentParams = new URLSearchParams(window.location.search || '');
+  const [pathname, targetQuery] = targetPath.split("?");
+  const currentParams = new URLSearchParams(window.location.search || "");
 
   // Normalize legacy 'source' param to 'service'
-  if (currentParams.has('source')) {
-    const val = currentParams.get('source');
-    if (val && !currentParams.has('service')) {
-      currentParams.set('service', val);
+  if (currentParams.has("source")) {
+    const val = currentParams.get("source");
+    if (val && !currentParams.has("service")) {
+      currentParams.set("service", val);
     }
-    currentParams.delete('source');
+    currentParams.delete("source");
   }
 
   if (targetQuery) {
     const targetParams = new URLSearchParams(targetQuery);
     targetParams.forEach((value, key) => {
-      if (key === 'source') {
-        currentParams.set('service', value);
+      if (key === "source") {
+        currentParams.set("service", value);
       } else {
         currentParams.set(key, value);
       }
@@ -52,26 +52,20 @@ export const preserveQueryParams = (targetPath: string): string => {
  * 3. Standalone browser -> window.location.href = "https://provider.mantracare.com"
  */
 export const handleExit = () => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
   // 1. React Native WebView
   if (window.ReactNativeWebView) {
-    window.ReactNativeWebView.postMessage(
-      JSON.stringify({ action: "exit" })
-    );
+    window.ReactNativeWebView.postMessage(JSON.stringify({ action: "exit" }));
     return;
   }
 
-  // 2. iframe inside web.mantracare.com
+  // 2. iframe inside provider.mantracare.com
   if (window.parent !== window) {
-    try {
-      window.parent.postMessage(
-        { action: "exit" },
-        "https://provider.mantracare.com"
-      );
-    } catch (e) {
-      console.warn('[Navigation] PostMessage to parent window failed:', e);
-    }
+    window.parent.postMessage(
+      { action: "exit" },
+      "https://provider.mantracare.com",
+    );
     return;
   }
 
@@ -82,15 +76,18 @@ export const handleExit = () => {
 /**
  * Navigates to a specific screen inside the native React Native app (e.g. after task completion)
  */
-export const navigateToNativeScreen = (screen: string = 'Home', params?: Record<string, any>) => {
-  if (typeof window === 'undefined') return;
+export const navigateToNativeScreen = (
+  screen: string = "Home",
+  params?: Record<string, any>,
+) => {
+  if (typeof window === "undefined") return;
   if (window.ReactNativeWebView) {
     window.ReactNativeWebView.postMessage(
       JSON.stringify({
-        action: 'navigate',
+        action: "navigate",
         screen,
         params,
-      })
+      }),
     );
   }
 };
@@ -118,15 +115,21 @@ export const goToDashboard = () => {
  * preserving query parameters.
  */
 export const goToLesson = (route: string) => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
   const currentPathname = window.location.pathname;
   const subpathMatch = currentPathname.match(/^(\/[^\/]+)/);
-  const currentSubpath = (subpathMatch && subpathMatch[1] && !subpathMatch[1].startsWith('/task')) ? subpathMatch[1] : '';
+  const currentSubpath =
+    subpathMatch && subpathMatch[1] && !subpathMatch[1].startsWith("/task")
+      ? subpathMatch[1]
+      : "";
 
-  const fullPath = route === '/' ? (currentSubpath || '/') : ((currentSubpath + route).replace('//', '/'));
+  const fullPath =
+    route === "/"
+      ? currentSubpath || "/"
+      : (currentSubpath + route).replace("//", "/");
   const targetUrl = preserveQueryParams(fullPath);
 
-  window.history.replaceState(null, '', targetUrl);
-  window.dispatchEvent(new Event('popstate'));
+  window.history.replaceState(null, "", targetUrl);
+  window.dispatchEvent(new Event("popstate"));
 };
