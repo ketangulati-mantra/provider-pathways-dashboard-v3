@@ -67,6 +67,7 @@ import DoctorInternationalClientsLessonPage from './DoctorInternationalClientsLe
 import DoctorVideoConsultLessonPage from './DoctorVideoConsultLessonPage';
 import DoctorFollowUpNudgingLessonPage from './DoctorFollowUpNudgingLessonPage';
 import DoctorCertificatePage from './DoctorCertificatePage';
+import OcdCertificatePage from './OcdCertificatePage';
 
 import GrowYourPracticeAcademy from '../components/corporate/GrowYourPracticeAcademy';
 
@@ -157,7 +158,9 @@ const ROUTE_VIEW_REGISTRY = {
   '/task/yoga-nudging': { default: YogaNudgingLessonPage },
   '/task/yoga-refer-services': { default: YogaReferServicesLessonPage },
   '/task/yoga-market-profile': { default: YogaMarketProfileLessonPage },
-  '/task/yoga-certificate': { default: YogaCertificatePage }
+  '/task/yoga-certificate': { default: YogaCertificatePage },
+  '/task/ocd-certificate': { default: OcdCertificatePage },
+  '/task/ocd-provider-certificate': { default: OcdCertificatePage }
 };
 
 /**
