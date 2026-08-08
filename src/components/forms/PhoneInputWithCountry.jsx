@@ -86,11 +86,11 @@ export default function PhoneInputWithCountry({
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           style={{
-            padding: '10px 10px 10px 12px',
+            padding: '0 10px',
             border: 'none',
             borderRight: '1px solid #cbd5e1',
             background: '#f8fafc',
-            fontSize: '0.86rem',
+            fontSize: '0.82rem',
             fontWeight: 800,
             color: '#0f172a',
             outline: 'none',
@@ -98,15 +98,17 @@ export default function PhoneInputWithCountry({
             height: '46px',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '5px',
             flexShrink: 0,
+            whiteSpace: 'nowrap',
+            maxWidth: '115px',
             borderTopLeftRadius: '10px',
             borderBottomLeftRadius: '10px'
           }}
         >
           <span>{selectedCountry.code}</span>
           <span style={{ color: '#2563eb' }}>{selectedCountry.dialCode}</span>
-          <ChevronDown size={14} style={{ color: '#64748b', transition: 'transform 0.2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0)' }} />
+          <ChevronDown size={14} style={{ color: '#64748b', flexShrink: 0, transition: 'transform 0.2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0)' }} />
         </button>
 
         {/* Number Input Field */}
@@ -118,9 +120,11 @@ export default function PhoneInputWithCountry({
           onBlur={onBlur}
           style={{
             flex: 1,
-            padding: '10px 14px',
+            minWidth: 0,
+            width: '100%',
+            padding: '10px 12px',
             border: 'none',
-            fontSize: '0.9rem',
+            fontSize: '0.88rem',
             color: '#0f172a',
             outline: 'none',
             background: 'transparent',

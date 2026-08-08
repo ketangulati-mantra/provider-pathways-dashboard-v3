@@ -571,11 +571,73 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
         backgroundColor: '#faf9f6'
       });
 
-      // Trigger download
+      const filename = `MantraCare-Certificate-${userName.trim().replace(/\s+/g, '_')}.png`;
+
+      // Convert data URL to Blob for reliable mobile app & desktop file handling
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+
+      // 1. Try Native Web Share API first (Mobile Apps / iOS Safari / Android WebViews)
+      if (navigator.canShare && navigator.share) {
+        try {
+          const file = new File([blob], filename, { type: 'image/png' });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: 'MantraCare Certificate',
+              text: `Certificate of Completion for ${userName.trim()}`
+            });
+            showToast('Certificate saved / shared successfully!', 'success');
+            if (onDownload) onDownload();
+            return;
+          }
+        } catch (shareErr) {
+          // If user cancels native share sheet, exit gracefully
+          if (shareErr.name === 'AbortError') {
+            setIsDownloading(false);
+            return;
+          }
+          console.warn('Web share failed, trying fallback download:', shareErr);
+        }
+      }
+
+      // 2. Blob URL Download (Works reliably on mobile webviews & desktop browsers)
+      const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.download = `MantraCare-Certificate-${userName.trim().replace(/\s+/g, '_')}.png`;
-      link.href = dataUrl;
-      link.click();
+      link.href = blobUrl;
+      link.download = filename;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      
+      // Dispatch explicit mouse click event for custom webview wrappers
+      const clickEvent = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window
+      });
+      link.dispatchEvent(clickEvent);
+
+      // Fallback for Mobile WebViews that block programmatic anchor downloads: open blob image directly
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        const opened = window.open(blobUrl, '_blank');
+        if (!opened) {
+          window.location.href = blobUrl;
+        }
+      }
+
+      setTimeout(() => {
+        try {
+          if (document.body.contains(link)) {
+            document.body.removeChild(link);
+          }
+          URL.revokeObjectURL(blobUrl);
+        } catch (e) {
+          // ignore cleanup error
+        }
+      }, 4000);
 
       showToast('Certificate downloaded successfully!', 'success');
       
