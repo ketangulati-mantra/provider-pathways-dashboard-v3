@@ -477,8 +477,10 @@ export default function SubmissionsTable() {
 
   const dynamicKeys = getDynamicFormKeys();
 
-  // Column Drag & Drop Reordering state
+  // Column Drag & Drop Reordering state (strictly local per user in browser localStorage)
   const [columns, setColumns] = useState([]);
+
+  const STORAGE_KEY = 'mantra_submissions_table_column_order';
 
   useEffect(() => {
     const baseCols = [
@@ -493,13 +495,24 @@ export default function SubmissionsTable() {
       { id: 'action', label: 'Action', width: '8%', align: 'right' }
     ];
 
-    setColumns(prev => {
-      if (prev.length === 0) return baseCols;
-      // Preserve user reordered ids if present, append any new dynamic columns
-      const existingIds = prev.map(c => c.id);
-      const newCols = baseCols.filter(c => !existingIds.includes(c.id));
-      return [...prev.filter(c => baseCols.some(bc => bc.id === c.id)), ...newCols];
-    });
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const savedIds = JSON.parse(saved);
+        if (Array.isArray(savedIds) && savedIds.length > 0) {
+          const ordered = savedIds
+            .map(id => baseCols.find(col => col.id === id))
+            .filter(Boolean);
+          const missing = baseCols.filter(col => !savedIds.includes(col.id));
+          setColumns([...ordered, ...missing]);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to parse saved column layout:', err);
+    }
+
+    setColumns(baseCols);
   }, [submissions]);
 
   const [draggedColumnIndex, setDraggedColumnIndex] = useState(null);
@@ -528,6 +541,31 @@ export default function SubmissionsTable() {
     updated.splice(dropIndex, 0, movedItem);
     setColumns(updated);
     setDraggedColumnIndex(null);
+
+    // Save customized column layout strictly in local storage per user browser
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated.map(c => c.id)));
+    } catch (err) {
+      console.warn('Failed to save local column layout:', err);
+    }
+  };
+
+  const resetColumnLayout = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (err) {}
+    const defaultCols = [
+      { id: 'user', label: 'User / Email', width: '16%' },
+      { id: 'service', label: 'Service', width: '9%' },
+      { id: 'country', label: 'Country', width: '10%' },
+      ...dynamicKeys.map(k => ({ id: `dyn_${k}`, key: k, label: formatHeaderLabel(k) })),
+      { id: 'activity', label: 'Activity', width: '14%' },
+      { id: 'submittedAt', label: 'Submitted At', width: '13%' },
+      { id: 'status', label: 'Status', width: '12%' },
+      { id: 'reviewedBy', label: 'Reviewed By', width: '13%' },
+      { id: 'action', label: 'Action', width: '8%', align: 'right' }
+    ];
+    setColumns(defaultCols);
   };
 
   const formatHeaderLabel = (key) => {

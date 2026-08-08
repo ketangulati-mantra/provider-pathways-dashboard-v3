@@ -58,14 +58,37 @@ export default function AdminUsersPage() {
   const [showLeftNav, setShowLeftNav] = useState(false);
   const [showRightNav, setShowRightNav] = useState(false);
 
-  const [adminColumns, setAdminColumns] = useState([
+  const DEFAULT_ADMIN_COLUMNS = [
     { id: 'name', label: 'Admin User' },
     { id: 'role', label: 'Role' },
     { id: 'status', label: 'Status' },
     { id: 'lastLogin', label: 'Last Login' },
     { id: 'createdDate', label: 'Created Date' },
     { id: 'actions', label: 'Actions', align: 'right' }
-  ]);
+  ];
+
+  const ADMIN_COL_STORAGE_KEY = 'mantra_admin_users_column_order';
+
+  const getInitialAdminColumns = () => {
+    try {
+      const saved = localStorage.getItem(ADMIN_COL_STORAGE_KEY);
+      if (saved) {
+        const savedIds: string[] = JSON.parse(saved);
+        if (Array.isArray(savedIds) && savedIds.length > 0) {
+          const ordered = savedIds
+            .map(id => DEFAULT_ADMIN_COLUMNS.find(col => col.id === id))
+            .filter(Boolean) as typeof DEFAULT_ADMIN_COLUMNS;
+          const missing = DEFAULT_ADMIN_COLUMNS.filter(col => !savedIds.includes(col.id));
+          return [...ordered, ...missing];
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to parse saved admin column order:', err);
+    }
+    return DEFAULT_ADMIN_COLUMNS;
+  };
+
+  const [adminColumns, setAdminColumns] = useState(getInitialAdminColumns);
   const [draggedAdminColIndex, setDraggedAdminColIndex] = useState<number | null>(null);
 
   const handleAdminColDragStart = (e: React.DragEvent, index: number) => {
@@ -92,6 +115,13 @@ export default function AdminUsersPage() {
     updated.splice(dropIndex, 0, movedItem);
     setAdminColumns(updated);
     setDraggedAdminColIndex(null);
+
+    // Save strictly per user in browser localStorage
+    try {
+      localStorage.setItem(ADMIN_COL_STORAGE_KEY, JSON.stringify(updated.map(c => c.id)));
+    } catch (err) {
+      console.warn('Failed to save local admin column layout:', err);
+    }
   };
 
   const checkScrollState = () => {
