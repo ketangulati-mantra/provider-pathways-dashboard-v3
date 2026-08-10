@@ -218,8 +218,18 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
   const lessonId = brand.lessonId || 'grow-your-practice';
   const TOTAL_STEPS = 7;
 
-  // 1. Fetch initial progress from DB on mount
+  // 1. Fetch initial progress from DB & local storage on mount
   useEffect(() => {
+    try {
+      const savedProgress = localStorage.getItem(`lesson_progress_${userId}_${lessonId}`);
+      if (savedProgress) {
+        const parsed = JSON.parse(savedProgress);
+        if (parsed.celebrationShown || parsed.actionDone || parsed.quizDone || parsed.videoWatched) {
+          setIsCompleted(true);
+        }
+      }
+    } catch (e) {}
+
     async function fetchDBProgress() {
       try {
         const res = await fetch(`${API_BASE}/api/activities/progress/${encodeURIComponent(userId)}/${encodeURIComponent(lessonId)}`);
@@ -228,6 +238,9 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
           const stepFromDB = json.data.current_step;
           if (stepFromDB !== undefined && stepFromDB !== null && stepFromDB >= 1 && stepFromDB <= 7) {
             setCurrentStepIndex(stepFromDB);
+          }
+          if (json.data.completed) {
+            setIsCompleted(true);
           }
         }
       } catch (e) {

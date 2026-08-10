@@ -504,66 +504,88 @@ export default function DeveloperLessonsPage({ onNavigate }) {
                   <div style={{ fontSize: '0.82rem', marginTop: '4px' }}>No pathways match service <strong>"{selectedService}"</strong> and search <strong>"{searchQuery}"</strong></div>
                 </div>
               ) : (
-                filteredActivities.map(act => (
-                  <div
-                    key={act.lessonId || act.route}
-                    style={{
-                      background: '#ffffff',
-                      borderRadius: '16px',
-                      border: '1px solid #e2e8f0',
-                      padding: '20px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justify: 'space-between',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-                      transition: 'transform 0.15s ease, box-shadow 0.15s ease'
-                    }}
-                  >
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                        <span style={{ fontSize: '0.73rem', fontWeight: 800, color: '#043263', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '6px' }}>
-                          +{act.rewardPoints || 5} Points
-                        </span>
-                        <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Clock size={13} /> {act.estimatedDuration || '3 min'}
-                        </span>
+                filteredActivities.map(act => {
+                  const completed = (() => {
+                    try {
+                      const uId = getCurrentUserId();
+                      const lId = act.lessonId || act.activityId;
+                      const saved = localStorage.getItem(`lesson_progress_${uId}_${lId}`);
+                      if (saved) {
+                        const parsed = JSON.parse(saved);
+                        return !!parsed.celebrationShown || !!parsed.actionDone || !!parsed.quizDone;
+                      }
+                    } catch (e) {}
+                    return false;
+                  })();
+
+                  return (
+                    <div
+                      key={act.lessonId || act.route}
+                      style={{
+                        background: completed ? '#f0fdf4' : '#ffffff',
+                        borderRadius: '16px',
+                        border: completed ? '1.5px solid #86efac' : '1px solid #e2e8f0',
+                        padding: '20px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                        transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '0.73rem', fontWeight: 800, color: '#043263', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '6px' }}>
+                              +{act.rewardPoints || 5} Points
+                            </span>
+                            {completed && (
+                              <span style={{ fontSize: '0.73rem', fontWeight: 800, color: '#15803d', background: '#dcfce7', border: '1px solid #bbf7d0', padding: '2px 8px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <CheckCircle2 size={12} color="#15803d" /> Completed
+                              </span>
+                            )}
+                          </div>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <Clock size={13} /> {act.estimatedDuration || '3 min'}
+                          </span>
+                        </div>
+
+                        <h3 style={{ margin: '0 0 6px', fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.35 }}>
+                          {act.title}
+                        </h3>
+
+                        <div style={{ fontSize: '0.76rem', color: '#64748b', fontFamily: 'monospace', margin: '4px 0 12px' }}>
+                          {act.route || `/task/${act.lessonId}`}
+                        </div>
                       </div>
 
-                      <h3 style={{ margin: '0 0 6px', fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.35 }}>
-                        {act.title}
-                      </h3>
+                      <div style={{ paddingTop: '12px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'capitalize' }}>
+                          Services: {Array.isArray(act.services) ? act.services.join(', ') : (act.services || 'All')}
+                        </span>
 
-                      <div style={{ fontSize: '0.76rem', color: '#64748b', fontFamily: 'monospace', margin: '4px 0 12px' }}>
-                        {act.route || `/task/${act.lessonId}`}
+                        <button
+                          onClick={() => launchPathway(act)}
+                          style={{
+                            padding: '6px 14px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: completed ? '#16a34a' : '#00a8e8',
+                            color: '#ffffff',
+                            fontWeight: 800,
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          {completed ? 'Review Pathway' : 'Open Pathway'} <ArrowRight size={14} />
+                        </button>
                       </div>
                     </div>
-
-                    <div style={{ paddingTop: '12px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'capitalize' }}>
-                        Services: {Array.isArray(act.services) ? act.services.join(', ') : (act.services || 'All')}
-                      </span>
-
-                      <button
-                        onClick={() => launchPathway(act)}
-                        style={{
-                          padding: '6px 14px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          background: '#00a8e8',
-                          color: '#ffffff',
-                          fontWeight: 800,
-                          fontSize: '0.8rem',
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px'
-                        }}
-                      >
-                        Open Pathway <ArrowRight size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
