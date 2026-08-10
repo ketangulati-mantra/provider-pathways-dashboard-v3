@@ -588,9 +588,12 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
     }
   }, [step, userName]);
 
+  const [downloadState, setDownloadState] = useState('idle'); // 'idle' | 'downloading' | 'success' | 'error'
+
   const handleDownload = async () => {
     try {
       setIsDownloading(true);
+      setDownloadState('downloading');
       let dataUrl = generatedImg;
 
       if (!dataUrl && certificateRef.current) {
@@ -611,57 +614,86 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
         setGeneratedImg(dataUrl);
       }
 
-      if (!dataUrl) {
-        showToast('Preparing certificate image, please try again in a moment.', 'info');
+      // PDF / PNG Response Validation
+      if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) {
+        if (import.meta.env?.DEV || process.env.NODE_ENV !== 'production') {
+          console.error('[DevLog] Certificate Generation Failed: Response is empty or invalid format.', {
+            userName: userName.trim(),
+            certificateId,
+            receivedType: typeof dataUrl,
+            dataLength: dataUrl ? dataUrl.length : 0
+          });
+        }
+        setDownloadState('error');
+        showToast('Unable to download certificate. Please try again.', 'error');
         return;
       }
 
       const filename = `MantraCare-Certificate-${userName.trim().replace(/\s+/g, '_')}.png`;
 
+      if (import.meta.env?.DEV || process.env.NODE_ENV !== 'production') {
+        console.log('[DevLog] Certificate Download Executed:', {
+          filename,
+          certificateId,
+          dataUrlSize: `${Math.round(dataUrl.length / 1024)} KB`,
+          isRNWebView: typeof window !== 'undefined' && !!window.ReactNativeWebView
+        });
+      }
+
       // 1. Post message to native React Native / iOS WKWebView / Android WebView bridge if embedded
       try {
-        if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === 'function') {
+        if (typeof window !== 'undefined' && window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === 'function') {
           window.ReactNativeWebView.postMessage(JSON.stringify({
             type: 'DOWNLOAD_CERTIFICATE',
             action: 'download_certificate',
+            fileType: 'png',
             dataUrl,
             filename,
-            userName: userName.trim()
+            userName: userName.trim(),
+            certificateId,
+            title: config.certificateTitle || 'Certificate of Completion'
           }));
-        } else if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.downloadCertificate) {
+        } else if (typeof window !== 'undefined' && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.downloadCertificate) {
           window.webkit.messageHandlers.downloadCertificate.postMessage({
             dataUrl,
-            filename
+            filename,
+            certificateId
           });
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Native postMessage bridge skipped:', e);
+      }
 
-      // 2. Direct Anchor Click File Download
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = filename;
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
+      // 2. Direct Anchor Click File Download for Web Browsers (Preserves Web Implementation)
+      if (typeof document !== 'undefined') {
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = filename;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
 
-      setTimeout(() => {
-        try {
-          if (document.body.contains(link)) document.body.removeChild(link);
-        } catch (e) {}
-      }, 2000);
+        setTimeout(() => {
+          try {
+            if (document.body.contains(link)) document.body.removeChild(link);
+          } catch (e) {}
+        }, 2000);
+      }
 
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (isMobile) {
         setMobileSaveImage({ url: dataUrl, filename });
       }
 
+      setDownloadState('success');
       showToast('Certificate generated & ready to save!', 'success');
       
       if (onDownload) {
         onDownload();
       }
     } catch (err) {
-      console.error('Error generating certificate image:', err);
+      console.error('Error downloading certificate:', err);
+      setDownloadState('error');
       showToast('Unable to download certificate. Please try again.', 'error');
     } finally {
       setIsDownloading(false);
@@ -796,48 +828,36 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {generatedImg ? (
-                <a
-                  href={generatedImg}
-                  download={`MantraCare-Certificate-${userName.trim().replace(/\s+/g, '_')}.png`}
-                  onClick={() => {
-                    showToast('Certificate download initiated!', 'success');
-                    if (onDownload) onDownload();
-                  }}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '10px 20px',
-                    fontSize: '0.9rem',
-                    background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                    color: '#ffffff',
-                    borderRadius: '8px',
-                    fontWeight: 800,
-                    textDecoration: 'none',
-                    boxShadow: '0 4px 12px rgba(37,99,235,0.25)'
-                  }}
-                >
-                  <Download size={16} />
-                  <span>Download PNG</span>
-                </a>
-              ) : (
-                <Button
-                  variant="primary"
-                  onClick={handleDownload}
-                  disabled={isDownloading}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '10px 20px',
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  {isDownloading ? <span className="animate-spin">⏳</span> : <Download size={16} />}
-                  <span>{isDownloading ? 'Generating...' : 'Download PNG'}</span>
-                </Button>
-              )}
+              <Button
+                variant="primary"
+                onClick={handleDownload}
+                disabled={isDownloading || downloadState === 'downloading'}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 20px',
+                  fontSize: '0.9rem',
+                  fontWeight: 800
+                }}
+              >
+                {isDownloading || downloadState === 'downloading' ? (
+                  <>
+                    <span className="animate-spin">⏳</span>
+                    <span>Downloading...</span>
+                  </>
+                ) : downloadState === 'success' ? (
+                  <>
+                    <ShieldCheck size={16} />
+                    <span>Open / Share Certificate</span>
+                  </>
+                ) : (
+                  <>
+                    <Download size={16} />
+                    <span>Download Certificate</span>
+                  </>
+                )}
+              </Button>
             </div>
           </div>
 
