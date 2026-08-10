@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Header, Button, useToast } from '../components';
 import { toPng } from 'html-to-image';
+import { Download, ArrowLeft, ShieldCheck, CheckCircle2, X } from 'lucide-react';
 import { downloadCertificate, sanitizeFilename } from '../utils/certificateDownloadService';
 
 /* ==========================================================================
