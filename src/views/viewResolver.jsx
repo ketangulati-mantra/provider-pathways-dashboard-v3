@@ -148,8 +148,10 @@ const ROUTE_VIEW_REGISTRY = {
   '/task/refer-provider': { default: ReferProviderLessonPage },
   '/task/sales-partner': { default: SalesPartnerLessonPage },
   '/task/intern-certificate': { default: TherapyInternCertificatePage },
-  '/task/download-certificate': { default: CertificateDownloadPage },
-  '/task/provider-certificate': { default: TherapyProviderCertificatePage },
+  '/task/download-certificate': { default: CertificateDownloadPage, ocd: OcdCertificatePage, ocdmantra: OcdCertificatePage, ocd_mantra: OcdCertificatePage },
+  '/task/provider-certificate': { default: TherapyProviderCertificatePage, ocd: OcdCertificatePage, ocdmantra: OcdCertificatePage, ocd_mantra: OcdCertificatePage },
+  '/download-certificate': { default: CertificateDownloadPage, ocd: OcdCertificatePage, ocdmantra: OcdCertificatePage, ocd_mantra: OcdCertificatePage },
+  '/provider-certificate': { default: TherapyProviderCertificatePage, ocd: OcdCertificatePage, ocdmantra: OcdCertificatePage, ocd_mantra: OcdCertificatePage },
   '/task/top-listener-recognition': { default: TopListenerLessonPage },
   '/task/listener-certificate': { default: ListenerCertificatePage },
   '/task/yoga-pathway': { default: YogaPathwayLessonPage },
@@ -159,11 +161,14 @@ const ROUTE_VIEW_REGISTRY = {
   '/task/yoga-refer-services': { default: YogaReferServicesLessonPage },
   '/task/yoga-market-profile': { default: YogaMarketProfileLessonPage },
   '/task/yoga-certificate': { default: YogaCertificatePage },
+  '/task/ocd': { default: OcdCertificatePage },
+  '/ocd': { default: OcdCertificatePage },
   '/task/ocd-certificate': { default: OcdCertificatePage },
   '/task/ocd-provider-certificate': { default: OcdCertificatePage },
   '/task/download-ocd-certificate': { default: OcdCertificatePage },
   '/task/ocd-download-certificate': { default: OcdCertificatePage },
   '/task/ocd_certificate': { default: OcdCertificatePage },
+  '/task/ocdmantra': { default: OcdCertificatePage },
   '/ocd-certificate': { default: OcdCertificatePage },
   '/ocd-provider-certificate': { default: OcdCertificatePage },
   '/download-ocd-certificate': { default: OcdCertificatePage },
@@ -182,20 +187,22 @@ export const resolveLessonView = ({ currentPath, currentService, onBack, activit
   }
 
   // Dynamic path matching for OCD Certificate
-  if (
+  const fullUrl = typeof window !== 'undefined' ? window.location.href.toLowerCase() : '';
+  const isOcdCertMatch = 
     currentPath.includes('ocd-certificate') || 
     currentPath.includes('ocd-provider-certificate') || 
     currentPath.includes('download-ocd-certificate') || 
     currentPath.includes('ocd-download-certificate') || 
     currentPath.includes('ocd_certificate') ||
     currentPath.includes('ocd-cert') ||
-    (typeof window !== 'undefined' && (
-      window.location.search.toLowerCase().includes('ocd-certificate') ||
-      window.location.search.toLowerCase().includes('ocd_certificate') ||
-      window.location.hash.toLowerCase().includes('ocd-certificate') ||
-      window.location.hash.toLowerCase().includes('ocd_certificate')
-    ))
-  ) {
+    currentPath === '/task/ocd' ||
+    currentPath === '/ocd' ||
+    fullUrl.includes('ocd-certificate') ||
+    fullUrl.includes('ocd_certificate') ||
+    fullUrl.includes('ocd-provider-certificate') ||
+    (fullUrl.includes('ocd') && (fullUrl.includes('cert') || fullUrl.includes('download')));
+
+  if (isOcdCertMatch) {
     return <OcdCertificatePage onBack={onBack} />;
   }
 

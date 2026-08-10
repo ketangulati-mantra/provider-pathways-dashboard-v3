@@ -12,9 +12,36 @@ function App() {
 
   const getPath = () => {
     if (typeof window !== 'undefined') {
+      const fullHref = window.location.href.toLowerCase();
+      
+      // Immediate resolution if OCD Certificate is in URL, search params, or hash
+      if (
+        fullHref.includes('ocd-certificate') || 
+        fullHref.includes('ocd_certificate') || 
+        fullHref.includes('ocd-provider-certificate') || 
+        fullHref.includes('ocd_provider_certificate') || 
+        fullHref.includes('download-ocd-certificate') || 
+        fullHref.includes('download_ocd_certificate') || 
+        (fullHref.includes('ocd') && fullHref.includes('cert'))
+      ) {
+        return '/task/ocd-certificate';
+      }
+
       // Priority 0: Check URL query parameters for task/lesson/activity passed by phone apps
       const searchParams = new URLSearchParams(window.location.search);
-      const paramTask = searchParams.get('task') || searchParams.get('lesson_id') || searchParams.get('lessonId') || searchParams.get('lesson') || searchParams.get('activity') || searchParams.get('activityId') || searchParams.get('route');
+      const paramTask = searchParams.get('task') || 
+                        searchParams.get('lesson_id') || 
+                        searchParams.get('lessonId') || 
+                        searchParams.get('lesson') || 
+                        searchParams.get('activity') || 
+                        searchParams.get('activityId') || 
+                        searchParams.get('id') || 
+                        searchParams.get('path') || 
+                        searchParams.get('route') || 
+                        searchParams.get('page') || 
+                        searchParams.get('view') || 
+                        searchParams.get('name') || 
+                        searchParams.get('action');
       if (paramTask) {
         const cleanTask = paramTask.startsWith('/') ? paramTask : `/task/${paramTask}`;
         return cleanTask.split('?')[0];
@@ -116,6 +143,7 @@ function App() {
   // Render view based on route path and service context
   const renderView = () => {
     const onBackCallback = () => handleExit();
+    const isAdminRoute = currentPath.startsWith('/admin') || currentPath === '/dev';
 
     // 1. Try to resolve specific activity/lesson view first
     const resolvedView = resolveLessonView({
@@ -129,13 +157,23 @@ function App() {
       return resolvedView;
     }
 
-    // 2. Default Root / Admin Views Dashboard (/ or /provider_activity)
-    if (currentPath === '/' || currentPath === '/provider_activity' || currentPath === '/admin' || currentPath === '/dev' || currentPath === '/admin/dashboard') {
+    // 2. Admin Routes -> Developer/Admin Dashboard
+    if (isAdminRoute) {
       return <DeveloperLessonsPage onNavigate={navigate} />;
     }
 
-    // 3. Default Fallback: Admin Submissions Dashboard
-    return <DeveloperLessonsPage onNavigate={navigate} />;
+    // 3. OCD Service Context Fallback -> OcdCertificatePage
+    if (currentService === 'ocd' || currentService === 'ocdmantra' || currentService === 'ocd_mantra') {
+      return <OcdCertificatePage onBack={onBackCallback} />;
+    }
+
+    // 4. Default Root / Admin Views Dashboard (/ or /provider_activity)
+    if (currentPath === '/' || currentPath === '/provider_activity') {
+      return <DeveloperLessonsPage onNavigate={navigate} />;
+    }
+
+    // 5. Default Non-Admin Provider Fallback -> Introduction Lesson
+    return <IntroductionLessonPage onBack={onBackCallback} />;
   };
 
   return (
