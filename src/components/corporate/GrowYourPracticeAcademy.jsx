@@ -215,8 +215,6 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
-
-  const userId = getCurrentUserId();
   const lessonId = brand.lessonId || 'grow-your-practice';
   const TOTAL_STEPS = 9;
 
