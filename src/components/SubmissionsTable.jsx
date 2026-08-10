@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { Search, RefreshCw, Download, FileSpreadsheet, Calendar, User, ExternalLink, Filter, ChevronRight, X, Sparkles, Database, Layers, CheckCircle2, ZoomIn, ZoomOut, RotateCcw, Clock, Eye, Mail, Image, FileText, Phone, Trash2, Plus } from 'lucide-react';
-import { fetchAllSubmissions, reviewSubmissionStatus } from '../mantra/api';
+import { Search, RefreshCw, Download, FileSpreadsheet, Calendar, User, ExternalLink, Filter, ChevronRight, X, Sparkles, Database, Layers, CheckCircle2, ZoomIn, ZoomOut, RotateCcw, Clock, Eye, Mail, Image, FileText, Phone, Trash2, Plus, BarChart3, Users, Video } from 'lucide-react';
+import { fetchAllSubmissions, reviewSubmissionStatus, fetchSubmissionAnalytics, fetchAdminReviewers, addAdminReviewer, deleteAdminReviewer, fetchSubmissionActivities } from '../mantra/api';
 import { useToast } from './Toast';
 import { useAuth } from '../auth/AuthContext';
+import { activities as registeredActivities } from '../mantra/activities';
 
 /* Interactive Photo Preview Modal with Zoom & Drag Support */
 function InteractiveImageModal({ imageUrl, onClose }) {
@@ -214,6 +215,64 @@ const formatActivityTitle = (title, lessonId) => {
   return title || 'Mantra intro video';
 };
 
+function isDateInPeriod(dateStr, period, startDate, endDate) {
+  if (!dateStr || period === 'all_time') return true;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return true;
+
+  const now = new Date();
+
+  if (period === 'today') {
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return d >= startOfDay;
+  }
+  if (period === 'yesterday') {
+    const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    const endOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return d >= startOfYesterday && d < endOfYesterday;
+  }
+  if (period === 'this_week') {
+    const dayOfWeek = now.getDay();
+    const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
+    return d >= startOfWeek;
+  }
+  if (period === 'this_month') {
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    return d >= startOfMonth;
+  }
+  if (period === 'last_month') {
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+    return d >= startOfLastMonth && d <= endOfLastMonth;
+  }
+  if (period === 'last_3_months') {
+    const past = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+    return d >= past;
+  }
+  if (period === 'last_6_months') {
+    const past = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+    return d >= past;
+  }
+  if (period === 'last_12_months') {
+    const past = new Date(now.getFullYear(), now.getMonth() - 12, now.getDate());
+    return d >= past;
+  }
+  if (period === 'custom') {
+    if (startDate) {
+      const s = new Date(startDate);
+      s.setHours(0, 0, 0, 0);
+      if (d < s) return false;
+    }
+    if (endDate) {
+      const e = new Date(endDate);
+      e.setHours(23, 59, 59, 999);
+      if (d > e) return false;
+    }
+    return true;
+  }
+  return true;
+}
+
 export default function SubmissionsTable() {
   const { showToast } = useToast();
   const { admin: currentAdmin } = useAuth();
@@ -227,6 +286,46 @@ export default function SubmissionsTable() {
   const [previewImage, setPreviewImage] = useState(null);
   const [columnOrder, setColumnOrder] = useState(['user', 'service', 'country', 'dynamic', 'activity', 'submittedAt', 'status', 'reviewedBy', 'action']);
   const [draggedColId, setDraggedColId] = useState(null);
+
+  // Analytics state (collapsed by default)
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [analyticsRange, setAnalyticsRange] = useState('this_month');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState(null);
+
+  const loadAnalytics = async (range = analyticsRange, sDate = customStartDate, eDate = customEndDate) => {
+    setIsAnalyticsLoading(true);
+    setAnalyticsError(null);
+    try {
+      const res = await fetchSubmissionAnalytics({ range, startDate: sDate, endDate: eDate });
+      if (res.success && res.data) {
+        setAnalyticsData(res.data);
+      } else {
+        setAnalyticsError(res.error || 'Unable to load analytics. Please try again.');
+      }
+    } catch (err) {
+      setAnalyticsError('Unable to load analytics. Please try again.');
+    } finally {
+      setIsAnalyticsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showAnalytics && analyticsRange !== 'custom') {
+      loadAnalytics(analyticsRange);
+    }
+  }, [showAnalytics, analyticsRange]);
+
+  const handleApplyCustomDate = () => {
+    if (!customStartDate || !customEndDate) {
+      showToast('Please select both start and end dates', 'error');
+      return;
+    }
+    loadAnalytics('custom', customStartDate, customEndDate);
+  };
 
   const tableScrollRef = useRef(null);
   const scrollIntervalRef = useRef(null);
@@ -304,56 +403,136 @@ export default function SubmissionsTable() {
 
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedReviewer, setSelectedReviewer] = useState('all');
-  const [reviewerOptions, setReviewerOptions] = useState(['Unassigned', 'Ketan', 'Team Member', 'Pooja', 'Mantra Admin']);
+  const [reviewerOptions, setReviewerOptions] = useState(['Unassigned']);
   const [isManagingReviewers, setIsManagingReviewers] = useState(false);
   const [newReviewerName, setNewReviewerName] = useState('');
 
-  // Extract unique reviewers from dataset
-  useEffect(() => {
-    if (submissions && submissions.length > 0) {
-      const existing = submissions.map(s => s.reviewed_by).filter(r => r && r.trim() && r !== 'Unassigned');
-      setReviewerOptions(prev => Array.from(new Set([...prev, ...existing])));
-    }
-  }, [submissions]);
+  // Custom Searchable Activity Selector state
+  const [isActivityDropdownOpen, setIsActivityDropdownOpen] = useState(false);
+  const [activitySearchTerm, setActivitySearchTerm] = useState('');
+  const activityDropdownRef = useRef(null);
 
-  const handleAddReviewer = (nameToAdd) => {
+  // Time period filter state for Submission Portal
+  const [selectedTimePeriod, setSelectedTimePeriod] = useState('all_time');
+  const [tableCustomStartDate, setTableCustomStartDate] = useState('');
+  const [tableCustomEndDate, setTableCustomEndDate] = useState('');
+  const [isCustomDateModalOpen, setIsCustomDateModalOpen] = useState(false);
+
+  // Additional field filter states
+  const [selectedService, setSelectedService] = useState('all');
+  const [selectedCountry, setSelectedCountry] = useState('all');
+  const [selectedSkippedVideo, setSelectedSkippedVideo] = useState('all');
+
+  // Filter visibility toggles (Allows admin to toggle on/off individual filter controls)
+  const [filterVisibility, setFilterVisibility] = useState({
+    date: true,
+    status: true,
+    activity: true,
+    search: true,
+    reviewer: false,
+    service: false,
+    country: false,
+    skippedVideo: false
+  });
+  const [isFilterSettingsOpen, setIsFilterSettingsOpen] = useState(false);
+  const filterSettingsRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (activityDropdownRef.current && !activityDropdownRef.current.contains(e.target)) {
+        setIsActivityDropdownOpen(false);
+      }
+      if (filterSettingsRef.current && !filterSettingsRef.current.contains(e.target)) {
+        setIsFilterSettingsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Fetch distinct submitted activities across all pages from DB
+  const [dbActivities, setDbActivities] = useState([]);
+
+  useEffect(() => {
+    const loadDbActivities = async () => {
+      try {
+        const res = await fetchSubmissionActivities();
+        if (res.success && Array.isArray(res.data)) {
+          setDbActivities(res.data);
+        }
+      } catch (e) {
+        console.error('[SubmissionsTable] Error loading DB activities:', e);
+      }
+    };
+    loadDbActivities();
+  }, []);
+
+  // Fetch reviewers directly from DB table
+  const loadReviewers = async () => {
+    try {
+      const res = await fetchAdminReviewers();
+      if (res.success && Array.isArray(res.data)) {
+        setReviewerOptions(res.data);
+      }
+    } catch (err) {
+      console.error('[SubmissionsTable] Error loading reviewers:', err);
+    }
+  };
+
+  useEffect(() => {
+    loadReviewers();
+  }, []);
+
+  const handleAddReviewer = async (nameToAdd) => {
     const trimmed = nameToAdd ? nameToAdd.trim() : newReviewerName.trim();
     if (!trimmed) return;
-    if (reviewerOptions.includes(trimmed)) {
+    if (reviewerOptions.some(r => r.toLowerCase() === trimmed.toLowerCase())) {
       showToast(`Reviewer '${trimmed}' already exists`, 'info');
       return;
     }
-    setReviewerOptions(prev => [...prev, trimmed]);
-    setNewReviewerName('');
-    showToast(`Added reviewer '${trimmed}'`, 'success');
+
+    try {
+      const res = await addAdminReviewer(trimmed);
+      if (res.success && Array.isArray(res.data)) {
+        setReviewerOptions(res.data);
+      } else {
+        setReviewerOptions(prev => [...prev, trimmed]);
+      }
+      setNewReviewerName('');
+      showToast(`Added reviewer '${trimmed}'`, 'success');
+    } catch (err) {
+      console.error('Error adding reviewer:', err);
+      showToast('Failed to add reviewer', 'error');
+    }
   };
 
   const handleDeleteReviewer = async (nameToDelete) => {
-    if (nameToDelete === 'Unassigned') {
+    if (!nameToDelete || nameToDelete === 'Unassigned') {
       showToast('Cannot delete default Unassigned option', 'error');
       return;
     }
 
-    // 1. Remove from options list
-    setReviewerOptions(prev => prev.filter(r => r !== nameToDelete));
-    if (selectedReviewer === nameToDelete) {
-      setSelectedReviewer('all');
-    }
-
-    // 2. Re-assign any submissions assigned to this deleted reviewer back to 'Unassigned'
-    const assignedSubmissions = submissions.filter(s => s.reviewed_by === nameToDelete);
-    if (assignedSubmissions.length > 0) {
-      setSubmissions(prev => prev.map(s => s.reviewed_by === nameToDelete ? { ...s, reviewed_by: 'Unassigned' } : s));
-      for (const sub of assignedSubmissions) {
-        try {
-          await reviewSubmissionStatus(sub.id, undefined, '', 'Unassigned');
-        } catch (e) {
-          console.error('Failed to reset reviewer for submission:', sub.id, e);
-        }
+    try {
+      // 1. Remove from options list locally immediately
+      setReviewerOptions(prev => prev.filter(r => r.toLowerCase() !== nameToDelete.toLowerCase()));
+      if (selectedReviewer.toLowerCase() === nameToDelete.toLowerCase()) {
+        setSelectedReviewer('all');
       }
-    }
 
-    showToast(`Deleted reviewer '${nameToDelete}'`, 'success');
+      // 2. Re-assign any submissions assigned to this deleted reviewer back to 'Unassigned' in state
+      setSubmissions(prev => prev.map(s => (s.reviewed_by && s.reviewed_by.toLowerCase() === nameToDelete.toLowerCase()) ? { ...s, reviewed_by: 'Unassigned' } : s));
+
+      // 3. Delete in DB and reset records in DB
+      const res = await deleteAdminReviewer(nameToDelete);
+      if (res.success && Array.isArray(res.data)) {
+        setReviewerOptions(res.data);
+      }
+
+      showToast(`Deleted reviewer '${nameToDelete}'`, 'success');
+    } catch (err) {
+      console.error('Error deleting reviewer:', err);
+      showToast('Failed to delete reviewer', 'error');
+    }
   };
 
   // Counts calculation
@@ -405,35 +584,104 @@ export default function SubmissionsTable() {
     }
   };
 
-  // Filter submissions by selected activity, status, and reviewer
+  // Filter submissions by selected date, activity, status, and reviewer
   const filteredSubmissions = submissions.filter(item => {
-    if (selectedActivity !== 'all') {
+    // 1. Time Period Filter
+    if (filterVisibility.date && selectedTimePeriod !== 'all_time') {
+      const itemDate = item.created_at || item.submitted_at || item.submittedAt;
+      if (!isDateInPeriod(itemDate, selectedTimePeriod, tableCustomStartDate, tableCustomEndDate)) {
+        return false;
+      }
+    }
+
+    // 2. Activity Filter
+    if (filterVisibility.activity && selectedActivity !== 'all') {
       const formattedTitle = formatActivityTitle(item.activity_title, item.lesson_id);
       if (item.lesson_id !== selectedActivity && item.activity_title !== selectedActivity && formattedTitle !== selectedActivity) {
         return false;
       }
     }
-    const itemStatus = (item.status || 'pending').toLowerCase();
-    if (selectedStatus !== 'all') {
+
+    // 3. Status Filter
+    if (filterVisibility.status && selectedStatus !== 'all') {
+      const itemStatus = (item.status || 'pending').toLowerCase();
       if (selectedStatus === 'reviewed' && (itemStatus === 'reviewed' || itemStatus === 'approved')) {
         // match
       } else if (itemStatus !== selectedStatus) {
         return false;
       }
     }
-    const itemReviewer = item.reviewed_by || 'Unassigned';
-    if (selectedReviewer !== 'all') {
+
+    // 4. Reviewer Filter
+    if (filterVisibility.reviewer && selectedReviewer !== 'all') {
+      const itemReviewer = item.reviewed_by || 'Unassigned';
       if (selectedReviewer === 'Unassigned' && (itemReviewer === 'Unassigned' || !item.reviewed_by)) {
         // match
       } else if (itemReviewer.toLowerCase() !== selectedReviewer.toLowerCase()) {
         return false;
       }
     }
+
+    // 5. Service Filter
+    if (filterVisibility.service && selectedService !== 'all') {
+      const itemService = (item.service || item.formData?.service || '').toLowerCase();
+      if (itemService !== selectedService.toLowerCase()) {
+        return false;
+      }
+    }
+
+    // 6. Country Filter
+    if (filterVisibility.country && selectedCountry !== 'all') {
+      const itemCountry = (item.country || item.formData?.country || item.submissionData?.country || '').toLowerCase();
+      if (itemCountry !== selectedCountry.toLowerCase()) {
+        return false;
+      }
+    }
+
+    // 7. Skipped Video Filter
+    if (filterVisibility.skippedVideo && selectedSkippedVideo !== 'all') {
+      const isSkipped = item.video_skipped === true || item.video_skipped === 'true' || item.formData?.videoSkipped === true || item.submissionData?.videoSkipped === true;
+      if (selectedSkippedVideo === 'skipped' && !isSkipped) {
+        return false;
+      }
+      if (selectedSkippedVideo === 'uploaded' && isSkipped) {
+        return false;
+      }
+    }
+
     return true;
   });
 
-  // Dynamically extract unique activity options present in real table records
+  // Extract unique countries
+  const uniqueCountries = Array.from(new Set(
+    submissions
+      .map(s => s.country || s.formData?.country || s.submissionData?.country)
+      .filter(c => c && String(c).trim())
+  ));
+
+  // Extract unique services
+  const uniqueServices = Array.from(new Set(
+    submissions
+      .map(s => s.service || s.formData?.service)
+      .filter(s => s && String(s).trim())
+  ));
+
+  // Extract unique activity options across ALL database records & current page
   const uniqueActivitiesMap = new Map();
+
+  // 1. Include all distinct submitted activities fetched from entire DB across all pages
+  if (Array.isArray(dbActivities)) {
+    dbActivities.forEach(item => {
+      const titleVal = item.title || item.activity_title || item.lesson_id;
+      const formattedTitle = formatActivityTitle(titleVal, item.key || item.lesson_id);
+      const key = item.key || item.lesson_id || formattedTitle;
+      if (formattedTitle && !uniqueActivitiesMap.has(formattedTitle)) {
+        uniqueActivitiesMap.set(formattedTitle, { key, title: formattedTitle });
+      }
+    });
+  }
+
+  // 2. Include any activity present in current page submissions
   submissions.forEach(s => {
     const formattedTitle = formatActivityTitle(s.activity_title, s.lesson_id);
     const key = s.lesson_id || s.activity_title || formattedTitle;
@@ -441,7 +689,11 @@ export default function SubmissionsTable() {
       uniqueActivitiesMap.set(formattedTitle, { key, title: formattedTitle });
     }
   });
-  const uniqueActivities = Array.from(uniqueActivitiesMap.values());
+
+  const availableActivities = Array.from(uniqueActivitiesMap.values());
+  const filteredActivityOptions = availableActivities.filter(act =>
+    act.title.toLowerCase().includes(activitySearchTerm.toLowerCase())
+  );
 
   // Exclude redundant user info, P/V links & technical file upload metadata keys from main table
   const REDUNDANT_KEYS = [
@@ -644,7 +896,297 @@ export default function SubmissionsTable() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+
+      {/* Top Header Control Bar with View/Hide Analytics Toggle */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '12px',
+        background: '#ffffff',
+        padding: '12px 18px',
+        borderRadius: '12px',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '8px',
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+            color: '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 6px rgba(15, 23, 42, 0.15)'
+          }}>
+            <FileSpreadsheet size={16} />
+          </div>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.01em' }}>
+              Form Submissions
+            </h2>
+            <p style={{ margin: 0, fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>
+              Provider activity responses & verification reviews
+            </p>
+          </div>
+        </div>
+
+        {/* Toggle Analytics Button */}
+        <button
+          onClick={() => setShowAnalytics(prev => !prev)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '7px 14px',
+            borderRadius: '8px',
+            border: showAnalytics ? '1px solid #cbd5e1' : '1px solid #2563eb',
+            background: showAnalytics ? '#f8fafc' : '#2563eb',
+            color: showAnalytics ? '#0f172a' : '#ffffff',
+            fontSize: '0.78rem',
+            fontWeight: 800,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease-in-out',
+            boxShadow: showAnalytics ? 'none' : '0 2px 6px rgba(37, 99, 235, 0.25)'
+          }}
+        >
+          <BarChart3 size={15} />
+          <span>{showAnalytics ? 'Hide Analytics' : 'View Analytics'}</span>
+          <ChevronRight size={14} style={{ transform: showAnalytics ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
+        </button>
+      </div>
+
+      {/* ======================================================== */}
+      {/* COLLAPSIBLE SECTION: ACTIVITY ANALYTICS                   */}
+      {/* ======================================================== */}
+      {showAnalytics && (
+        <div style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 4px 16px rgba(0,0,0,0.02)', animation: 'fadeIn 0.2s ease-in-out' }}>
+          
+          {/* Header & Date Range Filter Bar */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(15,23,42,0.15)' }}>
+                <BarChart3 size={18} />
+              </div>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.01em' }}>Activity Analytics</h2>
+                <p style={{ margin: 0, fontSize: '0.74rem', color: '#64748b', fontWeight: 600 }}>Real-time completion & video submission behavior</p>
+              </div>
+            </div>
+
+            {/* Date Selector Controls */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '4px 8px' }}>
+                <Calendar size={14} color="#64748b" />
+                <select
+                  value={analyticsRange}
+                  onChange={(e) => setAnalyticsRange(e.target.value)}
+                  style={{ border: 'none', background: 'transparent', fontSize: '0.78rem', fontWeight: 800, color: '#0f172a', outline: 'none', cursor: 'pointer' }}
+                >
+                  <option value="today">Today</option>
+                  <option value="yesterday">Yesterday</option>
+                  <option value="this_week">This Week</option>
+                  <option value="this_month">This Month</option>
+                  <option value="last_month">Last Month</option>
+                  <option value="last_3_months">Last 3 Months</option>
+                  <option value="last_6_months">Last 6 Months</option>
+                  <option value="last_12_months">Last 12 Months</option>
+                  <option value="custom">Custom Range</option>
+                </select>
+              </div>
+
+              {analyticsRange === 'custom' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                  <input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.74rem', fontWeight: 700 }}
+                  />
+                  <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 800 }}>to</span>
+                  <input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.74rem', fontWeight: 700 }}
+                  />
+                  <button
+                    onClick={handleApplyCustomDate}
+                    style={{ padding: '5px 12px', borderRadius: '6px', border: 'none', background: '#2563eb', color: '#ffffff', fontSize: '0.74rem', fontWeight: 800, cursor: 'pointer' }}
+                  >
+                    Apply
+                  </button>
+                </div>
+              )}
+
+              <button
+                onClick={() => loadAnalytics()}
+                title="Refresh Analytics"
+                style={{ padding: '6px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <RefreshCw size={14} color="#475569" className={isAnalyticsLoading ? 'spin-icon' : ''} />
+              </button>
+            </div>
+          </div>
+
+          {/* Loading / Error / Data state */}
+          {isAnalyticsLoading ? (
+            <div style={{ padding: '30px', textAlign: 'center', color: '#64748b', fontSize: '0.84rem', fontWeight: 700 }}>
+              Loading activity analytics...
+            </div>
+          ) : analyticsError ? (
+            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '14px', textAlign: 'center', color: '#991b1b', fontSize: '0.8rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+              <span>Unable to load analytics. Please try again.</span>
+              <button onClick={() => loadAnalytics()} style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: '#dc2626', color: '#ffffff', fontSize: '0.74rem', fontWeight: 800, cursor: 'pointer' }}>Retry</button>
+            </div>
+          ) : (
+            <>
+              {/* Overview Cards (4 Compact Metrics) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <CheckCircle2 size={18} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Activity Completions</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', marginTop: '2px' }}>{analyticsData?.overview?.totalCompletions || 0}</div>
+                  </div>
+                </div>
+
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: '#f0fdf4', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Users size={18} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Unique Providers</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', marginTop: '2px' }}>{analyticsData?.overview?.uniqueProviders || 0}</div>
+                  </div>
+                </div>
+
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: '#fae8ff', color: '#c026d3', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Layers size={18} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Activities Completed</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', marginTop: '2px' }}>{analyticsData?.overview?.activitiesCompleted || 0}</div>
+                  </div>
+                </div>
+
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: '#fff7ed', color: '#ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Video size={18} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Video Submissions</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', marginTop: '2px' }}>{analyticsData?.overview?.videoSubmissions || 0}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Detailed Analytics Grid: Completions + Video Breakdown */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+
+                {/* Card 1: Activity Completion Breakdown */}
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ fontSize: '0.76rem', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>ACTIVITY COMPLETIONS</span>
+                    <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>Sorted by Highest</span>
+                  </div>
+
+                  {!analyticsData?.activityCompletions || analyticsData.activityCompletions.length === 0 ? (
+                    <div style={{ padding: '24px 12px', textAlign: 'center', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 700 }}>
+                      No activity data for this period.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {analyticsData.activityCompletions.map((item, idx) => {
+                        const maxCount = analyticsData.activityCompletions[0]?.count || 1;
+                        const percent = Math.round((item.count / maxCount) * 100);
+                        return (
+                          <div key={idx} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                              <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0f172a' }}>{formatActivityTitle(item.activityName, item.activityId)}</span>
+                              <span style={{ fontSize: '0.84rem', fontWeight: 900, color: '#2563eb', background: '#eff6ff', padding: '2px 8px', borderRadius: '6px' }}>{item.count}</span>
+                            </div>
+                            <div style={{ width: '100%', height: '5px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+                              <div style={{ width: `${percent}%`, height: '100%', background: 'linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)', borderRadius: '3px' }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Card 2: Video Submission Breakdown */}
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ fontSize: '0.76rem', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>VIDEO SUBMISSION BREAKDOWN</span>
+                    <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>Uploaded vs Skipped</span>
+                  </div>
+
+                  {!analyticsData?.videoSubmissions || analyticsData.videoSubmissions.length === 0 ? (
+                    <div style={{ padding: '24px 12px', textAlign: 'center', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 700 }}>
+                      No video submission data for this period.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {analyticsData.videoSubmissions.map((vItem, idx) => {
+                        const uploadPct = vItem.total > 0 ? Math.round((vItem.uploaded / vItem.total) * 100) : 0;
+                        const skipPct = vItem.total > 0 ? Math.round((vItem.skipped / vItem.total) * 100) : 0;
+                        return (
+                          <div key={idx} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <div style={{ fontSize: '0.84rem', fontWeight: 900, color: '#0f172a' }}>{formatActivityTitle(vItem.activityName, vItem.activityId)}</div>
+                            
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', textAlign: 'center', background: '#f8fafc', padding: '6px', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
+                              <div>
+                                <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Total</div>
+                                <div style={{ fontSize: '0.84rem', fontWeight: 900, color: '#0f172a' }}>{vItem.total}</div>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#2563eb', textTransform: 'uppercase' }}>Uploaded</div>
+                                <div style={{ fontSize: '0.84rem', fontWeight: 900, color: '#1d4ed8' }}>{vItem.uploaded}</div>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#d97706', textTransform: 'uppercase' }}>Skipped</div>
+                                <div style={{ fontSize: '0.84rem', fontWeight: 900, color: '#b45309' }}>{vItem.skipped}</div>
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.7rem', fontWeight: 800 }}>
+                                <span style={{ color: '#2563eb' }}>Uploaded</span>
+                                <span style={{ color: '#1d4ed8' }}>{uploadPct}% ({vItem.uploaded})</span>
+                              </div>
+                              <div style={{ width: '100%', height: '6px', background: '#eff6ff', borderRadius: '3px', overflow: 'hidden' }}>
+                                <div style={{ width: `${uploadPct}%`, height: '100%', background: '#2563eb', borderRadius: '3px' }} />
+                              </div>
+
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.7rem', fontWeight: 800, marginTop: '2px' }}>
+                                <span style={{ color: '#d97706' }}>Skipped</span>
+                                <span style={{ color: '#b45309' }}>{skipPct}% ({vItem.skipped})</span>
+                              </div>
+                              <div style={{ width: '100%', height: '6px', background: '#fffbe8', borderRadius: '3px', overflow: 'hidden' }}>
+                                <div style={{ width: `${skipPct}%`, height: '100%', background: '#f59e0b', borderRadius: '3px' }} />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Top Status Metrics Cards (Ultra-Compact) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
@@ -736,80 +1278,416 @@ export default function SubmissionsTable() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
 
+          {/* Time Period Filter */}
+          {filterVisibility.date && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', maxWidth: '160px' }}>
+              <Calendar size={12} color="#64748b" style={{ flexShrink: 0 }} />
+              <select
+                value={selectedTimePeriod}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedTimePeriod(val);
+                  if (val === 'custom') {
+                    setIsCustomDateModalOpen(true);
+                  }
+                }}
+                style={{ border: 'none', background: 'transparent', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, outline: 'none', cursor: 'pointer', maxWidth: '130px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}
+              >
+                <option value="all_time">All Time</option>
+                <option value="today">Today</option>
+                <option value="yesterday">Yesterday</option>
+                <option value="this_week">This Week</option>
+                <option value="this_month">This Month</option>
+                <option value="last_month">Last Month</option>
+                <option value="last_3_months">Last 3 Months</option>
+                <option value="last_6_months">Last 6 Months</option>
+                <option value="last_12_months">Last 12 Months</option>
+                <option value="custom">Custom Range...</option>
+              </select>
+            </div>
+          )}
+
           {/* Status Filter */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-            <Filter size={12} color="#64748b" />
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              style={{ border: 'none', background: 'transparent', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, outline: 'none', cursor: 'pointer' }}
-            >
-              <option value="all">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="under_review">Under Review</option>
-              <option value="reviewed">Reviewed</option>
-              <option value="mail_sent">Mail Sent</option>
-            </select>
-          </div>
+          {filterVisibility.status && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', maxWidth: '140px' }}>
+              <Filter size={12} color="#64748b" style={{ flexShrink: 0 }} />
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                style={{ border: 'none', background: 'transparent', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, outline: 'none', cursor: 'pointer', maxWidth: '110px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}
+              >
+                <option value="all">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="under_review">Under Review</option>
+                <option value="reviewed">Reviewed</option>
+                <option value="mail_sent">Mail Sent</option>
+              </select>
+            </div>
+          )}
 
           {/* Reviewed By Filter */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-            <User size={12} color="#64748b" />
-            <select
-              value={selectedReviewer}
-              onChange={(e) => {
-                if (e.target.value === '__MANAGE__') {
-                  setIsManagingReviewers(true);
-                } else {
-                  setSelectedReviewer(e.target.value);
-                }
-              }}
-              style={{ border: 'none', background: 'transparent', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, outline: 'none', cursor: 'pointer' }}
-            >
-              <option value="all">All Reviewers</option>
-              {reviewerOptions.map(r => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-              <option value="__MANAGE__">⚙️ Manage Reviewers...</option>
-            </select>
-          </div>
+          {filterVisibility.reviewer && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', maxWidth: '150px' }}>
+              <User size={12} color="#64748b" style={{ flexShrink: 0 }} />
+              <select
+                value={selectedReviewer}
+                onChange={(e) => {
+                  if (e.target.value === '__MANAGE__') {
+                    setIsManagingReviewers(true);
+                  } else {
+                    setSelectedReviewer(e.target.value);
+                  }
+                }}
+                style={{ border: 'none', background: 'transparent', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, outline: 'none', cursor: 'pointer', maxWidth: '120px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}
+              >
+                <option value="all">All Reviewers</option>
+                {reviewerOptions.map(r => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+                <option value="__MANAGE__">⚙️ Manage Reviewers...</option>
+              </select>
+            </div>
+          )}
 
-          {/* Activity Filter */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-            <Layers size={12} color="#64748b" />
-            <select
-              value={selectedActivity}
-              onChange={(e) => setSelectedActivity(e.target.value)}
-              style={{ border: 'none', background: 'transparent', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, outline: 'none', cursor: 'pointer' }}
-            >
-              <option value="all">All Activities</option>
-              {uniqueActivities.map(act => (
-                <option key={act.title} value={act.title}>{act.title}</option>
-              ))}
-            </select>
-          </div>
+          {/* Custom Searchable Activity Selector */}
+          {filterVisibility.activity && (
+            <div ref={activityDropdownRef} style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsActivityDropdownOpen(prev => !prev);
+                  setActivitySearchTerm('');
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: '#f8fafc',
+                  padding: '4px 10px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  cursor: 'pointer',
+                  fontSize: '0.76rem',
+                  color: '#1e293b',
+                  fontWeight: 700,
+                  maxWidth: '220px',
+                  outline: 'none'
+                }}
+              >
+                <Layers size={12} color="#64748b" style={{ flexShrink: 0 }} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px' }}>
+                  {selectedActivity === 'all' ? 'All Activities' : selectedActivity}
+                </span>
+                <ChevronRight size={12} color="#64748b" style={{ transform: isActivityDropdownOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s ease', flexShrink: 0 }} />
+              </button>
+
+              {/* Dropdown Menu Card */}
+              {isActivityDropdownOpen && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    marginTop: '6px',
+                    width: '280px',
+                    background: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '10px',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
+                    zIndex: 99999,
+                    padding: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px'
+                  }}
+                  className="animate-fade-in"
+                >
+                  {/* Search Bar inside Selector */}
+                  <div style={{ position: 'relative', width: '100%' }}>
+                    <Search size={12} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                    <input
+                      type="text"
+                      placeholder="Search activities..."
+                      value={activitySearchTerm}
+                      onChange={(e) => setActivitySearchTerm(e.target.value)}
+                      autoFocus
+                      style={{
+                        width: '100%',
+                        height: '30px',
+                        padding: '0 10px 0 28px',
+                        borderRadius: '6px',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '0.74rem',
+                        outline: 'none',
+                        background: '#f8fafc',
+                        color: '#0f172a',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+
+                  {/* Options List */}
+                  <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    {/* Option: All Activities */}
+                    <div
+                      onClick={() => {
+                        setSelectedActivity('all');
+                        setIsActivityDropdownOpen(false);
+                      }}
+                      style={{
+                        padding: '7px 10px',
+                        borderRadius: '6px',
+                        fontSize: '0.76rem',
+                        fontWeight: selectedActivity === 'all' ? 900 : 700,
+                        background: selectedActivity === 'all' ? '#eff6ff' : 'transparent',
+                        color: selectedActivity === 'all' ? '#2563eb' : '#334155',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}
+                      onMouseEnter={(e) => { if (selectedActivity !== 'all') e.currentTarget.style.background = '#f8fafc'; }}
+                      onMouseLeave={(e) => { if (selectedActivity !== 'all') e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <span>All Activities</span>
+                      {selectedActivity === 'all' && <CheckCircle2 size={13} color="#2563eb" />}
+                    </div>
+
+                    {/* Filtered Activity Options */}
+                    {filteredActivityOptions.length === 0 ? (
+                      <div style={{ padding: '12px 10px', fontSize: '0.72rem', color: '#94a3b8', textAlign: 'center', fontWeight: 600 }}>
+                        No available activities found
+                      </div>
+                    ) : (
+                      filteredActivityOptions.map(act => {
+                        const isSelected = selectedActivity === act.title;
+                        return (
+                          <div
+                            key={act.title}
+                            onClick={() => {
+                              setSelectedActivity(act.title);
+                              setIsActivityDropdownOpen(false);
+                            }}
+                            style={{
+                              padding: '7px 10px',
+                              borderRadius: '6px',
+                              fontSize: '0.76rem',
+                              fontWeight: isSelected ? 900 : 700,
+                              background: isSelected ? '#eff6ff' : 'transparent',
+                              color: isSelected ? '#2563eb' : '#334155',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: '8px'
+                            }}
+                            onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = '#f8fafc'; }}
+                            onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
+                          >
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{act.title}</span>
+                            {isSelected && <CheckCircle2 size={13} color="#2563eb" style={{ flexShrink: 0 }} />}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Service Filter */}
+          {filterVisibility.service && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', maxWidth: '140px' }}>
+              <Sparkles size={12} color="#64748b" style={{ flexShrink: 0 }} />
+              <select
+                value={selectedService}
+                onChange={(e) => setSelectedService(e.target.value)}
+                style={{ border: 'none', background: 'transparent', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, outline: 'none', cursor: 'pointer', maxWidth: '110px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}
+              >
+                <option value="all">All Services</option>
+                {uniqueServices.map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Country Filter */}
+          {filterVisibility.country && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', maxWidth: '140px' }}>
+              <ExternalLink size={12} color="#64748b" style={{ flexShrink: 0 }} />
+              <select
+                value={selectedCountry}
+                onChange={(e) => setSelectedCountry(e.target.value)}
+                style={{ border: 'none', background: 'transparent', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, outline: 'none', cursor: 'pointer', maxWidth: '110px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}
+              >
+                <option value="all">All Countries</option>
+                {uniqueCountries.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Skipped Video Filter */}
+          {filterVisibility.skippedVideo && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', maxWidth: '150px' }}>
+              <Video size={12} color="#64748b" style={{ flexShrink: 0 }} />
+              <select
+                value={selectedSkippedVideo}
+                onChange={(e) => setSelectedSkippedVideo(e.target.value)}
+                style={{ border: 'none', background: 'transparent', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, outline: 'none', cursor: 'pointer', maxWidth: '120px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}
+              >
+                <option value="all">All Video Status</option>
+                <option value="uploaded">Uploaded Video</option>
+                <option value="skipped">Skipped Video</option>
+              </select>
+            </div>
+          )}
 
           {/* Search Input */}
-          <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '150px' }}>
-            <Search size={12} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+          {filterVisibility.search && (
+            <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '130px' }}>
+              <Search size={12} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: '100%',
+                  height: '28px',
+                  padding: '0 8px 0 24px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.76rem',
+                  outline: 'none',
+                  background: '#f8fafc',
+                  color: '#0f172a'
+                }}
+              />
+            </form>
+          )}
+
+          {/* Filter Field Visibility Toggles Popover */}
+          <div ref={filterSettingsRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={() => setIsFilterSettingsOpen(prev => !prev)}
+              title="Toggle filter fields visibility"
               style={{
-                width: '100%',
                 height: '28px',
-                padding: '0 8px 0 24px',
+                padding: '0 8px',
                 borderRadius: '8px',
                 border: '1px solid #cbd5e1',
-                fontSize: '0.76rem',
-                outline: 'none',
-                background: '#f8fafc',
-                color: '#0f172a'
+                background: isFilterSettingsOpen ? '#eff6ff' : '#ffffff',
+                color: isFilterSettingsOpen ? '#2563eb' : '#475569',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '0.74rem',
+                fontWeight: 800
               }}
-            />
-          </form>
+            >
+              <Sparkles size={12} color={isFilterSettingsOpen ? '#2563eb' : '#64748b'} />
+              <span>Filters</span>
+            </button>
+
+            {/* Filter Toggle Menu Card */}
+            {isFilterSettingsOpen && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: '6px',
+                  width: '210px',
+                  background: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '10px',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
+                  zIndex: 99999,
+                  padding: '10px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
+                }}
+                className="animate-fade-in"
+              >
+                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Toggle Filter Visibility
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={filterVisibility.date}
+                      onChange={(e) => setFilterVisibility(prev => ({ ...prev, date: e.target.checked }))}
+                    />
+                    <span>Time Period</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={filterVisibility.status}
+                      onChange={(e) => setFilterVisibility(prev => ({ ...prev, status: e.target.checked }))}
+                    />
+                    <span>Status Filter</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={filterVisibility.reviewer}
+                      onChange={(e) => setFilterVisibility(prev => ({ ...prev, reviewer: e.target.checked }))}
+                    />
+                    <span>Reviewer Filter</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={filterVisibility.activity}
+                      onChange={(e) => setFilterVisibility(prev => ({ ...prev, activity: e.target.checked }))}
+                    />
+                    <span>Activity Filter</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={filterVisibility.service}
+                      onChange={(e) => setFilterVisibility(prev => ({ ...prev, service: e.target.checked }))}
+                    />
+                    <span>Service Filter</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={filterVisibility.country}
+                      onChange={(e) => setFilterVisibility(prev => ({ ...prev, country: e.target.checked }))}
+                    />
+                    <span>Country Filter</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={filterVisibility.skippedVideo}
+                      onChange={(e) => setFilterVisibility(prev => ({ ...prev, skippedVideo: e.target.checked }))}
+                    />
+                    <span>Skipped Video Filter</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={filterVisibility.search}
+                      onChange={(e) => setFilterVisibility(prev => ({ ...prev, search: e.target.checked }))}
+                    />
+                    <span>Search Input</span>
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Refresh Button */}
           <button
@@ -1787,6 +2665,130 @@ export default function SubmissionsTable() {
               </button>
             </div>
 
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Custom Date Range Modal for Table Filter */}
+      {isCustomDateModalOpen && ReactDOM.createPortal(
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.5)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 999999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            padding: '24px',
+            width: '100%',
+            maxWidth: '380px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+            border: '1px solid #e2e8f0'
+          }} className="animate-scale-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Calendar size={18} color="#2563eb" />
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>Custom Date Range</h3>
+              </div>
+              <button
+                onClick={() => setIsCustomDateModalOpen(false)}
+                style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '4px' }}
+              >
+                <X size={18} color="#64748b" />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 800, color: '#475569', marginBottom: '6px' }}>
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={tableCustomStartDate}
+                  onChange={(e) => setTableCustomStartDate(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.84rem',
+                    color: '#0f172a',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 800, color: '#475569', marginBottom: '6px' }}>
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  value={tableCustomEndDate}
+                  onChange={(e) => setTableCustomEndDate(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.84rem',
+                    color: '#0f172a',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsCustomDateModalOpen(false)}
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    background: '#ffffff',
+                    color: '#475569',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedTimePeriod('custom');
+                    setIsCustomDateModalOpen(false);
+                    showToast('Custom date filter applied', 'success');
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: '#2563eb',
+                    color: '#ffffff',
+                    fontSize: '0.82rem',
+                    fontWeight: 800,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Apply Filter
+                </button>
+              </div>
+            </div>
           </div>
         </div>,
         document.body

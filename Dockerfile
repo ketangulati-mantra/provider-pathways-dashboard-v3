@@ -7,7 +7,7 @@ COPY backend/package*.json ./backend/
 
 # Install root & backend dependencies
 RUN npm ci || npm i
-RUN cd backend && (npm ci || npm i)
+RUN cd backend && (npm ci || npm
 
 # Copy source files
 COPY . .

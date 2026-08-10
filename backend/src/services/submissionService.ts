@@ -76,6 +76,261 @@ export const submissionService = {
     return result[0];
   },
 
+  async getAnalytics(options: { range?: string; startDate?: string; endDate?: string }) {
+    const now = new Date();
+    let start: Date;
+    let end: Date = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+    const range = options.range || 'this_month';
+
+    if (range === 'custom' && options.startDate) {
+      start = new Date(options.startDate);
+      start.setHours(0, 0, 0, 0);
+      if (options.endDate) {
+        end = new Date(options.endDate);
+        end.setHours(23, 59, 59, 999);
+      }
+    } else if (range === 'today') {
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    } else if (range === 'yesterday') {
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0, 0);
+      end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999);
+    } else if (range === 'this_week') {
+      const current = new Date();
+      const day = current.getDay();
+      const diff = current.getDate() - day + (day === 0 ? -6 : 1);
+      start = new Date(current.setDate(diff));
+      start.setHours(0, 0, 0, 0);
+    } else if (range === 'this_month') {
+      start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    } else if (range === 'last_month') {
+      start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
+      end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    } else if (range === 'last_3_months') {
+      start = new Date(now.getFullYear(), now.getMonth() - 2, 1, 0, 0, 0, 0);
+    } else if (range === 'last_6_months') {
+      start = new Date(now.getFullYear(), now.getMonth() - 5, 1, 0, 0, 0, 0);
+    } else if (range === 'last_12_months') {
+      start = new Date(now.getFullYear(), now.getMonth() - 11, 1, 0, 0, 0, 0);
+    } else {
+      start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    }
+
+    const startISO = start.toISOString();
+    const endISO = end.toISOString();
+
+    let submissions: any[] = [];
+    try {
+      submissions = await sql`
+        SELECT * FROM activity_submissions
+        WHERE created_at >= ${startISO}::timestamptz AND created_at <= ${endISO}::timestamptz
+        ORDER BY created_at DESC;
+      `;
+    } catch (err) {
+      console.warn('[submissionService] Error querying submissions for analytics:', err);
+    }
+
+    let completions: any[] = [];
+    try {
+      completions = await sql`
+        SELECT * FROM user_activity_completions
+        WHERE completed_at >= ${startISO}::timestamptz AND completed_at <= ${endISO}::timestamptz
+        ORDER BY completed_at DESC;
+      `;
+    } catch (err) {
+      // Table might not exist yet or empty
+    }
+
+    const providerIds = new Set<string>();
+    submissions.forEach((s: any) => { if (s.user_id) providerIds.add(String(s.user_id)); });
+    completions.forEach((c: any) => { if (c.user_id) providerIds.add(String(c.user_id)); });
+
+    const activityCountMap = new Map<string, { activityId: string; activityName: string; count: number }>();
+
+    completions.forEach((c: any) => {
+      const lessonId = c.lesson_id || 'unknown';
+      const name = c.metadata?.activityTitle || c.metadata?.title || lessonId;
+      const key = lessonId;
+      if (!activityCountMap.has(key)) {
+        activityCountMap.set(key, { activityId: lessonId, activityName: name, count: 0 });
+      }
+      activityCountMap.get(key)!.count += 1;
+    });
+
+    submissions.forEach((s: any) => {
+      const lessonId = s.lesson_id || 'unknown';
+      const name = s.activity_title || lessonId;
+      const key = lessonId;
+      if (!activityCountMap.has(key)) {
+        activityCountMap.set(key, { activityId: lessonId, activityName: name, count: 0 });
+      }
+      const existsInCompletions = completions.some((c: any) => c.user_id === s.user_id && c.lesson_id === s.lesson_id);
+      if (!existsInCompletions) {
+        activityCountMap.get(key)!.count += 1;
+      }
+    });
+
+    const videoSubmissionMap = new Map<string, { activityId: string; activityName: string; total: number; uploaded: number; skipped: number }>();
+
+    submissions.forEach((s: any) => {
+      const subType = (s.submission_type || '').toLowerCase();
+      const formData = typeof s.form_data === 'object' && s.form_data ? s.form_data : {};
+      const hasVideo = subType === 'video_introduction' || !!formData.videoUrl || !!formData.video_url;
+      const isSkipped = subType === 'skipped_video' || formData.skipped === true;
+
+      if (hasVideo || isSkipped || subType.includes('video') || (s.lesson_id || '').includes('market-yourself') || (s.lesson_id || '').includes('growth')) {
+        const lessonId = s.lesson_id || 'video-activity';
+        const name = s.activity_title || lessonId;
+        const key = lessonId;
+
+        if (!videoSubmissionMap.has(key)) {
+          videoSubmissionMap.set(key, { activityId: lessonId, activityName: name, total: 0, uploaded: 0, skipped: 0 });
+        }
+
+        const item = videoSubmissionMap.get(key)!;
+        item.total += 1;
+        if (hasVideo) {
+          item.uploaded += 1;
+        } else if (isSkipped) {
+          item.skipped += 1;
+        }
+      }
+    });
+
+    const activityCompletionsList = Array.from(activityCountMap.values()).sort((a, b) => b.count - a.count);
+    const videoSubmissionsList = Array.from(videoSubmissionMap.values()).sort((a, b) => b.total - a.total);
+
+    const totalCompletions = activityCompletionsList.reduce((acc, curr) => acc + curr.count, 0);
+    const totalVideoSubmissions = videoSubmissionsList.reduce((acc, curr) => acc + curr.total, 0);
+
+    return {
+      overview: {
+        totalCompletions,
+        uniqueProviders: providerIds.size,
+        activitiesCompleted: activityCompletionsList.length,
+        videoSubmissions: totalVideoSubmissions,
+      },
+      activityCompletions: activityCompletionsList,
+      videoSubmissions: videoSubmissionsList,
+    };
+  },
+
+  async getReviewers() {
+    try {
+      await sql`
+        CREATE TABLE IF NOT EXISTS admin_reviewers (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) UNIQUE NOT NULL,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+
+      const existing = await sql`SELECT name FROM admin_reviewers ORDER BY id ASC;`;
+      if (existing.length === 0) {
+        const defaults = ['Unassigned', 'Ketan', 'Team Member', 'Pooja', 'Mantra Admin'];
+        for (const d of defaults) {
+          try {
+            await sql`INSERT INTO admin_reviewers (name) VALUES (${d}) ON CONFLICT DO NOTHING;`;
+          } catch (e) {}
+        }
+        const updated = await sql`SELECT name FROM admin_reviewers ORDER BY id ASC;`;
+        return updated.map((r: any) => r.name);
+      }
+
+      let subReviewers: any[] = [];
+      try {
+        subReviewers = await sql`SELECT DISTINCT reviewed_by FROM activity_submissions WHERE reviewed_by IS NOT NULL;`;
+      } catch (e) {}
+
+      const set = new Set<string>();
+      existing.forEach((r: any) => { if (r.name) set.add(r.name); });
+      subReviewers.forEach((s: any) => { if (s.reviewed_by && s.reviewed_by.trim()) set.add(s.reviewed_by.trim()); });
+
+      if (!set.has('Unassigned')) set.add('Unassigned');
+
+      return Array.from(set);
+    } catch (err) {
+      console.error('[submissionService] Error fetching reviewers:', err);
+      return ['Unassigned', 'Ketan', 'Team Member', 'Pooja', 'Mantra Admin'];
+    }
+  },
+
+  async addReviewer(name: string) {
+    const trimmed = name ? name.trim() : '';
+    if (!trimmed) throw new Error('Reviewer name cannot be empty');
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS admin_reviewers (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) UNIQUE NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+
+    await sql`
+      INSERT INTO admin_reviewers (name)
+      VALUES (${trimmed})
+      ON CONFLICT (name) DO NOTHING;
+    `;
+
+    return this.getReviewers();
+  },
+
+  async deleteReviewer(name: string) {
+    const trimmed = name ? name.trim() : '';
+    if (!trimmed || trimmed === 'Unassigned') {
+      throw new Error('Cannot delete default Unassigned option');
+    }
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS admin_reviewers (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) UNIQUE NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+
+    await sql`
+      DELETE FROM admin_reviewers WHERE LOWER(name) = LOWER(${trimmed});
+    `;
+
+    try {
+      await sql`
+        UPDATE activity_submissions
+        SET reviewed_by = 'Unassigned', updated_at = CURRENT_TIMESTAMP
+        WHERE LOWER(reviewed_by) = LOWER(${trimmed});
+      `;
+    } catch (err) {
+      console.warn('[submissionService] Error resetting activity_submissions for deleted reviewer:', err);
+    }
+
+    return this.getReviewers();
+  },
+
+  async getUniqueActivities() {
+    try {
+      const result = await sql`
+        SELECT DISTINCT lesson_id, activity_title
+        FROM activity_submissions
+        WHERE activity_title IS NOT NULL OR lesson_id IS NOT NULL;
+      `;
+      const map = new Map<string, { key: string; title: string }>();
+      result.forEach((row: any) => {
+        const title = row.activity_title || row.lesson_id;
+        if (title && title.trim()) {
+          const key = row.lesson_id || title;
+          if (!map.has(title)) {
+            map.set(title, { key, title });
+          }
+        }
+      });
+      return Array.from(map.values());
+    } catch (err) {
+      console.error('[submissionService] Error fetching unique activities:', err);
+      return [];
+    }
+  },
+
   async getAllSubmissions(options: GetSubmissionsQuery = {}) {
     const page = Math.max(1, Number(options.page) || 1);
     const limit = Math.min(100, Math.max(1, Number(options.limit) || 20));

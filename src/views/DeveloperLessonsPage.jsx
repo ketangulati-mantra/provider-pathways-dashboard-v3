@@ -10,11 +10,18 @@ const MANTRA_LOGO_URL = 'https://res.cloudinary.com/hxbamdqf/image/upload/v17846
 
 export default function DeveloperLessonsPage({ onNavigate }) {
   const { admin: currentAdmin, logout } = useAuth();
+  const isSuperAdmin = currentAdmin?.role === 'super_admin' || currentAdmin?.role === 'Super Admin';
   const [selectedService, setSelectedService] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('submissions');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const searchInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!isSuperAdmin && activeTab === 'lessons') {
+      setActiveTab('submissions');
+    }
+  }, [isSuperAdmin, activeTab]);
 
   useEffect(() => {
     const current = getCurrentService();
@@ -280,30 +287,33 @@ export default function DeveloperLessonsPage({ onNavigate }) {
                 <ChevronRight size={14} opacity={0.6} />
               </button>
 
-              <button
-                onClick={() => { setActiveTab('lessons'); setIsSidebarOpen(false); }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: activeTab === 'lessons' ? '#043263' : '#f8fafc',
-                  color: activeTab === 'lessons' ? '#ffffff' : '#334155',
-                  fontWeight: 700,
-                  fontSize: '0.82rem',
-                  cursor: 'pointer',
-                  boxShadow: activeTab === 'lessons' ? '0 2px 8px rgba(4, 50, 99, 0.2)' : 'none',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <BookOpen size={15} color={activeTab === 'lessons' ? '#ffffff' : '#043263'} />
-                  <span>Pathways ({filteredActivities.length})</span>
-                </div>
-                <ChevronRight size={14} opacity={0.6} />
-              </button>
+              {/* Super Admin Only: Pathways Tab */}
+              {isSuperAdmin && (
+                <button
+                  onClick={() => { setActiveTab('lessons'); setIsSidebarOpen(false); }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: activeTab === 'lessons' ? '#043263' : '#f8fafc',
+                    color: activeTab === 'lessons' ? '#ffffff' : '#334155',
+                    fontWeight: 700,
+                    fontSize: '0.82rem',
+                    cursor: 'pointer',
+                    boxShadow: activeTab === 'lessons' ? '0 2px 8px rgba(4, 50, 99, 0.2)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <BookOpen size={15} color={activeTab === 'lessons' ? '#ffffff' : '#043263'} />
+                    <span>Pathways ({filteredActivities.length})</span>
+                  </div>
+                  <ChevronRight size={14} opacity={0.6} />
+                </button>
+              )}
 
               {/* Super Admin Only: Admin Management Navigation (Last Option) */}
               {(currentAdmin?.role === 'super_admin' || currentAdmin?.role === 'Super Admin') && (
@@ -408,8 +418,8 @@ export default function DeveloperLessonsPage({ onNavigate }) {
           </div>
         )}
 
-        {/* TAB 3: LESSONS & ACTIVITIES PATHWAYS */}
-        {activeTab === 'lessons' && (
+        {/* TAB 3: LESSONS & ACTIVITIES PATHWAYS (Super Admin Only) */}
+        {activeTab === 'lessons' && isSuperAdmin && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} className="animate-fade-in">
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px' }}>

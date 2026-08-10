@@ -260,6 +260,82 @@ export const reviewSubmissionStatus = async (id: string, status?: string, review
 };
 
 /**
+ * Fetches submission analytics data with date range filter.
+ */
+export const fetchSubmissionAnalytics = async ({ range = 'this_month', startDate = '', endDate = '' } = {}) => {
+  const backendUrl = MANTRA_CONFIG.apiBaseUrl;
+  const params = new URLSearchParams({
+    range,
+    ...(startDate ? { startDate } : {}),
+    ...(endDate ? { endDate } : {})
+  });
+
+  try {
+    const res = await fetch(`${backendUrl}/api/activity-submissions/analytics?${params}`);
+    return await res.json();
+  } catch (error) {
+    console.error('[Mantra API] Error fetching submission analytics:', error);
+    return { success: false, error: 'Failed to connect to backend analytics server' };
+  }
+};
+
+/**
+ * Reviewers Management APIs (DB backed)
+ */
+export const fetchAdminReviewers = async () => {
+  const backendUrl = MANTRA_CONFIG.apiBaseUrl;
+  try {
+    const res = await fetch(`${backendUrl}/api/admin/reviewers`);
+    return await res.json();
+  } catch (error) {
+    console.error('[Mantra API] Error fetching reviewers:', error);
+    return { success: false, error: 'Failed to fetch reviewers' };
+  }
+};
+
+export const addAdminReviewer = async (name: string) => {
+  const backendUrl = MANTRA_CONFIG.apiBaseUrl;
+  try {
+    const res = await fetch(`${backendUrl}/api/admin/reviewers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    return await res.json();
+  } catch (error) {
+    console.error('[Mantra API] Error adding reviewer:', error);
+    return { success: false, error: 'Failed to add reviewer' };
+  }
+};
+
+export const deleteAdminReviewer = async (name: string) => {
+  const backendUrl = MANTRA_CONFIG.apiBaseUrl;
+  try {
+    const res = await fetch(`${backendUrl}/api/admin/reviewers/${encodeURIComponent(name)}`, {
+      method: 'DELETE'
+    });
+    return await res.json();
+  } catch (error) {
+    console.error('[Mantra API] Error deleting reviewer:', error);
+    return { success: false, error: 'Failed to delete reviewer' };
+  }
+};
+
+/**
+ * Fetches distinct activities that have submission rows across all pages from DB.
+ */
+export const fetchSubmissionActivities = async () => {
+  const backendUrl = MANTRA_CONFIG.apiBaseUrl;
+  try {
+    const res = await fetch(`${backendUrl}/api/activity-submissions/activities`);
+    return await res.json();
+  } catch (error) {
+    console.error('[Mantra API] Error fetching submission activities:', error);
+    return { success: false, error: 'Failed to fetch submission activities' };
+  }
+};
+
+/**
  * Retrieves activity configuration object by lessonId.
  */
 export const getLesson = (lessonId: string) => {

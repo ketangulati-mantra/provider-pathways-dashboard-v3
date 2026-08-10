@@ -238,4 +238,87 @@ export const submissionController = {
       });
     }
   },
+
+  async getAnalytics(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { range, startDate, endDate } = req.query;
+
+      const analytics = await submissionService.getAnalytics({
+        range: range ? String(range) : undefined,
+        startDate: startDate ? String(startDate) : undefined,
+        endDate: endDate ? String(endDate) : undefined,
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: analytics,
+      });
+    } catch (error) {
+      console.error('❌ Error fetching submission analytics:', error);
+      next(error);
+    }
+  },
+
+  async getReviewers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const reviewers = await submissionService.getReviewers();
+      return res.status(200).json({
+        success: true,
+        data: reviewers,
+      });
+    } catch (error) {
+      console.error('❌ Error fetching reviewers:', error);
+      next(error);
+    }
+  },
+
+  async addReviewer(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { name } = req.body;
+      if (!name || !String(name).trim()) {
+        return res.status(400).json({ success: false, error: 'Reviewer name is required' });
+      }
+      const reviewers = await submissionService.addReviewer(String(name));
+      return res.status(201).json({
+        success: true,
+        message: `Reviewer '${name}' added successfully`,
+        data: reviewers,
+      });
+    } catch (error: any) {
+      console.error('❌ Error adding reviewer:', error);
+      return res.status(500).json({ success: false, error: error?.message || 'Failed to add reviewer' });
+    }
+  },
+
+  async deleteReviewer(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { name } = req.params;
+      const targetName = name || req.body?.name;
+      if (!targetName) {
+        return res.status(400).json({ success: false, error: 'Reviewer name parameter is required' });
+      }
+      const reviewers = await submissionService.deleteReviewer(String(targetName));
+      return res.status(200).json({
+        success: true,
+        message: `Reviewer '${targetName}' deleted successfully`,
+        data: reviewers,
+      });
+    } catch (error: any) {
+      console.error('❌ Error deleting reviewer:', error);
+      return res.status(500).json({ success: false, error: error?.message || 'Failed to delete reviewer' });
+    }
+  },
+
+  async getActivities(req: Request, res: Response, next: NextFunction) {
+    try {
+      const activities = await submissionService.getUniqueActivities();
+      return res.status(200).json({
+        success: true,
+        data: activities,
+      });
+    } catch (error) {
+      console.error('❌ Error fetching submission activities:', error);
+      next(error);
+    }
+  },
 };

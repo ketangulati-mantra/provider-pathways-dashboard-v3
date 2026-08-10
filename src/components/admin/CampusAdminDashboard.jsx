@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Eye, Filter, CheckCircle2, XCircle, Clock, GraduationCap, Calendar, UserCheck, Plus, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
+import { Search, Eye, Filter, CheckCircle2, XCircle, Clock, GraduationCap, Calendar, UserCheck, Plus, ChevronDown, Sparkles, Building2, BookOpen, X } from 'lucide-react';
 import CampusApplicationDetailsDrawer from './CampusApplicationDetailsDrawer';
 import RejectReasonModal from './RejectReasonModal';
 import RequestMoreInfoModal from './RequestMoreInfoModal';
@@ -32,6 +33,32 @@ export default function CampusAdminDashboard() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [rejectModalApp, setRejectModalApp] = useState(null);
   const [requestInfoModalApp, setRequestInfoModalApp] = useState(null);
+
+  // Filter Visibility Toggle State for Campus Program
+  const [filterVisibility, setFilterVisibility] = useState({
+    date: true,
+    status: true,
+    activity: true,
+    search: true,
+    reviewer: false,
+    college: false,
+    course: false
+  });
+  const [isFilterSettingsOpen, setIsFilterSettingsOpen] = useState(false);
+  const filterSettingsRef = useRef(null);
+
+  const [selectedCollege, setSelectedCollege] = useState('all');
+  const [selectedCourse, setSelectedCourse] = useState('all');
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (filterSettingsRef.current && !filterSettingsRef.current.contains(e.target)) {
+        setIsFilterSettingsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     fetchApplications();
@@ -201,6 +228,7 @@ export default function CampusAdminDashboard() {
   // Custom Date Range State
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
+  const [isCustomDateModalOpen, setIsCustomDateModalOpen] = useState(false);
 
   const statusCounts = applicationsData?.statusCounts || { all: 0, submitted: 0, under_review: 0, approved: 0, rejected: 0, more_info_required: 0 };
   let rawApplications = applicationsData?.applications || [];
@@ -274,12 +302,41 @@ export default function CampusAdminDashboard() {
   }
 
   // Filter applications by Reviewer
-  if (reviewerFilter !== 'all') {
+  if (filterVisibility.reviewer && reviewerFilter !== 'all') {
     rawApplications = rawApplications.filter(app => {
       if (reviewerFilter === 'Unassigned') {
         return !app.reviewed_by || app.reviewed_by === 'Unassigned';
       }
       return app.reviewed_by === reviewerFilter;
+    });
+  }
+
+  // Extract unique colleges & courses
+  const uniqueColleges = Array.from(new Set(
+    (applicationsData?.applications || [])
+      .map(app => app.college_name || app.college || app.university)
+      .filter(c => c && String(c).trim())
+  ));
+
+  const uniqueCourses = Array.from(new Set(
+    (applicationsData?.applications || [])
+      .map(app => app.course || app.degree || app.year_of_study)
+      .filter(c => c && String(c).trim())
+  ));
+
+  // Filter applications by College
+  if (filterVisibility.college && selectedCollege !== 'all') {
+    rawApplications = rawApplications.filter(app => {
+      const appCollege = app.college_name || app.college || app.university || '';
+      return appCollege.toLowerCase() === selectedCollege.toLowerCase();
+    });
+  }
+
+  // Filter applications by Course
+  if (filterVisibility.course && selectedCourse !== 'all') {
+    rawApplications = rawApplications.filter(app => {
+      const appCourse = app.course || app.degree || app.year_of_study || '';
+      return appCourse.toLowerCase() === selectedCourse.toLowerCase();
     });
   }
 
@@ -333,11 +390,91 @@ export default function CampusAdminDashboard() {
       <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', flexWrap: 'wrap', gap: '8px', background: '#ffffff', padding: '8px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.01)' }}>
         
         {/* 1. Date Applied Filter */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+        {filterVisibility.date && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative' }}>
+              <select
+                value={dateFilter}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setDateFilter(val);
+                  if (val === 'custom') {
+                    setIsCustomDateModalOpen(true);
+                  }
+                }}
+                style={{
+                  padding: '4px 22px 4px 8px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: '#1e293b',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  appearance: 'none',
+                  height: '28px'
+                }}
+              >
+                <option value="all">All Dates</option>
+                <option value="today">Today</option>
+                <option value="yesterday">Yesterday</option>
+                <option value="this_week">This Week</option>
+                <option value="this_month">This Month</option>
+                <option value="last_month">Last Month</option>
+                <option value="last_3_months">Last 3 Months</option>
+                <option value="last_6_months">Last 6 Months</option>
+                <option value="last_12_months">Last 12 Months</option>
+                <option value="custom">Custom Range...</option>
+              </select>
+              <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            </div>
+
+            {/* Custom Date Range Inputs */}
+            {dateFilter === 'custom' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  placeholder="From"
+                  style={{
+                    height: '28px',
+                    padding: '0 6px',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.72rem',
+                    color: '#0f172a',
+                    outline: 'none'
+                  }}
+                />
+                <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>to</span>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  placeholder="To"
+                  style={{
+                    height: '28px',
+                    padding: '0 6px',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.72rem',
+                    color: '#0f172a',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 2. Single Consolidated Status Filter */}
+        {filterVisibility.status && (
           <div style={{ position: 'relative' }}>
             <select
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value)}
               style={{
                 padding: '4px 22px 4px 8px',
                 borderRadius: '8px',
@@ -352,87 +489,18 @@ export default function CampusAdminDashboard() {
                 height: '28px'
               }}
             >
-              <option value="all">All Dates</option>
-              <option value="today">Today</option>
-              <option value="yesterday">Yesterday</option>
-              <option value="this_week">This Week</option>
-              <option value="this_month">This Month</option>
-              <option value="last_month">Last Month</option>
-              <option value="last_3_months">Last 3 Months</option>
-              <option value="last_6_months">Last 6 Months</option>
-              <option value="last_12_months">Last 12 Months</option>
-              <option value="custom">Custom Range...</option>
+              <option value="all">All Statuses ({statusCounts.all})</option>
+              <option value="submitted">Pending Review ({statusCounts.submitted + statusCounts.under_review})</option>
+              <option value="approved">Approved Members ({statusCounts.approved})</option>
+              <option value="rejected">Rejected ({statusCounts.rejected})</option>
+              <option value="more_info_required">Info Requested ({statusCounts.more_info_required})</option>
             </select>
             <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           </div>
+        )}
 
-          {/* Custom Date Range Inputs */}
-          {dateFilter === 'custom' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <input
-                type="date"
-                value={customStartDate}
-                onChange={(e) => setCustomStartDate(e.target.value)}
-                placeholder="From"
-                style={{
-                  height: '28px',
-                  padding: '0 6px',
-                  borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.72rem',
-                  color: '#0f172a',
-                  outline: 'none'
-                }}
-              />
-              <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>to</span>
-              <input
-                type="date"
-                value={customEndDate}
-                onChange={(e) => setCustomEndDate(e.target.value)}
-                placeholder="To"
-                style={{
-                  height: '28px',
-                  padding: '0 6px',
-                  borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.72rem',
-                  color: '#0f172a',
-                  outline: 'none'
-                }}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* 2. Single Consolidated Status Filter */}
-        <div style={{ position: 'relative' }}>
-          <select
-            value={activeTab}
-            onChange={(e) => setActiveTab(e.target.value)}
-            style={{
-              padding: '4px 22px 4px 8px',
-              borderRadius: '8px',
-              border: '1px solid #cbd5e1',
-              background: '#ffffff',
-              fontSize: '0.72rem',
-              fontWeight: 700,
-              color: '#1e293b',
-              outline: 'none',
-              cursor: 'pointer',
-              appearance: 'none',
-              height: '28px'
-            }}
-          >
-            <option value="all">All Statuses ({statusCounts.all})</option>
-            <option value="submitted">Pending Review ({statusCounts.submitted + statusCounts.under_review})</option>
-            <option value="approved">Approved Members ({statusCounts.approved})</option>
-            <option value="rejected">Rejected ({statusCounts.rejected})</option>
-            <option value="more_info_required">Info Requested ({statusCounts.more_info_required})</option>
-          </select>
-          <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-        </div>
-
-          {/* 3. Reviewer Filter */}
+        {/* 3. Reviewer Filter */}
+        {filterVisibility.reviewer && (
           <div style={{ position: 'relative' }}>
             <select
               value={reviewerFilter}
@@ -465,8 +533,72 @@ export default function CampusAdminDashboard() {
             </select>
             <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           </div>
+        )}
 
-          {/* Search Input */}
+        {/* 4. College Filter */}
+        {filterVisibility.college && (
+          <div style={{ position: 'relative' }}>
+            <select
+              value={selectedCollege}
+              onChange={(e) => setSelectedCollege(e.target.value)}
+              style={{
+                padding: '4px 22px 4px 8px',
+                borderRadius: '8px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                color: '#1e293b',
+                outline: 'none',
+                cursor: 'pointer',
+                appearance: 'none',
+                height: '28px',
+                maxWidth: '150px',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              <option value="all">All Colleges</option>
+              {uniqueColleges.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+          </div>
+        )}
+
+        {/* 5. Course Filter */}
+        {filterVisibility.course && (
+          <div style={{ position: 'relative' }}>
+            <select
+              value={selectedCourse}
+              onChange={(e) => setSelectedCourse(e.target.value)}
+              style={{
+                padding: '4px 22px 4px 8px',
+                borderRadius: '8px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                color: '#1e293b',
+                outline: 'none',
+                cursor: 'pointer',
+                appearance: 'none',
+                height: '28px',
+                maxWidth: '150px',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              <option value="all">All Courses</option>
+              {uniqueCourses.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+          </div>
+        )}
+
+        {/* Search Input */}
+        {filterVisibility.search && (
           <div style={{ position: 'relative', width: '180px' }}>
             <Search size={12} color="#94a3b8" style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)' }} />
             <input
@@ -487,7 +619,111 @@ export default function CampusAdminDashboard() {
               }}
             />
           </div>
+        )}
+
+        {/* Filter Field Visibility Toggles Popover */}
+        <div ref={filterSettingsRef} style={{ position: 'relative' }}>
+          <button
+            type="button"
+            onClick={() => setIsFilterSettingsOpen(prev => !prev)}
+            title="Toggle filter fields visibility"
+            style={{
+              height: '28px',
+              padding: '0 8px',
+              borderRadius: '8px',
+              border: '1px solid #cbd5e1',
+              background: isFilterSettingsOpen ? '#eff6ff' : '#ffffff',
+              color: isFilterSettingsOpen ? '#2563eb' : '#475569',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '0.74rem',
+              fontWeight: 800
+            }}
+          >
+            <Sparkles size={12} color={isFilterSettingsOpen ? '#2563eb' : '#64748b'} />
+            <span>Filters</span>
+          </button>
+
+          {/* Filter Toggle Menu Card */}
+          {isFilterSettingsOpen && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                marginTop: '6px',
+                width: '210px',
+                background: '#ffffff',
+                border: '1px solid #cbd5e1',
+                borderRadius: '10px',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
+                zIndex: 99999,
+                padding: '10px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
+              }}
+              className="animate-fade-in"
+            >
+              <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Toggle Filter Visibility
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={filterVisibility.date}
+                    onChange={(e) => setFilterVisibility(prev => ({ ...prev, date: e.target.checked }))}
+                  />
+                  <span>Time Period</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={filterVisibility.status}
+                    onChange={(e) => setFilterVisibility(prev => ({ ...prev, status: e.target.checked }))}
+                  />
+                  <span>Status Filter</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={filterVisibility.reviewer}
+                    onChange={(e) => setFilterVisibility(prev => ({ ...prev, reviewer: e.target.checked }))}
+                  />
+                  <span>Reviewer Filter</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={filterVisibility.college}
+                    onChange={(e) => setFilterVisibility(prev => ({ ...prev, college: e.target.checked }))}
+                  />
+                  <span>College Filter</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={filterVisibility.course}
+                    onChange={(e) => setFilterVisibility(prev => ({ ...prev, course: e.target.checked }))}
+                  />
+                  <span>Course Filter</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={filterVisibility.search}
+                    onChange={(e) => setFilterVisibility(prev => ({ ...prev, search: e.target.checked }))}
+                  />
+                  <span>Search Input</span>
+                </label>
+              </div>
+            </div>
+          )}
         </div>
+      </div>
 
       {/* Main Applications Table - Ultra-Compact Layout */}
       <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
@@ -733,6 +969,129 @@ export default function CampusAdminDashboard() {
         onSubmit={handleConfirmRequestInfo}
         applicantName={requestInfoModalApp?.full_name}
       />
+
+      {/* Custom Date Range Modal for Campus Program */}
+      {isCustomDateModalOpen && ReactDOM.createPortal(
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.5)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 999999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            padding: '24px',
+            width: '100%',
+            maxWidth: '380px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+            border: '1px solid #e2e8f0'
+          }} className="animate-scale-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Calendar size={18} color="#2563eb" />
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>Custom Date Range</h3>
+              </div>
+              <button
+                onClick={() => setIsCustomDateModalOpen(false)}
+                style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '4px' }}
+              >
+                <X size={18} color="#64748b" />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 800, color: '#475569', marginBottom: '6px' }}>
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.84rem',
+                    color: '#0f172a',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 800, color: '#475569', marginBottom: '6px' }}>
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.84rem',
+                    color: '#0f172a',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsCustomDateModalOpen(false)}
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    background: '#ffffff',
+                    color: '#475569',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDateFilter('custom');
+                    setIsCustomDateModalOpen(false);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: '#2563eb',
+                    color: '#ffffff',
+                    fontSize: '0.82rem',
+                    fontWeight: 800,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Apply Filter
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
     </div>
   );
