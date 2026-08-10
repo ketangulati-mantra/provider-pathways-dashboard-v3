@@ -554,27 +554,32 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
 
       {/* Top Header Bar */}
       <div style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '8px 12px', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+        <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-            <img src={brand.logo} alt={brand.name} style={{ height: '28px', maxWidth: '130px', width: 'auto', objectFit: 'contain' }} />
-            <div style={{ height: '16px', width: '1px', background: '#cbd5e1' }} />
-            <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap' }}>Grow Your Practice</div>
+          {/* Left: Logo & Title */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'nowrap', minWidth: 0 }}>
+            <img src={brand.logo} alt={brand.name} style={{ height: '26px', maxWidth: '120px', width: 'auto', objectFit: 'contain', flexShrink: 0 }} />
+            <div style={{ height: '14px', width: '1px', background: '#cbd5e1', flexShrink: 0 }} />
+            <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              Grow Your Practice
+            </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+          {/* Right: Badge & Action Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', flexShrink: 0 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: '#fef3c7', color: '#b45309', border: '1px solid #fcd34d', borderRadius: '20px', padding: '3px 8px', fontSize: '0.7rem', fontWeight: 800, whiteSpace: 'nowrap' }}>
               <span>🏅</span> +50 Pts
             </div>
 
-            <button onClick={() => setIsStudioOpen(true)} style={{ padding: '5px 10px', borderRadius: '7px', border: 'none', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#ffffff', fontWeight: 800, fontSize: '0.72rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', boxShadow: '0 2px 6px rgba(37,99,235,0.2)' }}>
+            <button onClick={() => setIsStudioOpen(true)} style={{ padding: '4px 9px', borderRadius: '7px', border: 'none', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#ffffff', fontWeight: 800, fontSize: '0.72rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', boxShadow: '0 2px 6px rgba(37,99,235,0.2)' }}>
               <Megaphone size={12} /> {t('buttons.promotion_toolkit', 'Promotion Toolkit')}
             </button>
 
-            <button onClick={() => goBack(onBack)} style={{ padding: '5px 10px', borderRadius: '7px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#475569', fontWeight: 800, fontSize: '0.72rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
+            <button onClick={() => goBack(onBack)} style={{ padding: '4px 9px', borderRadius: '7px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#475569', fontWeight: 800, fontSize: '0.72rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
               <ArrowLeft size={12} /> {t('buttons.continue_later', 'Continue Later')}
             </button>
           </div>
+
         </div>
       </div>
 
