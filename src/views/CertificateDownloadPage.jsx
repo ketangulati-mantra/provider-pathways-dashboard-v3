@@ -581,40 +581,36 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
       }
 
       const filename = `MantraCare-Certificate-${userName.trim().replace(/\s+/g, '_')}.png`;
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-      // 1. Web Share API for native mobile file sharing if supported
-      if (isMobile && navigator.canShare && navigator.share) {
-        try {
-          const response = await fetch(dataUrl);
-          const blob = await response.blob();
-          const file = new File([blob], filename, { type: 'image/png' });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              files: [file],
-              title: 'MantraCare Certificate',
-              text: `Certificate of Completion for ${userName.trim()}`
-            });
-            showToast('Certificate saved / shared successfully!', 'success');
-            if (onDownload) onDownload();
-            return;
-          }
-        } catch (shareErr) {
-          if (shareErr.name === 'AbortError') {
-            setIsDownloading(false);
-            return;
-          }
-          console.warn('Web share failed, proceeding with direct download:', shareErr);
+      // Convert Data URI to Blob & Blob URL (Required for Chrome, Safari & Android to trigger file download)
+      const blobRes = await fetch(dataUrl);
+      const blob = await blobRes.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      // 1. Post message to native React Native / iOS WKWebView / Android WebView bridge if embedded
+      try {
+        if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === 'function') {
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'DOWNLOAD_CERTIFICATE',
+            action: 'download_certificate',
+            dataUrl,
+            filename,
+            userName: userName.trim()
+          }));
+        } else if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.downloadCertificate) {
+          window.webkit.messageHandlers.downloadCertificate.postMessage({
+            dataUrl,
+            filename
+          });
         }
+      } catch (e) {
+        console.warn('Native postMessage skipped:', e);
       }
 
       // 2. Standard Programmatic Anchor File Download
       const link = document.createElement('a');
-      link.href = dataUrl;
+      link.href = blobUrl;
       link.download = filename;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
 
@@ -624,14 +620,28 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
             document.body.removeChild(link);
           }
         } catch (e) {}
-      }, 2000);
+      }, 3000);
 
-      // 3. For Mobile devices/WebViews, present Save Certificate Overlay for instant tap/long-press save
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (isMobile) {
-        setMobileSaveImage({ url: dataUrl, filename });
+        setMobileSaveImage({ url: dataUrl, blobUrl, filename });
+
+        // Optional Web Share API trigger
+        if (navigator.canShare && navigator.share) {
+          try {
+            const file = new File([blob], filename, { type: 'image/png' });
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                files: [file],
+                title: 'MantraCare Certificate',
+                text: `Certificate of Completion for ${userName.trim()}`
+              });
+            }
+          } catch (shareErr) {}
+        }
       }
 
-      showToast('Certificate downloaded successfully!', 'success');
+      showToast('Certificate generated & ready to save!', 'success');
       
       if (onDownload) {
         onDownload();
@@ -867,7 +877,15 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
                   <img
                     src={mobileSaveImage.url}
                     alt="Certificate"
-                    style={{ width: '100%', height: 'auto', display: 'block' }}
+                    style={{
+                      width: '100%',
+                      height: 'auto',
+                      display: 'block',
+                      WebkitTouchCallout: 'default',
+                      WebkitUserSelect: 'auto',
+                      userSelect: 'auto',
+                      pointerEvents: 'auto'
+                    }}
                   />
                 </div>
 
