@@ -20,14 +20,24 @@ const getWebhookContext = () => {
  */
 export const getCurrentUserId = (): string => {
   if (typeof window === 'undefined') return 'anonymous_user';
-  const params = new URLSearchParams(window.location.search);
-  return (
+  const searchParams = new URLSearchParams(window.location.search);
+  
+  const rawHash = window.location.hash || '';
+  const hashQueryStr = rawHash.includes('?') ? rawHash.substring(rawHash.indexOf('?') + 1) : '';
+  const hashParams = new URLSearchParams(hashQueryStr);
+
+  const foundId = (
     sessionStorage.getItem('user_id') ||
-    params.get('user_id') ||
-    params.get('userId') ||
-    localStorage.getItem('mantra_user_id') ||
-    'anonymous_user'
+    searchParams.get('user_id') ||
+    searchParams.get('userId') ||
+    searchParams.get('uid') ||
+    hashParams.get('user_id') ||
+    hashParams.get('userId') ||
+    hashParams.get('uid') ||
+    localStorage.getItem('mantra_user_id')
   );
+
+  return foundId ? foundId.trim() : 'anonymous_user';
 };
 
 /**
