@@ -535,6 +535,7 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
   const [step, setStep] = useState('form'); // 'form' | 'preview'
   const [userName, setUserName] = useState('');
   const [isDownloading, setIsDownloading] = useState(false);
+  const [mobileSaveImage, setMobileSaveImage] = useState(null); // { url, filename }
   const certificateRef = useRef(null);
 
   // Generate ID once per page load to remain stable
@@ -563,7 +564,7 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
     try {
       setIsDownloading(true);
       // Wait to ensure fonts and layout are completely settled
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 350));
 
       const dataUrl = await toPng(certificateRef.current, {
         pixelRatio: 3, 
@@ -572,14 +573,13 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
       });
 
       const filename = `MantraCare-Certificate-${userName.trim().replace(/\s+/g, '_')}.png`;
-
-      // Convert data URL to Blob for reliable mobile app & desktop file handling
-      const response = await fetch(dataUrl);
-      const blob = await response.blob();
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
       // 1. Try Native Web Share API first (Mobile Apps / iOS Safari / Android WebViews)
-      if (navigator.canShare && navigator.share) {
+      if (isMobile && navigator.canShare && navigator.share) {
         try {
+          const response = await fetch(dataUrl);
+          const blob = await response.blob();
           const file = new File([blob], filename, { type: 'image/png' });
           if (navigator.canShare({ files: [file] })) {
             await navigator.share({
@@ -592,54 +592,38 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
             return;
           }
         } catch (shareErr) {
-          // If user cancels native share sheet, exit gracefully
           if (shareErr.name === 'AbortError') {
             setIsDownloading(false);
             return;
           }
-          console.warn('Web share failed, trying fallback download:', shareErr);
+          console.warn('Web share failed, trying direct download fallback:', shareErr);
         }
       }
 
-      // 2. Blob URL Download (Works reliably on mobile webviews & desktop browsers)
-      const blobUrl = URL.createObjectURL(blob);
+      // 2. Direct Data URI Anchor Download (Works across Chrome, Safari, Android & WebViews)
       const link = document.createElement('a');
-      link.href = blobUrl;
+      link.href = dataUrl;
       link.download = filename;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
       link.style.display = 'none';
       document.body.appendChild(link);
-      
-      // Dispatch explicit mouse click event for custom webview wrappers
-      const clickEvent = new MouseEvent('click', {
-        bubbles: true,
-        cancelable: true,
-        view: window
-      });
-      link.dispatchEvent(clickEvent);
-
-      // Fallback for Mobile WebViews that block programmatic anchor downloads: open blob image directly
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if (isMobile) {
-        const opened = window.open(blobUrl, '_blank');
-        if (!opened) {
-          window.location.href = blobUrl;
-        }
-      }
+      link.click();
 
       setTimeout(() => {
         try {
           if (document.body.contains(link)) {
             document.body.removeChild(link);
           }
-          URL.revokeObjectURL(blobUrl);
         } catch (e) {
           // ignore cleanup error
         }
-      }, 4000);
+      }, 1000);
 
-      showToast('Certificate downloaded successfully!', 'success');
+      // 3. For Mobile Phones & WebViews, also show the Save Certificate Modal for instant touch/long-press save
+      if (isMobile) {
+        setMobileSaveImage({ url: dataUrl, filename });
+      }
+
+      showToast('Certificate generated successfully!', 'success');
       
       if (onDownload) {
         onDownload();
@@ -831,6 +815,99 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
               config={config} 
             />
           </div>
+
+          {/* Mobile Phone Save Certificate Modal Overlay */}
+          {mobileSaveImage && (
+            <div style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 999999,
+              background: 'rgba(15, 23, 42, 0.92)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px',
+              boxSizing: 'border-box'
+            }}>
+              <div style={{
+                background: '#ffffff',
+                borderRadius: '20px',
+                maxWidth: '480px',
+                width: '100%',
+                padding: '20px',
+                boxSizing: 'border-box',
+                textAlign: 'center',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                border: '1px solid #cbd5e1'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                  <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>
+                    🎓 Certificate Ready
+                  </div>
+                  <button
+                    onClick={() => setMobileSaveImage(null)}
+                    style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <X size={16} color="#64748b" />
+                  </button>
+                </div>
+
+                <div style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid #e2e8f0', marginBottom: '14px', background: '#faf9f6' }}>
+                  <img
+                    src={mobileSaveImage.url}
+                    alt="Certificate"
+                    style={{ width: '100%', height: 'auto', display: 'block' }}
+                  />
+                </div>
+
+                <div style={{ background: '#eff6ff', padding: '10px 14px', borderRadius: '10px', border: '1px solid #bfdbfe', fontSize: '0.78rem', color: '#1e40af', fontWeight: 700, marginBottom: '14px' }}>
+                  📱 Phone App Note: Tap & Hold the image above to save directly to your Photos / Camera Roll!
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <a
+                    href={mobileSaveImage.url}
+                    download={mobileSaveImage.filename}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      borderRadius: '10px',
+                      background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                      color: '#ffffff',
+                      fontWeight: 800,
+                      fontSize: '0.88rem',
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Download size={16} /> Download PNG
+                  </a>
+                  <button
+                    onClick={() => setMobileSaveImage(null)}
+                    style={{
+                      padding: '12px 18px',
+                      borderRadius: '10px',
+                      border: '1px solid #cbd5e1',
+                      background: '#ffffff',
+                      color: '#334155',
+                      fontWeight: 700,
+                      fontSize: '0.88rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
