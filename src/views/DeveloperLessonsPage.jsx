@@ -79,16 +79,12 @@ export default function DeveloperLessonsPage({ onNavigate }) {
       setServiceContext(act.services[0]);
     }
     const targetRoute = act.route || `/task/${act.lessonId}`;
-    if (onNavigate) {
-      onNavigate(targetRoute);
-    } else {
-      const p = window.location.pathname;
-      const subpathMatch = p.match(/^(\/[^\/]+)/);
-      const subpath = (subpathMatch && subpathMatch[1] && !subpathMatch[1].startsWith('/task') && !subpathMatch[1].startsWith('/api')) ? subpathMatch[1] : '';
-      const fullRoute = subpath ? `${subpath}${targetRoute}` : targetRoute;
-      const targetUrl = preserveQueryParams(fullRoute);
-      window.location.href = targetUrl;
-    }
+    const p = window.location.pathname;
+    const subpathMatch = p.match(/^(\/[^\/]+)/);
+    const subpath = (subpathMatch && subpathMatch[1] && !subpathMatch[1].startsWith('/task') && !subpathMatch[1].startsWith('/api')) ? subpathMatch[1] : '';
+    const fullRoute = subpath ? `${subpath}${targetRoute}` : targetRoute;
+    const targetUrl = preserveQueryParams(fullRoute);
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (

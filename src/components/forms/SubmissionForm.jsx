@@ -79,12 +79,17 @@ export default function SubmissionForm({
   };
 
   const handleFile = (selectedFile) => {
-    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
-    if (validTypes.includes(selectedFile.type) && selectedFile.size <= 20 * 1024 * 1024) {
+    const ext = selectedFile.name.split('.').pop()?.toLowerCase();
+    if (ext === 'pdf' || selectedFile.type === 'application/pdf') {
+      showToast("PDF files are not allowed. Please upload an image proof (PNG, JPG, JPEG, WEBP).", "warning");
+      return;
+    }
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    if ((validTypes.includes(selectedFile.type) || ['png', 'jpg', 'jpeg', 'webp'].includes(ext)) && selectedFile.size <= 20 * 1024 * 1024) {
       setFile(selectedFile);
       reset();
     } else {
-      showToast("Please upload a valid PNG, JPG, or PDF file under 20MB.", "warning");
+      showToast("Please upload a valid PNG, JPG, or WEBP image under 20MB.", "warning");
     }
   };
 
@@ -115,7 +120,7 @@ export default function SubmissionForm({
     }
 
     if (!file) {
-      showToast("Please upload a screenshot or PDF document proof before submitting.", "warning");
+      showToast("Please upload an image screenshot proof before submitting.", "warning");
       return;
     }
 
@@ -217,7 +222,7 @@ export default function SubmissionForm({
 
           <div style={{ textAlign: 'left' }}>
             <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <FileText size={14} color="#0284c7" /> Upload Proof Screenshot / Document
+              <FileText size={14} color="#0284c7" /> Upload Proof Screenshot (Image only, PDFs not allowed)
             </label>
 
             <div
@@ -242,7 +247,7 @@ export default function SubmissionForm({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/png,image/jpeg,image/jpg,application/pdf"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
                 onChange={handleFileSelect}
                 style={{ display: 'none' }}
               />
@@ -252,13 +257,13 @@ export default function SubmissionForm({
                   <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Upload size={18} color="#0284c7" />
                   </div>
-                  <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
-                    <span style={{ fontWeight: 700, color: '#0f172a' }}>Click to upload</span> or drag and drop PNG, JPG, PDF (Max 20MB)
+                  <span style={{ fontSize: '0.82rem', color: '#64748b', textAlign: 'center' }}>
+                    <span style={{ fontWeight: 700, color: '#0f172a' }}>Click to upload</span> or drag & drop PNG, JPG, WEBP (PDFs not allowed, Max 20MB)
                   </span>
                 </div>
               ) : (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyBetween: 'space-between', width: '100%', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden', flex: 1 }}>
                     <CheckCircle2 size={20} color="#10b981" style={{ flexShrink: 0 }} />
                     <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#065f46', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {file.name}
@@ -267,7 +272,7 @@ export default function SubmissionForm({
                   <button type="button" onClick={clearFile} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', color: '#6b7280' }}>
                     <X size={18} />
                   </button>
-                </>
+                </div>
               )}
             </div>
           </div>

@@ -7,13 +7,36 @@ import { useAuth } from '../auth/AuthContext';
 import { activities as registeredActivities } from '../mantra/activities';
 import { COUNTRY_LIST } from '../utils/countryData';
 
+export const normalizeImageUrl = (rawUrl) => {
+  if (!rawUrl || typeof rawUrl !== 'string') return '';
+  let cleaned = rawUrl.trim().replace(/^['"]|['"]$/g, '');
+  if (!cleaned || ['null', 'undefined', 'none', 'n/a', '[object object]'].includes(cleaned.toLowerCase())) return '';
+
+  if (cleaned.startsWith('http://')) {
+    cleaned = 'https://' + cleaned.slice(7);
+  } else if (cleaned.startsWith('//')) {
+    cleaned = 'https:' + cleaned;
+  } else if (!cleaned.startsWith('https://') && !cleaned.startsWith('data:') && !cleaned.startsWith('blob:')) {
+    if (cleaned.includes('cloudinary.com')) {
+      cleaned = 'https://' + cleaned.replace(/^(https?:\/\/)?/, '');
+    } else if (cleaned.startsWith('/')) {
+      cleaned = window.location.origin + cleaned;
+    } else if (cleaned.startsWith('v1') || cleaned.includes('upload') || cleaned.includes('.')) {
+      cleaned = `https://res.cloudinary.com/hxbamdqf/image/upload/${cleaned}`;
+    }
+  }
+  return cleaned;
+};
+
 /* Interactive Photo Preview Modal with Zoom & Drag Support */
 function InteractiveImageModal({ imageUrl, onClose }) {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [hasLoadError, setHasLoadError] = useState(false);
   const containerRef = useRef(null);
+  const cleanUrl = normalizeImageUrl(imageUrl);
 
   const handleZoomIn = () => setScale(prev => Math.min(prev + 0.35, 4.5));
   const handleZoomOut = () => {
@@ -176,20 +199,63 @@ function InteractiveImageModal({ imageUrl, onClose }) {
           cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
         }}
       >
-        <img
-          src={imageUrl}
-          alt="Proof Preview"
-          draggable={false}
-          style={{
-            maxHeight: '100%',
-            maxWidth: '100%',
-            objectFit: 'contain',
-            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-            transition: isDragging ? 'none' : 'transform 0.15s ease-out',
-            borderRadius: '10px',
-            boxShadow: '0 25px 50px rgba(0,0,0,0.5)'
-          }}
-        />
+        {!hasLoadError && cleanUrl ? (
+          <img
+            src={cleanUrl}
+            alt="Proof Preview"
+            draggable={false}
+            onError={() => setHasLoadError(true)}
+            style={{
+              maxHeight: '100%',
+              maxWidth: '100%',
+              objectFit: 'contain',
+              transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+              transition: isDragging ? 'none' : 'transform 0.15s ease-out',
+              borderRadius: '10px',
+              boxShadow: '0 25px 50px rgba(0,0,0,0.5)',
+              background: '#ffffff'
+            }}
+          />
+        ) : (
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            padding: '32px 24px',
+            textAlign: 'center',
+            maxWidth: '420px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+            border: '1px solid #cbd5e1'
+          }}>
+            <Image size={40} color="#64748b" style={{ margin: '0 auto 12px' }} />
+            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', marginBottom: '6px' }}>
+              Proof Image Preview
+            </div>
+            <div style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '18px', wordBreak: 'break-all' }}>
+              {imageUrl || 'Image file URL is missing or protected.'}
+            </div>
+            {cleanUrl && (
+              <a
+                href={cleanUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  padding: '8px 18px',
+                  borderRadius: '8px',
+                  background: '#2563eb',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '0.84rem',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                Open Direct Image <ExternalLink size={14} />
+              </a>
+            )}
+          </div>
+        )}
       </div>
     </div>,
     document.body
@@ -638,6 +704,39 @@ export default function SubmissionsTable() {
     );
   };
 
+  const extractProofImage = (sub) => {
+    if (!sub) return null;
+    const data = sub.form_data || sub.submission_data || sub.formData || sub.submissionData || {};
+    let candidate = (
+      sub.proof_url ||
+      sub.proofUrl ||
+      sub.image_url ||
+      sub.imageUrl ||
+      sub.screenshot_url ||
+      sub.screenshotUrl ||
+      sub.file_url ||
+      sub.fileUrl ||
+      sub.proof ||
+      data.proof_url ||
+      data.proofUrl ||
+      data.image_url ||
+      data.imageUrl ||
+      data.screenshot_url ||
+      data.screenshotUrl ||
+      data.file_url ||
+      data.fileUrl ||
+      data.file ||
+      data.proof ||
+      data.url ||
+      ''
+    );
+    if (!candidate || typeof candidate !== 'string') return null;
+    candidate = candidate.trim().replace(/^['"]|['"]$/g, '');
+    if (!candidate || candidate === 'null' || candidate === 'undefined' || candidate === 'none' || candidate === 'n/a') return null;
+    if (candidate.startsWith('//')) candidate = 'https:' + candidate;
+    return candidate;
+  };
+
   const hasUploadedVideo = (item) => {
     if (!item) return false;
     if (isVideoSkipped(item)) return false;
@@ -663,6 +762,11 @@ export default function SubmissionsTable() {
 
   // Filter submissions by selected date, activity, status, and reviewer
   const filteredSubmissions = submissions.filter(item => {
+    // 0. Exclude entries where video was skipped
+    if (isVideoSkipped(item)) {
+      return false;
+    }
+
     // 1. Time Period Filter
     if (filterVisibility.date && selectedTimePeriod !== 'all_time') {
       const itemDate = item.created_at || item.submitted_at || item.submittedAt;
@@ -781,6 +885,7 @@ export default function SubmissionsTable() {
   // Exclude redundant user info, P/V links & technical file upload metadata keys from main table
   const REDUNDANT_KEYS = [
     'fullName', 'name', 'email', 'phone', 'phoneNumber', 'phone_number', 'mobile', 'contact',
+    'rawPhone', 'raw_phone', 'raw_phone_number', 'rawphone',
     'submittedAt', 'submitted_at', 'uploadedAt', 'uploaded_at', 'submitted_date', 'created_at', 'updated_at', 'service',
     'fileName', 'file_name',
     'fileSize', 'file_size', 'bytes',
@@ -788,7 +893,8 @@ export default function SubmissionsTable() {
     'publicId', 'public_id',
     'screenshotUrl', 'imageUrl', 'url',
     'videoPublicId', 'country', 'countryCode', 'consent',
-    'profileUrl', 'profile_url', 'videoUrl'
+    'profileUrl', 'profile_url', 'videoUrl',
+    'skippedVideo', 'skipped_video', 'videoSkipped', 'video_skipped', 'skipped'
   ];
 
   const PROOF_KEYS = ['screenshotUrl', 'imageUrl', 'url', 'file', 'proof'];
@@ -798,7 +904,8 @@ export default function SubmissionsTable() {
     submissions.forEach(sub => {
       const data = sub.form_data || sub.submission_data || {};
       Object.keys(data).forEach(k => {
-        if (!REDUNDANT_KEYS.includes(k)) {
+        const lowerK = k.toLowerCase();
+        if (!REDUNDANT_KEYS.includes(k) && !lowerK.includes('rawphone') && !lowerK.includes('raw_phone') && !lowerK.includes('skippedvideo') && !lowerK.includes('skipped_video')) {
           keys.add(k);
         }
       });
@@ -837,7 +944,7 @@ export default function SubmissionsTable() {
         if (Array.isArray(savedIds) && savedIds.length > 0) {
           const ordered = savedIds
             .map(id => baseCols.find(col => col.id === id))
-            .filter(Boolean);
+            .filter(col => col && !col.id.toLowerCase().includes('rawphone') && !col.id.toLowerCase().includes('raw_phone') && !col.id.toLowerCase().includes('skippedvideo') && !col.id.toLowerCase().includes('skipped_video'));
           const missing = baseCols.filter(col => !savedIds.includes(col.id));
           setColumns([...ordered, ...missing]);
           return;
@@ -888,7 +995,7 @@ export default function SubmissionsTable() {
   const resetColumnLayout = () => {
     try {
       localStorage.removeItem(STORAGE_KEY);
-    } catch (err) {}
+    } catch (err) { }
     const defaultCols = [
       { id: 'user', label: 'User / Email', width: '16%' },
       { id: 'service', label: 'Service', width: '9%' },
@@ -1048,7 +1155,7 @@ export default function SubmissionsTable() {
       {/* ======================================================== */}
       {showAnalytics && (
         <div style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 4px 16px rgba(0,0,0,0.02)', animation: 'fadeIn 0.2s ease-in-out' }}>
-          
+
           {/* Header & Date Range Filter Bar */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1225,7 +1332,7 @@ export default function SubmissionsTable() {
                         return (
                           <div key={idx} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             <div style={{ fontSize: '0.84rem', fontWeight: 900, color: '#0f172a' }}>{formatActivityTitle(vItem.activityName, vItem.activityId)}</div>
-                            
+
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', textAlign: 'center', background: '#f8fafc', padding: '6px', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
                               <div>
                                 <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Total</div>
@@ -1743,22 +1850,6 @@ export default function SubmissionsTable() {
             </div>
           )}
 
-          {/* Skipped Video Filter */}
-          {filterVisibility.skippedVideo && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', maxWidth: '150px' }}>
-              <Video size={12} color="#64748b" style={{ flexShrink: 0 }} />
-              <select
-                value={selectedSkippedVideo}
-                onChange={(e) => setSelectedSkippedVideo(e.target.value)}
-                style={{ border: 'none', background: 'transparent', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, outline: 'none', cursor: 'pointer', maxWidth: '120px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}
-              >
-                <option value="all">All Video Status</option>
-                <option value="uploaded">Uploaded Video</option>
-                <option value="skipped">Skipped Video</option>
-              </select>
-            </div>
-          )}
-
           {/* Search Input */}
           {filterVisibility.search && (
             <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '130px' }}>
@@ -1884,14 +1975,6 @@ export default function SubmissionsTable() {
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
                     <input
                       type="checkbox"
-                      checked={filterVisibility.skippedVideo}
-                      onChange={(e) => setFilterVisibility(prev => ({ ...prev, skippedVideo: e.target.checked }))}
-                    />
-                    <span>Skipped Video Filter</span>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
                       checked={filterVisibility.search}
                       onChange={(e) => setFilterVisibility(prev => ({ ...prev, search: e.target.checked }))}
                     />
@@ -1955,97 +2038,97 @@ export default function SubmissionsTable() {
 
       {/* Main Operations Table (Compact Rows with Hover Scroll Navigators) */}
       <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', background: '#ffffff' }}>
-          
-          {/* Hover Scroll Navigator - LEFT */}
-          <div
-            onMouseEnter={() => startHoverScroll('left')}
-            onMouseLeave={stopHoverScroll}
-            onClick={() => {
-              if (tableScrollRef.current) tableScrollRef.current.scrollBy({ left: -450, behavior: 'smooth' });
-            }}
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: '44px',
-              zIndex: 20,
-              display: showLeftNav ? 'flex' : 'none',
-              alignItems: 'center',
-              justifyContent: 'flex-start',
-              background: 'linear-gradient(to right, rgba(241,245,249,0.85) 0%, rgba(241,245,249,0) 100%)',
-              cursor: 'pointer',
-              transition: 'opacity 0.2s ease',
-              pointerEvents: 'auto'
-            }}
-            title="Hover or Click to Scroll Left"
-          >
-            <div
-              style={{
-                width: '38px',
-                height: '64px',
-                borderTopRightRadius: '32px',
-                borderBottomRightRadius: '32px',
-                background: 'rgba(226, 232, 240, 0.9)',
-                backdropFilter: 'blur(4px)',
-                boxShadow: '2px 0 8px rgba(0,0,0,0.12)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#334155',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              <ChevronRight size={22} style={{ transform: 'rotate(180deg)', strokeWidth: 3 }} />
-            </div>
-          </div>
 
-          {/* Hover Scroll Navigator - RIGHT */}
+        {/* Hover Scroll Navigator - LEFT */}
+        <div
+          onMouseEnter={() => startHoverScroll('left')}
+          onMouseLeave={stopHoverScroll}
+          onClick={() => {
+            if (tableScrollRef.current) tableScrollRef.current.scrollBy({ left: -450, behavior: 'smooth' });
+          }}
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: '44px',
+            zIndex: 20,
+            display: showLeftNav ? 'flex' : 'none',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            background: 'linear-gradient(to right, rgba(241,245,249,0.85) 0%, rgba(241,245,249,0) 100%)',
+            cursor: 'pointer',
+            transition: 'opacity 0.2s ease',
+            pointerEvents: 'auto'
+          }}
+          title="Hover or Click to Scroll Left"
+        >
           <div
-            onMouseEnter={() => startHoverScroll('right')}
-            onMouseLeave={stopHoverScroll}
-            onClick={() => {
-              if (tableScrollRef.current) tableScrollRef.current.scrollBy({ left: 450, behavior: 'smooth' });
-            }}
             style={{
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: '44px',
-              zIndex: 20,
-              display: showRightNav ? 'flex' : 'none',
+              width: '38px',
+              height: '64px',
+              borderTopRightRadius: '32px',
+              borderBottomRightRadius: '32px',
+              background: 'rgba(226, 232, 240, 0.9)',
+              backdropFilter: 'blur(4px)',
+              boxShadow: '2px 0 8px rgba(0,0,0,0.12)',
+              display: 'flex',
               alignItems: 'center',
-              justifyContent: 'flex-end',
-              background: 'linear-gradient(to left, rgba(241,245,249,0.85) 0%, rgba(241,245,249,0) 100%)',
-              cursor: 'pointer',
-              transition: 'opacity 0.2s ease',
-              pointerEvents: 'auto'
+              justifyContent: 'center',
+              color: '#334155',
+              transition: 'all 0.15s ease'
             }}
-            title="Hover or Click to Scroll Right"
           >
-            <div
-              style={{
-                width: '38px',
-                height: '64px',
-                borderTopLeftRadius: '32px',
-                borderBottomLeftRadius: '32px',
-                background: 'rgba(226, 232, 240, 0.9)',
-                backdropFilter: 'blur(4px)',
-                boxShadow: '-2px 0 8px rgba(0,0,0,0.12)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#334155',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              <ChevronRight size={22} style={{ strokeWidth: 3 }} />
-            </div>
+            <ChevronRight size={22} style={{ transform: 'rotate(180deg)', strokeWidth: 3 }} />
           </div>
+        </div>
 
-          <div ref={tableScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.76rem' }}>
+        {/* Hover Scroll Navigator - RIGHT */}
+        <div
+          onMouseEnter={() => startHoverScroll('right')}
+          onMouseLeave={stopHoverScroll}
+          onClick={() => {
+            if (tableScrollRef.current) tableScrollRef.current.scrollBy({ left: 450, behavior: 'smooth' });
+          }}
+          style={{
+            position: 'absolute',
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: '44px',
+            zIndex: 20,
+            display: showRightNav ? 'flex' : 'none',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            background: 'linear-gradient(to left, rgba(241,245,249,0.85) 0%, rgba(241,245,249,0) 100%)',
+            cursor: 'pointer',
+            transition: 'opacity 0.2s ease',
+            pointerEvents: 'auto'
+          }}
+          title="Hover or Click to Scroll Right"
+        >
+          <div
+            style={{
+              width: '38px',
+              height: '64px',
+              borderTopLeftRadius: '32px',
+              borderBottomLeftRadius: '32px',
+              background: 'rgba(226, 232, 240, 0.9)',
+              backdropFilter: 'blur(4px)',
+              boxShadow: '-2px 0 8px rgba(0,0,0,0.12)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#334155',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <ChevronRight size={22} style={{ strokeWidth: 3 }} />
+          </div>
+        </div>
+
+        <div ref={tableScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.76rem' }}>
             <thead>
               <tr style={{ background: '#043263', borderBottom: '1px solid #03254c', color: '#ffffff', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.66rem', letterSpacing: '0.04em' }}>
                 {columns.map((col, index) => (
@@ -2229,6 +2312,8 @@ export default function SubmissionsTable() {
                                 {(item.activity_title === 'TherapyMantra' || item.lesson_id === 'grow-your-practice' || item.lesson_id === 'market-yourself' || item.activity_title?.toLowerCase().includes('therapymantra')) ? (
                                   <a
                                     href={`/provider_pathways_dashboard_v3/task/market-yourself/${encodeURIComponent(item.service || 'therapy')}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 700 }}
                                   >
                                     {formatActivityTitle(item.activity_title, item.lesson_id)}
@@ -2302,7 +2387,7 @@ export default function SubmissionsTable() {
                                   <option key={r} value={r}>{r}</option>
                                 ))}
                                 <option value="__ADD_NEW__">+ Add Reviewer...</option>
-                                <option value="__MANAGE__">⚙️ Manage / Delete Reviewers...</option>
+                                <option value="__MANAGE__">⚙️ Manage Reviewers...</option>
                               </select>
                             </td>
                           );
@@ -2341,96 +2426,96 @@ export default function SubmissionsTable() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Footer Controls */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '10px 16px',
+            borderTop: '1px solid #e2e8f0',
+            background: '#f8fafc',
+            borderBottomLeftRadius: '12px',
+            borderBottomRightRadius: '12px',
+            flexWrap: 'wrap',
+            gap: '10px'
+          }}
+        >
+          {/* Items Per Page Selector */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#475569', fontWeight: 600 }}>
+            <span>Rows per page:</span>
+            <select
+              value={limit}
+              onChange={(e) => {
+                const newLimit = Number(e.target.value);
+                setLimit(newLimit);
+                loadSubmissions(1, newLimit);
+              }}
+              style={{
+                padding: '3px 8px',
+                borderRadius: '6px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                color: '#0f172a',
+                fontSize: '0.76rem',
+                fontWeight: 700,
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <option value={25}>25 records</option>
+              <option value={50}>50 records</option>
+              <option value={100}>100 records</option>
+            </select>
           </div>
 
-          {/* Pagination Footer Controls */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '10px 16px',
-              borderTop: '1px solid #e2e8f0',
-              background: '#f8fafc',
-              borderBottomLeftRadius: '12px',
-              borderBottomRightRadius: '12px',
-              flexWrap: 'wrap',
-              gap: '10px'
-            }}
-          >
-            {/* Items Per Page Selector */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#475569', fontWeight: 600 }}>
-              <span>Rows per page:</span>
-              <select
-                value={limit}
-                onChange={(e) => {
-                  const newLimit = Number(e.target.value);
-                  setLimit(newLimit);
-                  loadSubmissions(1, newLimit);
-                }}
+          {/* Page Information & Navigation */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <span style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 600 }}>
+              Page <strong style={{ color: '#0f172a' }}>{pagination.currentPage || 1}</strong> of <strong style={{ color: '#0f172a' }}>{pagination.totalPages || 1}</strong>
+              {pagination.totalRecords ? ` (${pagination.totalRecords} total records)` : ''}
+            </span>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button
+                onClick={() => loadSubmissions((pagination.currentPage || 1) - 1)}
+                disabled={loading || (pagination.currentPage || 1) <= 1}
                 style={{
-                  padding: '3px 8px',
+                  padding: '4px 10px',
                   borderRadius: '6px',
                   border: '1px solid #cbd5e1',
-                  background: '#ffffff',
-                  color: '#0f172a',
-                  fontSize: '0.76rem',
+                  background: (pagination.currentPage || 1) <= 1 ? '#f1f5f9' : '#ffffff',
+                  color: (pagination.currentPage || 1) <= 1 ? '#94a3b8' : '#334155',
+                  fontSize: '0.74rem',
                   fontWeight: 700,
-                  outline: 'none',
-                  cursor: 'pointer'
+                  cursor: (pagination.currentPage || 1) <= 1 ? 'not-allowed' : 'pointer'
                 }}
               >
-                <option value={25}>25 records</option>
-                <option value={50}>50 records</option>
-                <option value={100}>100 records</option>
-              </select>
-            </div>
+                Previous
+              </button>
 
-            {/* Page Information & Navigation */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <span style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 600 }}>
-                Page <strong style={{ color: '#0f172a' }}>{pagination.currentPage || 1}</strong> of <strong style={{ color: '#0f172a' }}>{pagination.totalPages || 1}</strong>
-                {pagination.totalRecords ? ` (${pagination.totalRecords} total records)` : ''}
-              </span>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <button
-                  onClick={() => loadSubmissions((pagination.currentPage || 1) - 1)}
-                  disabled={loading || (pagination.currentPage || 1) <= 1}
-                  style={{
-                    padding: '4px 10px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    background: (pagination.currentPage || 1) <= 1 ? '#f1f5f9' : '#ffffff',
-                    color: (pagination.currentPage || 1) <= 1 ? '#94a3b8' : '#334155',
-                    fontSize: '0.74rem',
-                    fontWeight: 700,
-                    cursor: (pagination.currentPage || 1) <= 1 ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  Previous
-                </button>
-
-                <button
-                  onClick={() => loadSubmissions((pagination.currentPage || 1) + 1)}
-                  disabled={loading || (pagination.currentPage || 1) >= (pagination.totalPages || 1)}
-                  style={{
-                    padding: '4px 10px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    background: (pagination.currentPage || 1) >= (pagination.totalPages || 1) ? '#f1f5f9' : '#ffffff',
-                    color: (pagination.currentPage || 1) >= (pagination.totalPages || 1) ? '#94a3b8' : '#334155',
-                    fontSize: '0.74rem',
-                    fontWeight: 700,
-                    cursor: (pagination.currentPage || 1) >= (pagination.totalPages || 1) ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  Next
-                </button>
-              </div>
+              <button
+                onClick={() => loadSubmissions((pagination.currentPage || 1) + 1)}
+                disabled={loading || (pagination.currentPage || 1) >= (pagination.totalPages || 1)}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  background: (pagination.currentPage || 1) >= (pagination.totalPages || 1) ? '#f1f5f9' : '#ffffff',
+                  color: (pagination.currentPage || 1) >= (pagination.totalPages || 1) ? '#94a3b8' : '#334155',
+                  fontSize: '0.74rem',
+                  fontWeight: 700,
+                  cursor: (pagination.currentPage || 1) >= (pagination.totalPages || 1) ? 'not-allowed' : 'pointer'
+                }}
+              >
+                Next
+              </button>
             </div>
           </div>
         </div>
+      </div>
 
       {/* MODAL 1: Interactive Zoom & Drag Image Proof Viewer */}
       {previewImage && (
@@ -2613,34 +2698,43 @@ export default function SubmissionsTable() {
               })()}
 
               {/* Card 4: Proof Screenshot Attachment */}
-              {(selectedSubmission.form_data?.screenshotUrl || selectedSubmission.form_data?.imageUrl) && (
-                <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '14px 16px' }}>
-                  <h4 style={{ margin: '0 0 10px', fontSize: '0.76rem', color: '#0f172a', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    Uploaded Proof Screenshot
-                  </h4>
-                  <div style={{ background: '#faf5ff', padding: '10px 14px', borderRadius: '10px', border: '1px solid #e9d5ff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <img
-                        src={selectedSubmission.form_data?.screenshotUrl || selectedSubmission.form_data?.imageUrl}
-                        alt="Proof"
-                        onClick={() => setPreviewImage(selectedSubmission.form_data?.screenshotUrl || selectedSubmission.form_data?.imageUrl)}
-                        style={{ width: '60px', height: '44px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
-                      />
-                      <div>
-                        <div style={{ fontSize: '0.76rem', fontWeight: 700, color: '#7e22ce' }}>Image Proof Uploaded</div>
-                        <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '1px' }}>Click thumbnail to open zoom viewer</div>
+              {(() => {
+                const proofImgUrl = extractProofImage(selectedSubmission);
+                if (!proofImgUrl) return null;
+
+                return (
+                  <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '14px 16px' }}>
+                    <h4 style={{ margin: '0 0 10px', fontSize: '0.76rem', color: '#0f172a', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Uploaded Proof Screenshot
+                    </h4>
+                    <div style={{ background: '#faf5ff', padding: '10px 14px', borderRadius: '10px', border: '1px solid #e9d5ff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <img
+                          src={proofImgUrl}
+                          alt="Proof"
+                          onClick={() => setPreviewImage(proofImgUrl)}
+                          style={{ width: '60px', height: '44px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #cbd5e1', cursor: 'pointer', background: '#ffffff' }}
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                        <div>
+                          <div style={{ fontSize: '0.76rem', fontWeight: 700, color: '#7e22ce' }}>Image Proof Uploaded</div>
+                          <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '1px' }}>Click thumbnail to open zoom viewer</div>
+                        </div>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewImage(proofImgUrl)}
+                        style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid #e9d5ff', background: '#ffffff', color: '#7e22ce', fontWeight: 700, fontSize: '0.74rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+                      >
+                        <Image size={12} /> View Image <ExternalLink size={11} />
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setPreviewImage(selectedSubmission.form_data?.screenshotUrl || selectedSubmission.form_data?.imageUrl)}
-                      style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid #e9d5ff', background: '#ffffff', color: '#7e22ce', fontWeight: 700, fontSize: '0.74rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
-                    >
-                      <Image size={12} /> View Image <ExternalLink size={11} />
-                    </button>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Card 5: Uploaded Video Attachment (Always visible) */}
               {(() => {

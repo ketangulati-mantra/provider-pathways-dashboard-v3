@@ -501,28 +501,8 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
   const handleSkipVideo = async () => {
     try {
       setIsSubmitting(true);
-      const phoneStr = videoFormData.phone.trim() ? `${selectedCountry.dialCode} ${videoFormData.phone.trim()}` : '';
 
-      // 1. Record submission as skipped_video
-      await submitActivitySubmission({
-        userId,
-        lessonId: brand.lessonId || 'grow-your-practice',
-        activityTitle: brand.name || 'Grow Your Practice Video Submission',
-        submissionType: 'skipped_video',
-        formData: {
-          name: videoFormData.name || 'Provider',
-          email: videoFormData.email || '',
-          phone: phoneStr,
-          country: selectedCountry.name,
-          countryCode: selectedCountry.dialCode,
-          profileUrl: activeProfileUrl,
-          service: brand.submissionService || 'therapy',
-          skippedVideo: true,
-          submittedAt: new Date().toISOString()
-        }
-      });
-
-      // 2. Trigger /api/activities/complete endpoint
+      // 1. Trigger /api/activities/complete endpoint
       await fetch(`${API_BASE}/api/activities/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

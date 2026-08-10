@@ -82,11 +82,16 @@ export default function MarketYourselfLessonPage({ onBack }) {
     if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
   };
   const handleFile = (selectedFile) => {
-    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
-    if (validTypes.includes(selectedFile.type) && selectedFile.size <= 20 * 1024 * 1024) {
+    const ext = selectedFile.name.split('.').pop()?.toLowerCase();
+    if (ext === 'pdf' || selectedFile.type === 'application/pdf') {
+      alert("PDF files are not allowed. Please upload an image proof (PNG, JPG, WEBP).");
+      return;
+    }
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    if ((validTypes.includes(selectedFile.type) || ['png', 'jpg', 'jpeg', 'webp'].includes(ext)) && selectedFile.size <= 20 * 1024 * 1024) {
       setFile(selectedFile);
     } else {
-      alert("Please upload a valid PNG, JPG, or PDF file under 20MB.");
+      alert("Please upload a valid PNG, JPG, or WEBP image under 20MB.");
     }
   };
   const clearFile = (e) => {
@@ -227,7 +232,7 @@ export default function MarketYourselfLessonPage({ onBack }) {
                     cursor: 'pointer', transition: 'all 0.2s ease', gap: '12px'
                   }}
                 >
-                  <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept=".png,.jpg,.jpeg,.pdf" style={{ display: 'none' }} />
+                  <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" style={{ display: 'none' }} />
                   
                   {!file ? (
                     <>
@@ -235,10 +240,10 @@ export default function MarketYourselfLessonPage({ onBack }) {
                         <Upload size={20} color="var(--color-primary)" />
                       </div>
                       <div style={{ textAlign: 'center' }}>
-                        <p style={{ margin: '0 0 4px', fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)' }}>Drag & drop your screenshot</p>
+                        <p style={{ margin: '0 0 4px', fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)' }}>Drag & drop your screenshot proof</p>
                         <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>or <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Browse Files</span></p>
                       </div>
-                      <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af', marginTop: '4px' }}>PNG, JPG, JPEG, PDF up to 20MB</p>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af', marginTop: '4px' }}>PNG, JPG, JPEG, WEBP up to 20MB (PDFs not allowed)</p>
                     </>
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: '#fff', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e5e7eb' }} onClick={(e) => e.stopPropagation()}>
