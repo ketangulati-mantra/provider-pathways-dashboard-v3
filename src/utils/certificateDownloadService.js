@@ -17,7 +17,7 @@ export const sanitizeFilename = (name) => {
 // Validates PDF or PNG data URL / binary payload
 export const validateCertificatePayload = (payload) => {
   if (!payload) return { valid: false, reason: 'Empty payload' };
-  
+
   if (typeof payload === 'string') {
     if (payload.startsWith('data:image/png') || payload.startsWith('data:application/pdf')) {
       return { valid: true, mimeType: payload.split(';')[0].replace('data:', '') };
@@ -69,7 +69,7 @@ export const downloadCertificate = async ({
       authData.service = params.get('service') || params.get('source') || '';
       authData.uid = params.get('uid') || params.get('upa_id') || '';
     }
-  } catch (e) {}
+  } catch (e) { }
 
   const isRNWebView = typeof window !== 'undefined' && !!window.ReactNativeWebView;
 
@@ -89,7 +89,7 @@ export const downloadCertificate = async ({
   if (isRNWebView) {
     try {
       if (showToast) {
-        showToast('Certificate ready — saving to device…', 'info');
+        showToast('Certificate ready - saving to device…', 'info');
       }
 
       window.ReactNativeWebView.postMessage(JSON.stringify({
@@ -136,7 +136,7 @@ export const downloadCertificate = async ({
           if (document.body.contains(link)) {
             document.body.removeChild(link);
           }
-        } catch (e) {}
+        } catch (e) { }
       }, 2000);
 
       if (showToast) {

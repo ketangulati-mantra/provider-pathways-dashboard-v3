@@ -9,7 +9,7 @@ import { downloadCertificate, sanitizeFilename } from '../utils/certificateDownl
    ========================================================================== */
 const PremiumCertificate = ({ userName, innerRef, certificateId, config }) => {
   return (
-    <div 
+    <div
       ref={innerRef}
       style={{
         width: '900px',
@@ -73,17 +73,17 @@ const PremiumCertificate = ({ userName, innerRef, certificateId, config }) => {
           justifyContent: 'center',
           marginBottom: '12px'
         }}>
-          <img 
-            src={config?.logoUrl || "https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg"} 
-            alt={config?.programName || "MantraCare"} 
-            style={{ height: '36px', maxWidth: '180px', objectFit: 'contain' }} 
+          <img
+            src={config?.logoUrl || "https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg"}
+            alt={config?.programName || "MantraCare"}
+            style={{ height: '36px', maxWidth: '180px', objectFit: 'contain' }}
           />
         </div>
 
-        <div style={{ 
-          fontSize: '0.8rem', 
-          textTransform: 'uppercase', 
-          letterSpacing: '0.14em', 
+        <div style={{
+          fontSize: '0.8rem',
+          textTransform: 'uppercase',
+          letterSpacing: '0.14em',
           color: '#475569',
           marginBottom: '16px',
           fontWeight: 600
@@ -93,7 +93,7 @@ const PremiumCertificate = ({ userName, innerRef, certificateId, config }) => {
 
         <h1 style={{
           fontFamily: "Georgia, 'Times New Roman', serif",
-          fontSize: '1.85rem', 
+          fontSize: '1.85rem',
           fontWeight: 400,
           color: '#0f172a',
           textTransform: 'uppercase',
@@ -102,7 +102,7 @@ const PremiumCertificate = ({ userName, innerRef, certificateId, config }) => {
         }}>
           {config.certificateTitle}
         </h1>
-        
+
         <p style={{
           fontSize: '0.95rem',
           color: '#475569',
@@ -136,7 +136,7 @@ const PremiumCertificate = ({ userName, innerRef, certificateId, config }) => {
           maxWidth: '75%',
           lineHeight: '1.5'
         }}>
-          {config.completionText}<br/>
+          {config.completionText}<br />
           <strong>{config.courseName}</strong>
         </div>
 
@@ -145,7 +145,7 @@ const PremiumCertificate = ({ userName, innerRef, certificateId, config }) => {
           border: '1px solid #e2e8f0',
           borderRadius: '10px',
           padding: '12px 24px',
-          marginBottom: '26px', 
+          marginBottom: '26px',
           fontStyle: 'italic',
           color: '#475569',
           fontSize: '0.88rem',
@@ -269,7 +269,7 @@ const PremiumCertificate = ({ userName, innerRef, certificateId, config }) => {
    ========================================================================== */
 const OnScreenCertificatePreview = ({ userName, certificateId, config }) => {
   return (
-    <div 
+    <div
       style={{
         width: '100%',
         maxWidth: '750px',
@@ -333,17 +333,17 @@ const OnScreenCertificatePreview = ({ userName, certificateId, config }) => {
           justifyContent: 'center',
           marginBottom: '10px'
         }}>
-          <img 
-            src={config?.logoUrl || "https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg"} 
-            alt={config?.programName || "MantraCare"} 
-            style={{ height: 'clamp(24px, 4.5vw, 34px)', maxWidth: '160px', objectFit: 'contain' }} 
+          <img
+            src={config?.logoUrl || "https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg"}
+            alt={config?.programName || "MantraCare"}
+            style={{ height: 'clamp(24px, 4.5vw, 34px)', maxWidth: '160px', objectFit: 'contain' }}
           />
         </div>
 
-        <div style={{ 
-          fontSize: 'clamp(0.65rem, 1.8vw, 0.78rem)', 
-          textTransform: 'uppercase', 
-          letterSpacing: '0.12em', 
+        <div style={{
+          fontSize: 'clamp(0.65rem, 1.8vw, 0.78rem)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.12em',
           color: '#475569',
           marginBottom: '14px',
           fontWeight: 600
@@ -353,7 +353,7 @@ const OnScreenCertificatePreview = ({ userName, certificateId, config }) => {
 
         <h1 style={{
           fontFamily: "Georgia, 'Times New Roman', serif",
-          fontSize: 'clamp(1.2rem, 3.8vw, 1.75rem)', 
+          fontSize: 'clamp(1.2rem, 3.8vw, 1.75rem)',
           fontWeight: 400,
           color: '#0f172a',
           textTransform: 'uppercase',
@@ -362,7 +362,7 @@ const OnScreenCertificatePreview = ({ userName, certificateId, config }) => {
         }}>
           {config.certificateTitle}
         </h1>
-        
+
         <p style={{
           fontSize: 'clamp(0.8rem, 2.2vw, 0.92rem)',
           color: '#475569',
@@ -395,7 +395,7 @@ const OnScreenCertificatePreview = ({ userName, certificateId, config }) => {
           maxWidth: '88%',
           lineHeight: '1.45'
         }}>
-          {config.completionText}<br/>
+          {config.completionText}<br />
           <strong>{config.courseName}</strong>
         </div>
 
@@ -404,7 +404,7 @@ const OnScreenCertificatePreview = ({ userName, certificateId, config }) => {
           border: '1px solid #e2e8f0',
           borderRadius: '8px',
           padding: '10px 16px',
-          marginBottom: '20px', 
+          marginBottom: '20px',
           fontStyle: 'italic',
           color: '#475569',
           fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
@@ -581,7 +581,7 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
               backgroundColor: '#faf9f6'
             });
             if (isMounted) setGeneratedImg(dataUrl2);
-          } catch (err2) {}
+          } catch (err2) { }
         }
       };
       prepareImage();
@@ -698,7 +698,7 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
               }}>
                 <CheckCircle2 size={32} />
               </div>
-              
+
               {config.congratsBadge && (
                 <div style={{
                   display: 'inline-flex', alignItems: 'center', gap: '6px',
@@ -722,22 +722,22 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
               <form onSubmit={handleGenerate} style={{ display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'left' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)' }}>Full Name</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={userName}
                     onChange={(e) => setUserName(e.target.value)}
                     placeholder="E.g. Dr. Jane Doe"
                     required
-                    style={{ 
-                      padding: '12px 16px', 
-                      borderRadius: '8px', 
-                      border: '1px solid #e5e7eb', 
-                      background: '#ffffff', 
-                      color: '#1f2937', 
-                      fontSize: '1rem', 
+                    style={{
+                      padding: '12px 16px',
+                      borderRadius: '8px',
+                      border: '1px solid #e5e7eb',
+                      background: '#ffffff',
+                      color: '#1f2937',
+                      fontSize: '1rem',
                       outline: 'none',
                       transition: 'border-color 0.2s'
-                    }} 
+                    }}
                     onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
                     onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
                   />
@@ -770,7 +770,7 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
             justifyContent: 'space-between',
             boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
           }}>
-            <button 
+            <button
               onClick={() => setStep('form')}
               style={{
                 display: 'flex',
@@ -811,7 +811,7 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
                 ) : downloadState === 'success' ? (
                   <>
                     <ShieldCheck size={16} />
-                    <span>Open / Share Certificate</span>
+                    <span>Open Certificate</span>
                   </>
                 ) : (
                   <>
@@ -833,10 +833,10 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
             width: '100%',
             boxSizing: 'border-box'
           }}>
-            <OnScreenCertificatePreview 
-              userName={userName} 
-              certificateId={certificateId} 
-              config={config} 
+            <OnScreenCertificatePreview
+              userName={userName}
+              certificateId={certificateId}
+              config={config}
             />
           </main>
 
@@ -852,11 +852,11 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
             zIndex: -999,
             overflow: 'hidden'
           }}>
-            <PremiumCertificate 
-              userName={userName} 
-              innerRef={certificateRef} 
-              certificateId={certificateId} 
-              config={config} 
+            <PremiumCertificate
+              userName={userName}
+              innerRef={certificateRef}
+              certificateId={certificateId}
+              config={config}
             />
           </div>
 
