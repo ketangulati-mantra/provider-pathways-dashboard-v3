@@ -47,11 +47,14 @@ function App() {
         return cleanTask.split('?')[0];
       }
 
-      // Priority 1: Check window.location.hash for SPA client routes e.g. #/task/ocd-certificate, #/ocd-certificate, #ocd-certificate
+      // Priority 1: Check window.location.hash for SPA client routes e.g. #/admin/dashboard, #/admin, #/task/introduction
       if (window.location.hash) {
         const rawHash = window.location.hash.replace(/^#\/?/, '');
         if (rawHash) {
           const pathOnly = rawHash.split('?')[0];
+          if (pathOnly.startsWith('admin') || pathOnly.startsWith('dev')) {
+            return `/${pathOnly}`;
+          }
           const cleanPath = pathOnly.startsWith('task/') ? `/${pathOnly}` : (pathOnly.startsWith('/') ? pathOnly : `/task/${pathOnly}`);
           if (cleanPath.startsWith('/task/') || cleanPath.startsWith('/admin') || cleanPath.length > 1) {
             return cleanPath;
@@ -143,9 +146,19 @@ function App() {
   // Render view based on route path and service context
   const renderView = () => {
     const onBackCallback = () => handleExit();
-    const isAdminRoute = currentPath.startsWith('/admin') || currentPath === '/dev';
 
-    // 1. Try to resolve specific activity/lesson view first
+    // 1. Home Screen / Admin Dashboard Base Routes
+    if (
+      currentPath === '/' || 
+      currentPath === '/provider_activity' || 
+      currentPath === '/admin' || 
+      currentPath === '/admin/dashboard' || 
+      currentPath === '/dev'
+    ) {
+      return <DeveloperLessonsPage onNavigate={navigate} />;
+    }
+
+    // 2. Try to resolve specific activity/lesson view
     const resolvedView = resolveLessonView({
       currentPath,
       currentService,
@@ -157,23 +170,13 @@ function App() {
       return resolvedView;
     }
 
-    // 2. Admin Routes -> Developer/Admin Dashboard
-    if (isAdminRoute) {
-      return <DeveloperLessonsPage onNavigate={navigate} />;
-    }
-
     // 3. OCD Service Context Fallback -> OcdCertificatePage
     if (currentService === 'ocd' || currentService === 'ocdmantra' || currentService === 'ocd_mantra') {
       return <OcdCertificatePage onBack={onBackCallback} />;
     }
 
-    // 4. Default Root / Admin Views Dashboard (/ or /provider_activity)
-    if (currentPath === '/' || currentPath === '/provider_activity') {
-      return <DeveloperLessonsPage onNavigate={navigate} />;
-    }
-
-    // 5. Default Non-Admin Provider Fallback -> Introduction Lesson
-    return <IntroductionLessonPage onBack={onBackCallback} />;
+    // 4. Default Fallback -> DeveloperLessonsPage (Home Screen / Admin Dashboard)
+    return <DeveloperLessonsPage onNavigate={navigate} />;
   };
 
   return (
