@@ -790,28 +790,31 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Button
-                variant="primary"
+              <button
+                type="button"
                 onClick={handleDownload}
-                disabled={isDownloading || downloadState === 'downloading'}
+                disabled={isDownloading}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
                   padding: '10px 20px',
                   fontSize: '0.9rem',
-                  fontWeight: 800
+                  fontWeight: 800,
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                  color: '#ffffff',
+                  cursor: isDownloading ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 4px 12px rgba(37,99,235,0.3)',
+                  opacity: isDownloading ? 0.7 : 1,
+                  zIndex: 10
                 }}
               >
-                {isDownloading || downloadState === 'downloading' ? (
+                {isDownloading ? (
                   <>
                     <span className="animate-spin">⏳</span>
                     <span>Downloading...</span>
-                  </>
-                ) : downloadState === 'success' ? (
-                  <>
-                    <ShieldCheck size={16} />
-                    <span>Open Certificate</span>
                   </>
                 ) : (
                   <>
@@ -819,7 +822,7 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
                     <span>Download Certificate</span>
                   </>
                 )}
-              </Button>
+              </button>
             </div>
           </div>
 
