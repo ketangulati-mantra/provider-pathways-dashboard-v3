@@ -914,9 +914,6 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
                   />
                 </div>
 
-                <div style={{ background: '#eff6ff', padding: '10px 14px', borderRadius: '10px', border: '1px solid #bfdbfe', fontSize: '0.78rem', color: '#1e40af', fontWeight: 700, marginBottom: '14px' }}>
-                  📱 Phone App Note: Tap & Hold the image above to save directly to your Photos / Camera Roll!
-                </div>
 
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <a
