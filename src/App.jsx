@@ -117,12 +117,7 @@ function App() {
   const renderView = () => {
     const onBackCallback = () => handleExit();
 
-    // Default Root View (/ or /provider_activity): Admin Submissions Dashboard
-    if (currentPath === '/' || currentPath === '/provider_activity' || currentPath === '/admin' || currentPath === '/dev' || currentPath === '/admin/dashboard') {
-      return <DeveloperLessonsPage onNavigate={navigate} />;
-    }
-
-    // Use viewResolver to map route and service to appropriate lesson/activity component
+    // 1. Try to resolve specific activity/lesson view first
     const resolvedView = resolveLessonView({
       currentPath,
       currentService,
@@ -134,7 +129,12 @@ function App() {
       return resolvedView;
     }
 
-    // Default Fallback: Admin Submissions Dashboard
+    // 2. Default Root / Admin Views Dashboard (/ or /provider_activity)
+    if (currentPath === '/' || currentPath === '/provider_activity' || currentPath === '/admin' || currentPath === '/dev' || currentPath === '/admin/dashboard') {
+      return <DeveloperLessonsPage onNavigate={navigate} />;
+    }
+
+    // 3. Default Fallback: Admin Submissions Dashboard
     return <DeveloperLessonsPage onNavigate={navigate} />;
   };
 

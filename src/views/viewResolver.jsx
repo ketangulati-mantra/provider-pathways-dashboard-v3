@@ -188,7 +188,13 @@ export const resolveLessonView = ({ currentPath, currentService, onBack, activit
     currentPath.includes('download-ocd-certificate') || 
     currentPath.includes('ocd-download-certificate') || 
     currentPath.includes('ocd_certificate') ||
-    currentPath.includes('ocd-cert')
+    currentPath.includes('ocd-cert') ||
+    (typeof window !== 'undefined' && (
+      window.location.search.toLowerCase().includes('ocd-certificate') ||
+      window.location.search.toLowerCase().includes('ocd_certificate') ||
+      window.location.hash.toLowerCase().includes('ocd-certificate') ||
+      window.location.hash.toLowerCase().includes('ocd_certificate')
+    ))
   ) {
     return <OcdCertificatePage onBack={onBack} />;
   }
