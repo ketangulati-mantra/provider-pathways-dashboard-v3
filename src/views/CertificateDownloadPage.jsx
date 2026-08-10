@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Header, Button, useToast } from '../components';
 import { toPng } from 'html-to-image';
-import { Download, ArrowLeft, ShieldCheck, CheckCircle2, X } from 'lucide-react';
-import { openCertificate } from '../utils/certificateDownload';
+import { downloadCertificate, sanitizeFilename } from '../utils/certificateDownloadService';
 
 /* ==========================================================================
    1. Downloadable Certificate (Fixed 900px Landscape for HD PNG Generation)
@@ -630,22 +629,19 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
         return;
       }
 
-      const filename = `MantraCare-Certificate-${userName.trim().replace(/\s+/g, '_')}.png`;
+      const fileName = sanitizeFilename(`TherapyMantra_Certificate_${userName.trim().replace(/\s+/g, '_')}_${certificateId}.pdf`);
 
-      if (import.meta.env?.DEV || process.env.NODE_ENV !== 'production') {
-        console.log('[DevLog] Certificate Download Executed:', {
-          filename,
-          certificateId,
-          dataUrlSize: `${Math.round(dataUrl.length / 1024)} KB`,
-          isRNWebView: typeof window !== 'undefined' && !!window.ReactNativeWebView
-        });
-      }
-
-      const success = await openCertificate(dataUrl, filename, { showToast });
+      const success = await downloadCertificate({
+        dataUrl,
+        fileName,
+        userName,
+        certificateId,
+        showToast
+      });
 
       const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if (isMobile) {
-        setMobileSaveImage({ url: dataUrl, filename });
+      if (isMobile && dataUrl) {
+        setMobileSaveImage({ url: dataUrl, filename: fileName });
       }
 
       if (success) {
@@ -657,9 +653,9 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
         setDownloadState('error');
       }
     } catch (err) {
-      console.error('Error downloading certificate:', err);
+      console.error('[CertificateDownloadPage] Error downloading certificate:', err);
       setDownloadState('error');
-      showToast('Unable to download certificate. Please try again.', 'error');
+      showToast('Unable to download your certificate. Please try again.', 'error');
     } finally {
       setIsDownloading(false);
     }
