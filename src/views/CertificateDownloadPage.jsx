@@ -561,23 +561,21 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
     
     try {
       setIsDownloading(true);
-      // Wait to ensure fonts and layout are completely settled
-      await new Promise(resolve => setTimeout(resolve, 350));
+      // Wait to ensure fonts and DOM layout are completely rendered
+      await new Promise(resolve => setTimeout(resolve, 400));
 
       let dataUrl = '';
       try {
         dataUrl = await toPng(certificateRef.current, {
           pixelRatio: 2, 
           cacheBust: false,
-          skipFonts: true,
           backgroundColor: '#faf9f6'
         });
       } catch (err1) {
-        console.warn('toPng pixelRatio 2 failed, trying pixelRatio 1 fallback:', err1);
+        console.warn('toPng pixelRatio 2 failed, falling back to pixelRatio 1:', err1);
         dataUrl = await toPng(certificateRef.current, {
           pixelRatio: 1, 
           cacheBust: false,
-          skipFonts: true,
           backgroundColor: '#faf9f6'
         });
       }
@@ -585,7 +583,7 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
       const filename = `MantraCare-Certificate-${userName.trim().replace(/\s+/g, '_')}.png`;
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-      // 1. Try Native Web Share API first (Mobile Apps / iOS Safari / Android WebViews)
+      // 1. Web Share API for native mobile file sharing if supported
       if (isMobile && navigator.canShare && navigator.share) {
         try {
           const response = await fetch(dataUrl);
@@ -606,14 +604,16 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
             setIsDownloading(false);
             return;
           }
-          console.warn('Web share failed, trying direct download fallback:', shareErr);
+          console.warn('Web share failed, proceeding with direct download:', shareErr);
         }
       }
 
-      // 2. Direct Data URI Anchor Download (Works across Chrome, Safari, Android & WebViews)
+      // 2. Standard Programmatic Anchor File Download
       const link = document.createElement('a');
       link.href = dataUrl;
       link.download = filename;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
       link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
@@ -623,17 +623,15 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
           if (document.body.contains(link)) {
             document.body.removeChild(link);
           }
-        } catch (e) {
-          // ignore cleanup error
-        }
-      }, 1000);
+        } catch (e) {}
+      }, 2000);
 
-      // 3. For Mobile Phones & WebViews, also show the Save Certificate Modal for instant touch/long-press save
+      // 3. For Mobile devices/WebViews, present Save Certificate Overlay for instant tap/long-press save
       if (isMobile) {
         setMobileSaveImage({ url: dataUrl, filename });
       }
 
-      showToast('Certificate generated successfully!', 'success');
+      showToast('Certificate downloaded successfully!', 'success');
       
       if (onDownload) {
         onDownload();
@@ -807,16 +805,17 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
             />
           </main>
 
-          {/* Off-screen fixed 900px landscape certificate for HD PNG capture */}
+          {/* High resolution 900px landscape certificate capture target */}
           <div style={{
-            position: 'fixed',
-            left: '-9999px',
-            top: '-9999px',
+            position: 'absolute',
+            top: 0,
+            left: 0,
             width: '900px',
-            height: '650px',
-            overflow: 'hidden',
+            minHeight: '650px',
+            opacity: 0.001,
             pointerEvents: 'none',
-            zIndex: -9999
+            zIndex: -999,
+            overflow: 'hidden'
           }}>
             <PremiumCertificate 
               userName={userName} 
