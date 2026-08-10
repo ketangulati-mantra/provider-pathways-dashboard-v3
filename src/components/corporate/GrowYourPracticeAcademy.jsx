@@ -192,7 +192,8 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
   // 6: Mod 5 - Create Videos That Bring Clients
   // 7: Mod 6 - Weekly Growth Routine
   // 8: Completion Screen
-  const storageKey = `growth_academy_step_${brand.lessonId || 'grow-your-practice'}`;
+  const userId = getCurrentUserId();
+  const storageKey = `growth_academy_step_${userId}_${brand.lessonId || 'grow-your-practice'}`;
 
   const [currentStepIndex, setCurrentStepIndex] = useState(() => {
     try {

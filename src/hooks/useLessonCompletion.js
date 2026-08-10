@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { completeLesson, goToDashboard } from '../mantra';
+import { completeLesson, getCurrentUserId, goToDashboard } from '../mantra';
 import { useToast } from '../components';
 
 /**
@@ -21,7 +21,8 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
 
   const { showToast } = useToast();
   const isInitialMount = useRef(true);
-  const storageKey = `lesson_progress_${lessonId}`;
+  const userId = getCurrentUserId();
+  const storageKey = `lesson_progress_${userId}_${lessonId}`;
 
   const [completedSteps, setCompletedSteps] = useState(() => {
     try {

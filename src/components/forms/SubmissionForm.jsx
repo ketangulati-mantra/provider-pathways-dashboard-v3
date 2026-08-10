@@ -3,6 +3,7 @@ import { Upload, X, ShieldCheck, CheckCircle2, User, Mail, Phone, FileText } fro
 import { useToast, Button } from '../index';
 import { useActivitySubmission } from '../../hooks/useActivitySubmission';
 import { isValidEmail, isValidPhoneNumber } from '../../mantra/validation';
+import { getCurrentUserId } from '../../mantra';
 import PhoneInputWithCountry from './PhoneInputWithCountry';
 
 export default function SubmissionForm({ 
@@ -22,7 +23,8 @@ export default function SubmissionForm({
     ? isCompletedProp 
     : (() => {
         try {
-          const saved = localStorage.getItem(`lesson_progress_${lessonId}`);
+          const userId = getCurrentUserId();
+          const saved = localStorage.getItem(`lesson_progress_${userId}_${lessonId}`);
           if (saved) {
             const parsed = JSON.parse(saved);
             return !!parsed.celebrationShown || !!parsed.actionDone;
