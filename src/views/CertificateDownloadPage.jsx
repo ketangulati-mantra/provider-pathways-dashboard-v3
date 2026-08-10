@@ -556,36 +556,67 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
     setStep('preview');
   };
 
+  const [generatedImg, setGeneratedImg] = useState(null);
+
+  // Auto pre-render PNG when entering preview step so download link is instant & native HTML5
+  useEffect(() => {
+    if (step === 'preview' && certificateRef.current) {
+      let isMounted = true;
+      const prepareImage = async () => {
+        try {
+          await new Promise(resolve => setTimeout(resolve, 400));
+          const dataUrl = await toPng(certificateRef.current, {
+            pixelRatio: 2,
+            cacheBust: false,
+            backgroundColor: '#faf9f6'
+          });
+          if (isMounted) setGeneratedImg(dataUrl);
+        } catch (err) {
+          console.warn('Auto PNG pre-render fallback:', err);
+          try {
+            const dataUrl2 = await toPng(certificateRef.current, {
+              pixelRatio: 1,
+              cacheBust: false,
+              backgroundColor: '#faf9f6'
+            });
+            if (isMounted) setGeneratedImg(dataUrl2);
+          } catch (err2) {}
+        }
+      };
+      prepareImage();
+      return () => { isMounted = false; };
+    }
+  }, [step, userName]);
+
   const handleDownload = async () => {
-    if (!certificateRef.current) return;
-    
     try {
       setIsDownloading(true);
-      // Wait to ensure fonts and DOM layout are completely rendered
-      await new Promise(resolve => setTimeout(resolve, 400));
+      let dataUrl = generatedImg;
 
-      let dataUrl = '';
-      try {
-        dataUrl = await toPng(certificateRef.current, {
-          pixelRatio: 2, 
-          cacheBust: false,
-          backgroundColor: '#faf9f6'
-        });
-      } catch (err1) {
-        console.warn('toPng pixelRatio 2 failed, falling back to pixelRatio 1:', err1);
-        dataUrl = await toPng(certificateRef.current, {
-          pixelRatio: 1, 
-          cacheBust: false,
-          backgroundColor: '#faf9f6'
-        });
+      if (!dataUrl && certificateRef.current) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        try {
+          dataUrl = await toPng(certificateRef.current, {
+            pixelRatio: 2,
+            cacheBust: false,
+            backgroundColor: '#faf9f6'
+          });
+        } catch (e) {
+          dataUrl = await toPng(certificateRef.current, {
+            pixelRatio: 1,
+            cacheBust: false,
+            backgroundColor: '#faf9f6'
+          });
+        }
+        setGeneratedImg(dataUrl);
+      }
+
+      if (!dataUrl) {
+        showToast('Preparing certificate image, please try again in a moment.', 'info');
+        return;
       }
 
       const filename = `MantraCare-Certificate-${userName.trim().replace(/\s+/g, '_')}.png`;
-
-      // Convert Data URI to Blob & Blob URL (Required for Chrome, Safari & Android to trigger file download)
-      const blobRes = await fetch(dataUrl);
-      const blob = await blobRes.blob();
-      const blobUrl = URL.createObjectURL(blob);
 
       // 1. Post message to native React Native / iOS WKWebView / Android WebView bridge if embedded
       try {
@@ -603,42 +634,25 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
             filename
           });
         }
-      } catch (e) {
-        console.warn('Native postMessage skipped:', e);
-      }
+      } catch (e) {}
 
-      // 2. Standard Programmatic Anchor File Download
+      // 2. Direct Anchor Click File Download
       const link = document.createElement('a');
-      link.href = blobUrl;
+      link.href = dataUrl;
       link.download = filename;
+      link.target = '_blank';
       document.body.appendChild(link);
       link.click();
 
       setTimeout(() => {
         try {
-          if (document.body.contains(link)) {
-            document.body.removeChild(link);
-          }
+          if (document.body.contains(link)) document.body.removeChild(link);
         } catch (e) {}
-      }, 3000);
+      }, 2000);
 
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (isMobile) {
-        setMobileSaveImage({ url: dataUrl, blobUrl, filename });
-
-        // Optional Web Share API trigger
-        if (navigator.canShare && navigator.share) {
-          try {
-            const file = new File([blob], filename, { type: 'image/png' });
-            if (navigator.canShare({ files: [file] })) {
-              await navigator.share({
-                files: [file],
-                title: 'MantraCare Certificate',
-                text: `Certificate of Completion for ${userName.trim()}`
-              });
-            }
-          } catch (shareErr) {}
-        }
+        setMobileSaveImage({ url: dataUrl, filename });
       }
 
       showToast('Certificate generated & ready to save!', 'success');
@@ -781,21 +795,50 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
               <span>Back</span>
             </button>
 
-            <Button
-              variant="primary"
-              onClick={handleDownload}
-              disabled={isDownloading}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 20px',
-                fontSize: '0.9rem'
-              }}
-            >
-              {isDownloading ? <span className="animate-spin">⏳</span> : <Download size={16} />}
-              <span>{isDownloading ? 'Generating...' : 'Download PNG'}</span>
-            </Button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {generatedImg ? (
+                <a
+                  href={generatedImg}
+                  download={`MantraCare-Certificate-${userName.trim().replace(/\s+/g, '_')}.png`}
+                  onClick={() => {
+                    showToast('Certificate download initiated!', 'success');
+                    if (onDownload) onDownload();
+                  }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 20px',
+                    fontSize: '0.9rem',
+                    background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                    color: '#ffffff',
+                    borderRadius: '8px',
+                    fontWeight: 800,
+                    textDecoration: 'none',
+                    boxShadow: '0 4px 12px rgba(37,99,235,0.25)'
+                  }}
+                >
+                  <Download size={16} />
+                  <span>Download PNG</span>
+                </a>
+              ) : (
+                <Button
+                  variant="primary"
+                  onClick={handleDownload}
+                  disabled={isDownloading}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 20px',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  {isDownloading ? <span className="animate-spin">⏳</span> : <Download size={16} />}
+                  <span>{isDownloading ? 'Generating...' : 'Download PNG'}</span>
+                </Button>
+              )}
+            </div>
           </div>
 
           <main style={{
