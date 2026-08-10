@@ -16,7 +16,8 @@ const getWebhookContext = () => {
 };
 
 /**
- * Returns the current user_id from URL query params (e.g. ?user_id=...) or localStorage.
+ * Returns the current user_id from URL query params (e.g. ?user_id=... / ?upa_id=...),
+ * auth sessionStorage, or a unique guest session ID.
  */
 export const getCurrentUserId = (): string => {
   if (typeof window === 'undefined') return 'anonymous_user';
@@ -31,13 +32,31 @@ export const getCurrentUserId = (): string => {
     searchParams.get('user_id') ||
     searchParams.get('userId') ||
     searchParams.get('uid') ||
+    searchParams.get('upa_id') ||
+    searchParams.get('upaId') ||
+    searchParams.get('email') ||
     hashParams.get('user_id') ||
     hashParams.get('userId') ||
     hashParams.get('uid') ||
-    localStorage.getItem('mantra_user_id')
+    hashParams.get('upa_id') ||
+    hashParams.get('email') ||
+    localStorage.getItem('mantra_user_id') ||
+    localStorage.getItem('current_user')
   );
 
-  return foundId ? foundId.trim() : 'anonymous_user';
+  if (foundId) {
+    return foundId.trim();
+  }
+
+  // Generate a isolated unique guest session ID so each new account/session starts with fresh uncompleted activities
+  let guestId = localStorage.getItem('mantra_guest_session_id');
+  if (!guestId) {
+    guestId = 'guest_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+    try {
+      localStorage.setItem('mantra_guest_session_id', guestId);
+    } catch (e) {}
+  }
+  return guestId;
 };
 
 /**

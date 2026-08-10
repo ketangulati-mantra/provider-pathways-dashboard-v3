@@ -11,10 +11,26 @@ function App() {
   const envBase = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
 
   const getPath = () => {
-    // Priority 1: Check window.location.hash for SPA client routes e.g. #/admin/login or #/task/introduction?lang=fr
-    if (typeof window !== 'undefined' && window.location.hash && window.location.hash.startsWith('#/')) {
-      const rawHash = window.location.hash.slice(1);
-      return rawHash.split('?')[0];
+    if (typeof window !== 'undefined') {
+      // Priority 0: Check URL query parameters for task/lesson/activity passed by phone apps
+      const searchParams = new URLSearchParams(window.location.search);
+      const paramTask = searchParams.get('task') || searchParams.get('lesson_id') || searchParams.get('lessonId') || searchParams.get('lesson') || searchParams.get('activity') || searchParams.get('activityId') || searchParams.get('route');
+      if (paramTask) {
+        const cleanTask = paramTask.startsWith('/') ? paramTask : `/task/${paramTask}`;
+        return cleanTask.split('?')[0];
+      }
+
+      // Priority 1: Check window.location.hash for SPA client routes e.g. #/task/ocd-certificate, #/ocd-certificate, #ocd-certificate
+      if (window.location.hash) {
+        const rawHash = window.location.hash.replace(/^#\/?/, '');
+        if (rawHash) {
+          const pathOnly = rawHash.split('?')[0];
+          const cleanPath = pathOnly.startsWith('task/') ? `/${pathOnly}` : (pathOnly.startsWith('/') ? pathOnly : `/task/${pathOnly}`);
+          if (cleanPath.startsWith('/task/') || cleanPath.startsWith('/admin') || cleanPath.length > 1) {
+            return cleanPath;
+          }
+        }
+      }
     }
 
     let p = window.location.pathname;
@@ -41,6 +57,11 @@ function App() {
     } else if (p.startsWith('/provider_activity')) {
       p = p.slice('/provider_activity'.length) || '/';
     }
+
+    if (p && !p.startsWith('/task/') && !p.startsWith('/admin') && p !== '/' && p !== '/provider_activity') {
+      return `/task${p.startsWith('/') ? p : '/' + p}`;
+    }
+
     return p || '/';
   };
 

@@ -149,6 +149,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAdmin(null);
       setIsAuthenticated(false);
       setError(null);
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem('user_id');
+        sessionStorage.removeItem('admin_user');
+      }
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('mantra_user_id');
+        localStorage.removeItem('mantra_guest_session_id');
+      }
     }
   };
 

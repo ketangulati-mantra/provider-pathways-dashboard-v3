@@ -5,6 +5,7 @@ import { fetchAllSubmissions, reviewSubmissionStatus, fetchSubmissionAnalytics, 
 import { useToast } from './Toast';
 import { useAuth } from '../auth/AuthContext';
 import { activities as registeredActivities } from '../mantra/activities';
+import { COUNTRY_LIST } from '../utils/countryData';
 
 /* Interactive Photo Preview Modal with Zoom & Drag Support */
 function InteractiveImageModal({ imageUrl, onClose }) {
@@ -412,6 +413,11 @@ export default function SubmissionsTable() {
   const [activitySearchTerm, setActivitySearchTerm] = useState('');
   const activityDropdownRef = useRef(null);
 
+  // Custom Searchable Country Selector state
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const [countrySearchTerm, setCountrySearchTerm] = useState('');
+  const countryDropdownRef = useRef(null);
+
   // Time period filter state for Submission Portal
   const [selectedTimePeriod, setSelectedTimePeriod] = useState('all_time');
   const [tableCustomStartDate, setTableCustomStartDate] = useState('');
@@ -441,6 +447,9 @@ export default function SubmissionsTable() {
     const handleClickOutside = (e) => {
       if (activityDropdownRef.current && !activityDropdownRef.current.contains(e.target)) {
         setIsActivityDropdownOpen(false);
+      }
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target)) {
+        setIsCountryDropdownOpen(false);
       }
       if (filterSettingsRef.current && !filterSettingsRef.current.contains(e.target)) {
         setIsFilterSettingsOpen(false);
@@ -584,6 +593,74 @@ export default function SubmissionsTable() {
     }
   };
 
+  // Country & Video Filter Helper Functions
+  const extractSubmissionCountry = (item) => {
+    if (!item) return '';
+    const data = item.form_data || item.submission_data || item.formData || item.submissionData || {};
+    let raw = item.country || item.country_name || item.countryName || data.country || data.countryName || data.country_name || data.userCountry || data.location;
+    if (raw && typeof raw === 'string' && raw.trim() && !['undefined', 'null', 'n/a'].includes(raw.trim().toLowerCase())) {
+      const val = raw.trim();
+      const matchedByCode = COUNTRY_LIST.find(c => c.code.toLowerCase() === val.toLowerCase());
+      if (matchedByCode) return matchedByCode.name;
+      return val;
+    }
+    const codeVal = item.country_code || item.countryCode || data.countryCode || data.country_code || data.dialCode;
+    if (codeVal) {
+      const codeStr = String(codeVal).trim();
+      const matchedByCode = COUNTRY_LIST.find(c => c.code.toLowerCase() === codeStr.toLowerCase() || c.dialCode === codeStr);
+      if (matchedByCode) return matchedByCode.name;
+    }
+    const phoneStr = data.phone || data.phoneNumber || item.phone || '';
+    if (phoneStr && typeof phoneStr === 'string') {
+      const trimmedPhone = phoneStr.trim();
+      const matchedByDial = COUNTRY_LIST.find(c => trimmedPhone.startsWith(c.dialCode));
+      if (matchedByDial) return matchedByDial.name;
+    }
+    return '';
+  };
+
+  const isVideoSkipped = (item) => {
+    if (!item) return false;
+    const data = item.form_data || item.submission_data || item.formData || item.submissionData || {};
+    const subType = String(item.submission_type || item.submissionType || '').toLowerCase();
+    return (
+      item.video_skipped === true ||
+      item.video_skipped === 'true' ||
+      subType === 'skipped_video' ||
+      subType === 'no_video' ||
+      subType === 'skipped' ||
+      data.skippedVideo === true ||
+      data.videoSkipped === true ||
+      data.video_skipped === true ||
+      data.skipped === true ||
+      data.videoStatus === 'skipped' ||
+      data.video_status === 'skipped'
+    );
+  };
+
+  const hasUploadedVideo = (item) => {
+    if (!item) return false;
+    if (isVideoSkipped(item)) return false;
+    const data = item.form_data || item.submission_data || item.formData || item.submissionData || {};
+    const subType = String(item.submission_type || item.submissionType || '').toLowerCase();
+    const proofUrl = String(item.proof_url || data.videoUrl || data.video_url || data.fileUrl || data.url || '').toLowerCase();
+    return (
+      subType.includes('video') ||
+      !!data.videoUrl ||
+      !!data.video_url ||
+      !!data.videoPublicId ||
+      !!data.video_public_id ||
+      !!data.video ||
+      !!data.videoFilename ||
+      proofUrl.endsWith('.mp4') ||
+      proofUrl.endsWith('.webm') ||
+      proofUrl.endsWith('.mov') ||
+      proofUrl.includes('vimeo') ||
+      proofUrl.includes('youtube') ||
+      proofUrl.includes('cloudinary')
+    );
+  };
+
   // Filter submissions by selected date, activity, status, and reviewer
   const filteredSubmissions = submissions.filter(item => {
     // 1. Time Period Filter
@@ -632,19 +709,21 @@ export default function SubmissionsTable() {
 
     // 6. Country Filter
     if (filterVisibility.country && selectedCountry !== 'all') {
-      const itemCountry = (item.country || item.formData?.country || item.submissionData?.country || '').toLowerCase();
-      if (itemCountry !== selectedCountry.toLowerCase()) {
+      const itemCountry = extractSubmissionCountry(item);
+      if (itemCountry.toLowerCase() !== selectedCountry.toLowerCase()) {
         return false;
       }
     }
 
     // 7. Skipped Video Filter
     if (filterVisibility.skippedVideo && selectedSkippedVideo !== 'all') {
-      const isSkipped = item.video_skipped === true || item.video_skipped === 'true' || item.formData?.videoSkipped === true || item.submissionData?.videoSkipped === true;
-      if (selectedSkippedVideo === 'skipped' && !isSkipped) {
+      const skipped = isVideoSkipped(item);
+      const uploaded = hasUploadedVideo(item);
+
+      if (selectedSkippedVideo === 'skipped' && !skipped) {
         return false;
       }
-      if (selectedSkippedVideo === 'uploaded' && isSkipped) {
+      if (selectedSkippedVideo === 'uploaded' && !uploaded) {
         return false;
       }
     }
@@ -652,12 +731,16 @@ export default function SubmissionsTable() {
     return true;
   });
 
-  // Extract unique countries
+  // Extract unique countries ONLY for which rows are available
   const uniqueCountries = Array.from(new Set(
     submissions
-      .map(s => s.country || s.formData?.country || s.submissionData?.country)
+      .map(extractSubmissionCountry)
       .filter(c => c && String(c).trim())
-  ));
+  )).sort();
+
+  const filteredCountryOptions = uniqueCountries.filter(c =>
+    c.toLowerCase().includes(countrySearchTerm.toLowerCase())
+  );
 
   // Extract unique services
   const uniqueServices = Array.from(new Set(
@@ -1513,20 +1596,150 @@ export default function SubmissionsTable() {
             </div>
           )}
 
-          {/* Country Filter */}
+          {/* Custom Searchable Country Selector */}
           {filterVisibility.country && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', maxWidth: '140px' }}>
-              <ExternalLink size={12} color="#64748b" style={{ flexShrink: 0 }} />
-              <select
-                value={selectedCountry}
-                onChange={(e) => setSelectedCountry(e.target.value)}
-                style={{ border: 'none', background: 'transparent', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, outline: 'none', cursor: 'pointer', maxWidth: '110px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}
+            <div ref={countryDropdownRef} style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCountryDropdownOpen(!isCountryDropdownOpen);
+                  setCountrySearchTerm('');
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: '#f8fafc',
+                  padding: '5px 10px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.76rem',
+                  fontWeight: 800,
+                  color: '#1e293b',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '180px',
+                  outline: 'none'
+                }}
               >
-                <option value="all">All Countries</option>
-                {uniqueCountries.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+                <ExternalLink size={12} color="#64748b" style={{ flexShrink: 0 }} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '120px' }}>
+                  {selectedCountry === 'all' ? 'All Countries' : selectedCountry}
+                </span>
+                <ChevronRight size={12} color="#64748b" style={{ transform: isCountryDropdownOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s ease', flexShrink: 0 }} />
+              </button>
+
+              {/* Dropdown Menu Card */}
+              {isCountryDropdownOpen && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    marginTop: '6px',
+                    width: '240px',
+                    background: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '10px',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
+                    zIndex: 99999,
+                    padding: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px'
+                  }}
+                  className="animate-fade-in"
+                >
+                  {/* Search Bar inside Selector */}
+                  <div style={{ position: 'relative', width: '100%' }}>
+                    <Search size={12} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                    <input
+                      type="text"
+                      placeholder="Search country..."
+                      value={countrySearchTerm}
+                      onChange={(e) => setCountrySearchTerm(e.target.value)}
+                      autoFocus
+                      style={{
+                        width: '100%',
+                        height: '30px',
+                        padding: '0 10px 0 28px',
+                        borderRadius: '6px',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '0.74rem',
+                        outline: 'none',
+                        background: '#f8fafc',
+                        color: '#0f172a',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+
+                  {/* Options List */}
+                  <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    {/* Option: All Countries */}
+                    <div
+                      onClick={() => {
+                        setSelectedCountry('all');
+                        setIsCountryDropdownOpen(false);
+                      }}
+                      style={{
+                        padding: '7px 10px',
+                        borderRadius: '6px',
+                        fontSize: '0.76rem',
+                        fontWeight: selectedCountry === 'all' ? 900 : 700,
+                        background: selectedCountry === 'all' ? '#eff6ff' : 'transparent',
+                        color: selectedCountry === 'all' ? '#2563eb' : '#334155',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}
+                      onMouseEnter={(e) => { if (selectedCountry !== 'all') e.currentTarget.style.background = '#f8fafc'; }}
+                      onMouseLeave={(e) => { if (selectedCountry !== 'all') e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <span>All Countries</span>
+                      {selectedCountry === 'all' && <CheckCircle2 size={13} color="#2563eb" />}
+                    </div>
+
+                    {/* Filtered Country Options */}
+                    {filteredCountryOptions.length === 0 ? (
+                      <div style={{ padding: '12px 10px', fontSize: '0.72rem', color: '#94a3b8', textAlign: 'center', fontWeight: 600 }}>
+                        No countries available
+                      </div>
+                    ) : (
+                      filteredCountryOptions.map((c) => {
+                        const isSelected = selectedCountry.toLowerCase() === c.toLowerCase();
+                        return (
+                          <div
+                            key={c}
+                            onClick={() => {
+                              setSelectedCountry(c);
+                              setIsCountryDropdownOpen(false);
+                            }}
+                            style={{
+                              padding: '7px 10px',
+                              borderRadius: '6px',
+                              fontSize: '0.76rem',
+                              fontWeight: isSelected ? 900 : 700,
+                              background: isSelected ? '#eff6ff' : 'transparent',
+                              color: isSelected ? '#2563eb' : '#334155',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between'
+                            }}
+                            onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = '#f8fafc'; }}
+                            onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
+                          >
+                            <span>{c}</span>
+                            {isSelected && <CheckCircle2 size={13} color="#2563eb" />}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -1887,7 +2100,7 @@ export default function SubmissionsTable() {
                   const data = item.form_data || item.submission_data || {};
                   const fullName = data.fullName || data.name || item.user_id;
                   const email = data.email;
-                  const country = data.country || data.countryName || data.city || 'United States';
+                  const country = extractSubmissionCountry(item) || data.country || data.countryName || 'United States';
                   const currentStatus = (item.status || 'pending').toLowerCase();
                   const statusStyle = STATUS_CONFIG[currentStatus] || STATUS_CONFIG.pending;
                   const currentReviewer = item.reviewed_by || 'Unassigned';

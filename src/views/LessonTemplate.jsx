@@ -38,6 +38,7 @@ export default function LessonTemplate({
     videoWatched,
     quizDone,
     checklistDone,
+    isCompleted,
     lessonProgress,
     showCelebrate,
     handleVideoComplete,
@@ -65,6 +66,7 @@ export default function LessonTemplate({
         onBack={onBack} 
         progress={lessonProgress}
         points={lesson.points}
+        isCompleted={isCompleted}
       />
 
       {/* Lesson Content Container */}
@@ -79,6 +81,30 @@ export default function LessonTemplate({
         gap: '24px'
       }}>
         
+        {isCompleted && (
+          <div style={{
+            background: '#ecfdf5',
+            border: '1px solid #a7f3d0',
+            borderRadius: '12px',
+            padding: '14px 18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <ShieldCheck size={22} color="#059669" />
+              <div>
+                <div style={{ fontWeight: 800, color: '#065f46', fontSize: '0.9rem' }}>Activity Already Completed</div>
+                <div style={{ color: '#047857', fontSize: '0.78rem' }}>You have completed this lesson. Your reward points have been awarded.</div>
+              </div>
+            </div>
+            <span style={{ background: '#059669', color: '#ffffff', padding: '4px 10px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 800 }}>
+              Verified
+            </span>
+          </div>
+        )}
+
         {/* Lesson Description Card */}
         <OverviewCard 
           description={lesson.description}

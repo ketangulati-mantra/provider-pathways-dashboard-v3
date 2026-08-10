@@ -159,12 +159,20 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
     goToDashboard();
   };
 
+  const isCompleted = 
+    completedSteps.celebrationShown === true || 
+    completedSteps.actionDone === true || 
+    (hasQuiz && completedSteps.quizDone) || 
+    (hasVideo && !hasQuiz && !hasAction && completedSteps.videoWatched) || 
+    lessonProgress === 100;
+
   return {
     videoWatched: completedSteps.videoWatched,
     quizDone: completedSteps.quizDone,
     checklistDone: completedSteps.checklistDone,
     scenarioAttempted: completedSteps.scenarioAttempted,
     actionDone: completedSteps.actionDone,
+    isCompleted,
     lessonProgress,
     showCelebrate,
     handleVideoComplete,

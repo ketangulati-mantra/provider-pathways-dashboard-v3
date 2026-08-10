@@ -160,7 +160,14 @@ const ROUTE_VIEW_REGISTRY = {
   '/task/yoga-market-profile': { default: YogaMarketProfileLessonPage },
   '/task/yoga-certificate': { default: YogaCertificatePage },
   '/task/ocd-certificate': { default: OcdCertificatePage },
-  '/task/ocd-provider-certificate': { default: OcdCertificatePage }
+  '/task/ocd-provider-certificate': { default: OcdCertificatePage },
+  '/task/download-ocd-certificate': { default: OcdCertificatePage },
+  '/task/ocd-download-certificate': { default: OcdCertificatePage },
+  '/task/ocd_certificate': { default: OcdCertificatePage },
+  '/ocd-certificate': { default: OcdCertificatePage },
+  '/ocd-provider-certificate': { default: OcdCertificatePage },
+  '/download-ocd-certificate': { default: OcdCertificatePage },
+  '/ocd_certificate': { default: OcdCertificatePage }
 };
 
 /**
@@ -172,6 +179,18 @@ export const resolveLessonView = ({ currentPath, currentService, onBack, activit
   if (routeMapping) {
     const Component = routeMapping[currentService] || routeMapping.default;
     return <Component onBack={onBack} />;
+  }
+
+  // Dynamic path matching for OCD Certificate
+  if (
+    currentPath.includes('ocd-certificate') || 
+    currentPath.includes('ocd-provider-certificate') || 
+    currentPath.includes('download-ocd-certificate') || 
+    currentPath.includes('ocd-download-certificate') || 
+    currentPath.includes('ocd_certificate') ||
+    currentPath.includes('ocd-cert')
+  ) {
+    return <OcdCertificatePage onBack={onBack} />;
   }
 
   // Dynamic path matching for /task/market-yourself/*, /task/ocd-market-yourself/*, /task/physio-market-yourself/*

@@ -59,9 +59,11 @@ export const Header = ({
   title,
   progress = null,
   points = null,
-  onBack
+  onBack,
+  isCompleted = false
 }) => {
   const { t } = useTranslation('shared');
+  const isDone = isCompleted || progress === 100;
 
   return (
     <header className="academy-header">
@@ -82,7 +84,14 @@ export const Header = ({
       </div>
 
       <div className="academy-header-title-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-        <h1 className="academy-header-title" style={{ flex: 1, minWidth: 0 }}>{title}</h1>
+        <h1 className="academy-header-title" style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span>{title}</span>
+          {isDone && (
+            <span style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', padding: '2px 8px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <CheckCircle2 size={13} color="#15803d" /> Completed
+            </span>
+          )}
+        </h1>
         {points !== null && (
           <span className="overview-meta-badge points" style={{ marginLeft: 'auto', padding: '4px 10px', flexShrink: 0, whiteSpace: 'nowrap' }}>
             <Award size={14} style={{ color: 'var(--color-accent-orange)', flexShrink: 0 }} />

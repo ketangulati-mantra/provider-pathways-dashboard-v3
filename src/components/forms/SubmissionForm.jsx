@@ -51,6 +51,9 @@ export default function SubmissionForm({
     successMessage,
   });
 
+  const [showFormAnyway, setShowFormAnyway] = useState(false);
+  const isCompletedView = (isSuccess || isAlreadyCompleted) && !showFormAnyway;
+
   const handleDragOver = (e) => {
     e.preventDefault();
     setIsDragging(true);
@@ -99,24 +102,20 @@ export default function SubmissionForm({
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Clear errors
-    setEmailError('');
-    setPhoneError('');
-
-    if (email.trim() && !isValidEmail(email)) {
+    if (email && !isValidEmail(email)) {
       setEmailError('Please enter a valid, active email address.');
-      showToast('Please enter a valid, non-disposable email address.', 'warning');
+      showToast('Please enter a valid email address.', 'warning');
       return;
     }
 
-    if (phone.trim() && !isValidPhoneNumber(phone, countryCode)) {
+    if (phone && !isValidPhoneNumber(phone, countryCode)) {
       setPhoneError('Invalid phone number for the selected country.');
       showToast('Please enter a valid phone number.', 'warning');
       return;
     }
 
     if (!file) {
-      showToast('Please upload a screenshot or file.', 'warning');
+      showToast("Please upload a screenshot or PDF document proof before submitting.", "warning");
       return;
     }
 
@@ -125,9 +124,11 @@ export default function SubmissionForm({
     await submit({
       file,
       formData: {
-        ...(fullName.trim() ? { fullName: fullName.trim() } : {}),
-        ...(email.trim() ? { email: email.trim() } : {}),
-        ...(fullPhone ? { phone: fullPhone } : {}),
+        fullName: fullName.trim() || 'Provider',
+        email: email.trim(),
+        phone: fullPhone,
+        countryCode: countryCode,
+        rawPhone: phone.trim(),
         submittedAt: new Date().toISOString()
       }
     });
@@ -140,42 +141,17 @@ export default function SubmissionForm({
   };
 
   return (
-    <div style={{
-      width: '100%',
-      marginTop: '16px',
-      background: '#ffffff',
-      borderRadius: '16px',
-      border: '1px solid #e2e8f0',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-      padding: '28px 24px',
-      boxSizing: 'border-box'
-    }}>
-      {isAlreadyCompleted ? (
-        <div style={{ textAlign: 'center', padding: '24px 16px', background: '#ecfdf5', borderRadius: '12px', border: '1px solid #a7f3d0' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#d1fae5', margin: '0 auto 14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <CheckCircle2 size={26} color="#059669" />
-          </div>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 800, marginBottom: '6px', color: '#065f46' }}>Activity Completed</h3>
-          <p style={{ fontSize: '0.85rem', color: '#047857', margin: '0 0 16px', lineHeight: '1.4' }}>
-            You have already submitted your proof for this activity. Resubmission is disabled to prevent duplicate entries.
-          </p>
-          <Button variant="secondary" onClick={handleCompleteClick} style={{ padding: '8px 20px', fontSize: '0.82rem' }}>
-            Return to Dashboard
-          </Button>
-        </div>
-      ) : !isSuccess ? (
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-          
-          <div style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '14px' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0 0 4px' }}>
-              {title}
-            </h3>
-            <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
-              Fill in your contact details and attach your activity proof document.
-            </p>
-          </div>
+    <div style={{ width: '100%', maxWidth: '440px', margin: '0 auto' }}>
+      {!isCompletedView && (
+        <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: '16px', textAlign: 'center' }}>
+          {title}
+        </h3>
+      )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      {!isCompletedView ? (
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div>
               <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left' }}>
                 <User size={14} color="#0284c7" /> Full Name
@@ -195,7 +171,7 @@ export default function SubmissionForm({
               </label>
               <input
                 type="email"
-                placeholder="name@example.com"
+                placeholder="Enter your active email address"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(''); }}
                 style={{
@@ -296,7 +272,6 @@ export default function SubmissionForm({
             </div>
           </div>
 
-          {/* Primary Submit Button */}
           <button
             type="submit"
             disabled={isSubmitting || !file}
@@ -319,15 +294,39 @@ export default function SubmissionForm({
           </button>
         </form>
       ) : (
-        <div style={{ textAlign: 'center', padding: '24px 0', background: '#f8fafc', borderRadius: '12px', border: '1px solid #eef0f3' }}>
+        <div style={{ textAlign: 'center', padding: '24px 16px', background: '#ecfdf5', borderRadius: '12px', border: '1px solid #a7f3d0' }}>
           <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#d1fae5', margin: '0 auto 14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <ShieldCheck size={24} color="#059669" />
+            <ShieldCheck size={26} color="#059669" />
           </div>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 800, marginBottom: '6px', color: '#0f172a' }}>{successTitle}</h3>
-          <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '20px' }}>{successMessage}</p>
-          <Button variant="primary" onClick={handleCompleteClick} style={{ padding: '10px 24px', fontSize: '0.88rem' }}>
-            {successButtonText}
-          </Button>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 800, marginBottom: '6px', color: '#065f46' }}>
+            {isAlreadyCompleted && !isSuccess ? "Activity Already Completed" : successTitle}
+          </h3>
+          <p style={{ fontSize: '0.85rem', color: '#047857', marginBottom: '20px' }}>
+            {isAlreadyCompleted && !isSuccess ? "You have already completed this activity. Your proof has been submitted and verified." : successMessage}
+          </p>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Button variant="primary" onClick={handleCompleteClick} style={{ padding: '10px 24px', fontSize: '0.88rem', background: '#059669' }}>
+              {successButtonText}
+            </Button>
+            {isAlreadyCompleted && !showFormAnyway && (
+              <button
+                type="button"
+                onClick={() => setShowFormAnyway(true)}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid #059669',
+                  color: '#059669',
+                  padding: '10px 18px',
+                  borderRadius: '10px',
+                  fontWeight: 700,
+                  fontSize: '0.84rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Re-submit Proof
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
