@@ -11,17 +11,17 @@ const dietConfig = {
   programName: 'Mantra Fit Provider Program',
   awardText: 'This certificate is proudly awarded to',
   completionText: 'for successfully completing the',
-  courseName: 'Diet Provider Pathway',
-  quote: '"Nourishing the body is an act of care. Thank you for guiding clients toward healthier lifestyles, balanced nutrition, and lifelong wellness."',
+  courseName: 'Fitness Provider Pathway',
+  quote: '"Empowering movement, strength, and physical well-being. Thank you for guiding clients toward active lifestyles, movement, and lifelong fitness."',
   authorizedBy: 'MantraCare',
   signatureText: 'Mantra Fit',
   stampText: 'Mantra Fit Stamp Verified',
   logoUrl: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1786002234/mantra_fit_logo_r2dlj9.png',
-  footer: 'Empowering health through nutrition. | mantra.fit',
-  certificateIdPrefix: 'MF-DPP',
-  congratsBadge: '🎉 DIET PROVIDER PATHWAY COMPLETE',
+  footer: 'Empowering health through fitness. | mantra.fit',
+  certificateIdPrefix: 'MF-FPP',
+  congratsBadge: '🎉 FITNESS PROVIDER PATHWAY COMPLETE',
   congratsHeading: 'You did it!',
-  congratsDescription: 'Completing the Diet Provider Pathway takes real courage. Enter your name to receive your certificate.',
+  congratsDescription: 'Completing the Fitness Provider Pathway takes real courage. Enter your name to receive your certificate.',
 };
 
 export default function DietCertificatePage({ onBack }) {
@@ -46,7 +46,7 @@ export default function DietCertificatePage({ onBack }) {
         <CompletionScreen
           points={REWARD_POINTS}
           title="Pathway Complete!"
-          subtitle="Congratulations on completing the Diet Provider Pathway."
+          subtitle="Congratulations on completing the Fitness Provider Pathway."
           onClose={handleCloseCelebration}
         />
       )}
