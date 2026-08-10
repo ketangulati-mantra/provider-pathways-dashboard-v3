@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Header, Button, useToast } from '../components';
 import { toPng } from 'html-to-image';
 import { Download, ArrowLeft, ShieldCheck, CheckCircle2, X } from 'lucide-react';
+import { openCertificate } from '../utils/certificateDownload';
 
 /* ==========================================================================
    1. Downloadable Certificate (Fixed 900px Landscape for HD PNG Generation)
@@ -640,56 +641,20 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
         });
       }
 
-      // 1. Post message to native React Native / iOS WKWebView / Android WebView bridge if embedded
-      try {
-        if (typeof window !== 'undefined' && window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === 'function') {
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'DOWNLOAD_CERTIFICATE',
-            action: 'download_certificate',
-            fileType: 'png',
-            dataUrl,
-            filename,
-            userName: userName.trim(),
-            certificateId,
-            title: config.certificateTitle || 'Certificate of Completion'
-          }));
-        } else if (typeof window !== 'undefined' && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.downloadCertificate) {
-          window.webkit.messageHandlers.downloadCertificate.postMessage({
-            dataUrl,
-            filename,
-            certificateId
-          });
-        }
-      } catch (e) {
-        console.warn('Native postMessage bridge skipped:', e);
-      }
-
-      // 2. Direct Anchor Click File Download for Web Browsers (Preserves Web Implementation)
-      if (typeof document !== 'undefined') {
-        const link = document.createElement('a');
-        link.href = dataUrl;
-        link.download = filename;
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-
-        setTimeout(() => {
-          try {
-            if (document.body.contains(link)) document.body.removeChild(link);
-          } catch (e) {}
-        }, 2000);
-      }
+      const success = await openCertificate(dataUrl, filename, { showToast });
 
       const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (isMobile) {
         setMobileSaveImage({ url: dataUrl, filename });
       }
 
-      setDownloadState('success');
-      showToast('Certificate generated & ready to save!', 'success');
-      
-      if (onDownload) {
-        onDownload();
+      if (success) {
+        setDownloadState('success');
+        if (onDownload) {
+          onDownload();
+        }
+      } else {
+        setDownloadState('error');
       }
     } catch (err) {
       console.error('Error downloading certificate:', err);
