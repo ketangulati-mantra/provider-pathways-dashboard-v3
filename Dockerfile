@@ -7,7 +7,7 @@ COPY backend/package*.json ./backend/
 
 # Install root & backend dependencies
 RUN npm ci || npm i
-RUN cd backend && (npm ci || npm
+RUN cd backend && (npm ci || npm i)
 
 # Copy source files
 COPY . .
@@ -29,8 +29,8 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/backend/dist ./backend/dist
 
 # Install production dependencies only
-RUN npm i --only=production
-RUN cd backend && npm i --only=production
+RUN npm ci --omit=dev || npm i --only=production
+RUN cd backend && (npm ci --omit=dev || npm i --only=production)
 
 EXPOSE 80
 CMD ["node", "backend/dist/server.js"]
