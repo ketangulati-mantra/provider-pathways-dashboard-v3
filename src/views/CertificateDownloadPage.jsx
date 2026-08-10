@@ -76,7 +76,6 @@ const PremiumCertificate = ({ userName, innerRef, certificateId, config }) => {
             src={config?.logoUrl || "https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg"} 
             alt={config?.programName || "MantraCare"} 
             style={{ height: '36px', maxWidth: '180px', objectFit: 'contain' }} 
-            crossOrigin="anonymous"
           />
         </div>
 
@@ -337,7 +336,6 @@ const OnScreenCertificatePreview = ({ userName, certificateId, config }) => {
             src={config?.logoUrl || "https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg"} 
             alt={config?.programName || "MantraCare"} 
             style={{ height: 'clamp(24px, 4.5vw, 34px)', maxWidth: '160px', objectFit: 'contain' }} 
-            crossOrigin="anonymous"
           />
         </div>
 
@@ -566,11 +564,23 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
       // Wait to ensure fonts and layout are completely settled
       await new Promise(resolve => setTimeout(resolve, 350));
 
-      const dataUrl = await toPng(certificateRef.current, {
-        pixelRatio: 3, 
-        cacheBust: true,
-        backgroundColor: '#faf9f6'
-      });
+      let dataUrl = '';
+      try {
+        dataUrl = await toPng(certificateRef.current, {
+          pixelRatio: 2, 
+          cacheBust: false,
+          skipFonts: true,
+          backgroundColor: '#faf9f6'
+        });
+      } catch (err1) {
+        console.warn('toPng pixelRatio 2 failed, trying pixelRatio 1 fallback:', err1);
+        dataUrl = await toPng(certificateRef.current, {
+          pixelRatio: 1, 
+          cacheBust: false,
+          skipFonts: true,
+          backgroundColor: '#faf9f6'
+        });
+      }
 
       const filename = `MantraCare-Certificate-${userName.trim().replace(/\s+/g, '_')}.png`;
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
