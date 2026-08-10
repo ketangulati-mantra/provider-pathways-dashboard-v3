@@ -630,7 +630,7 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
         return;
       }
 
-      const fileName = sanitizeFilename(`TherapyMantra_Certificate_${userName.trim().replace(/\s+/g, '_')}_${certificateId}.pdf`);
+      const fileName = sanitizeFilename(`TherapyMantra_Certificate_${userName.trim().replace(/\s+/g, '_')}_${certificateId}.png`, 'png');
 
       const success = await downloadCertificate({
         dataUrl,

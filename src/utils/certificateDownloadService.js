@@ -8,10 +8,13 @@
  */
 
 // Helper to sanitize filenames across Windows, macOS, Android & iOS
-export const sanitizeFilename = (name) => {
-  if (!name) return 'TherapyMantra_Certificate.pdf';
+export const sanitizeFilename = (name, defaultExt = 'png') => {
+  if (!name) return `TherapyMantra_Certificate.${defaultExt}`;
   const cleanName = name.trim().replace(/[^a-zA-Z0-9_\-.]/g, '_');
-  return cleanName.endsWith('.pdf') ? cleanName : `${cleanName}.pdf`;
+  if (cleanName.endsWith('.pdf') || cleanName.endsWith('.png')) {
+    return cleanName;
+  }
+  return `${cleanName}.${defaultExt}`;
 };
 
 // Validates PDF or PNG data URL / binary payload
@@ -19,15 +22,18 @@ export const validateCertificatePayload = (payload) => {
   if (!payload) return { valid: false, reason: 'Empty payload' };
 
   if (typeof payload === 'string') {
-    if (payload.startsWith('data:image/png') || payload.startsWith('data:application/pdf')) {
-      return { valid: true, mimeType: payload.split(';')[0].replace('data:', '') };
+    if (payload.startsWith('data:image/png') || payload.startsWith('data:image/jpeg')) {
+      return { valid: true, mimeType: payload.split(';')[0].replace('data:', ''), isImage: true };
     }
-    if (payload.startsWith('%PDF-')) {
-      return { valid: true, mimeType: 'application/pdf' };
+    if (payload.startsWith('data:application/pdf') || payload.startsWith('%PDF-')) {
+      return { valid: true, mimeType: 'application/pdf', isPdf: true };
+    }
+    if (payload.startsWith('data:')) {
+      return { valid: true, mimeType: payload.split(';')[0].replace('data:', '') };
     }
   }
 
-  return { valid: true, mimeType: 'application/pdf' };
+  return { valid: true, mimeType: 'application/octet-stream' };
 };
 
 /**
@@ -36,12 +42,11 @@ export const validateCertificatePayload = (payload) => {
 export const downloadCertificate = async ({
   url,
   dataUrl,
-  fileName = 'TherapyMantra_Certificate.pdf',
+  fileName = 'TherapyMantra_Certificate.png',
   userName = '',
   certificateId = '',
   showToast
 }) => {
-  const cleanFilename = sanitizeFilename(fileName);
   const targetPayload = dataUrl || url;
 
   // 1. Validation
@@ -59,6 +64,9 @@ export const downloadCertificate = async ({
     }
     return false;
   }
+
+  const defaultExt = validation.isPdf ? 'pdf' : 'png';
+  const cleanFilename = sanitizeFilename(fileName, defaultExt);
 
   // 2. Authentication Context Extraction
   let authData = { token: '', service: '', uid: '' };
@@ -123,8 +131,23 @@ export const downloadCertificate = async ({
   // 4. WEB BROWSER FILE DOWNLOAD (Preserves Web Implementation)
   if (typeof document !== 'undefined') {
     try {
+      let downloadUrl = targetPayload;
+      let createdBlobUrl = null;
+
+      // Convert Data URI to Blob URL for reliable browser downloading
+      if (typeof targetPayload === 'string' && targetPayload.startsWith('data:')) {
+        try {
+          const res = await fetch(targetPayload);
+          const blob = await res.blob();
+          createdBlobUrl = URL.createObjectURL(blob);
+          downloadUrl = createdBlobUrl;
+        } catch (blobErr) {
+          downloadUrl = targetPayload;
+        }
+      }
+
       const link = document.createElement('a');
-      link.href = targetPayload;
+      link.href = downloadUrl;
       link.download = cleanFilename;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
@@ -136,8 +159,11 @@ export const downloadCertificate = async ({
           if (document.body.contains(link)) {
             document.body.removeChild(link);
           }
+          if (createdBlobUrl) {
+            URL.revokeObjectURL(createdBlobUrl);
+          }
         } catch (e) { }
-      }, 2000);
+      }, 3000);
 
       if (showToast) {
         showToast('Certificate downloaded successfully.', 'success');
