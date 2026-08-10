@@ -216,7 +216,7 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
   const [isCompleted, setIsCompleted] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const lessonId = brand.lessonId || 'grow-your-practice';
-  const TOTAL_STEPS = 9;
+  const TOTAL_STEPS = 7;
 
   // 1. Fetch initial progress from DB on mount
   useEffect(() => {
@@ -594,7 +594,7 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
       <div style={{ maxWidth: '960px', margin: '0 auto', width: '100%', padding: '24px 16px', boxSizing: 'border-box', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
 
         {/* MODULE 1 - ANIMATED CLIENT JOURNEY */}
-        {(currentStepIndex <= 2) && (
+        {(currentStepIndex <= 0) && (
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }} className="animate-fade-in">
             <div>
               <div style={{ fontSize: '0.64rem', fontWeight: 800, color: brand.primaryColor, textTransform: 'uppercase', letterSpacing: '0.05em' }}>MODULE 1 OF 6</div>
@@ -633,8 +633,6 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
               videoUrl={brand?.youtubeVideos?.gettingClients || brand?.videos?.gettingClients || 'https://res.cloudinary.com/hxbamdqf/video/upload/v1785829768/vidssave.com_Getting_Clients_from_Mantra_Business_Growth_through_Platform_Visibility_1080P_o0lhmj.mp4'}
             />
 
-
-
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
               <button onClick={handleNext} style={{ padding: '9px 20px', borderRadius: '10px', border: 'none', background: brand.primaryColor, color: '#ffffff', fontWeight: 900, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 Next Module <ChevronRight size={16} />
@@ -643,8 +641,8 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
           </div>
         )}
 
-        {/* STEP 3: MODULE 2 - INTERACTIVE PROFILE AUDIT SCORE */}
-        {currentStepIndex === 3 && (
+        {/* STEP 1: MODULE 2 - INTERACTIVE PROFILE AUDIT SCORE */}
+        {currentStepIndex === 1 && (
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }} className="animate-fade-in">
             <div>
               <div style={{ fontSize: '0.64rem', fontWeight: 800, color: brand.primaryColor, textTransform: 'uppercase', letterSpacing: '0.05em' }}>MODULE 2 OF 6</div>
@@ -712,8 +710,8 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
           </div>
         )}
 
-        {/* STEP 4: MODULE 3 - WHERE & HOW TO PROMOTE (WITH AI CONTENT STUDIO CTA) */}
-        {currentStepIndex === 4 && (
+        {/* STEP 2: MODULE 3 - WHERE & HOW TO PROMOTE (WITH AI CONTENT STUDIO CTA) */}
+        {currentStepIndex === 2 && (
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }} className="animate-fade-in">
             <div>
               <div style={{ fontSize: '0.64rem', fontWeight: 800, color: brand.primaryColor, textTransform: 'uppercase', letterSpacing: '0.05em' }}>MODULE 3 OF 6</div>
@@ -784,8 +782,8 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
           </div>
         )}
 
-        {/* STEP 5: MODULE 4 - HELP FIRST, PROMOTE SECOND */}
-        {currentStepIndex === 5 && (
+        {/* STEP 3: MODULE 4 - HELP FIRST, PROMOTE SECOND */}
+        {currentStepIndex === 3 && (
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }} className="animate-fade-in">
             <div>
               <div style={{ fontSize: '0.64rem', fontWeight: 800, color: brand.primaryColor, textTransform: 'uppercase', letterSpacing: '0.05em' }}>MODULE 4 OF 6</div>
@@ -831,8 +829,8 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
           </div>
         )}
 
-        {/* STEP 6: MODULE 5 - CREATE VIDEOS THAT BRING CLIENTS */}
-        {currentStepIndex === 6 && (
+        {/* STEP 4: MODULE 5 - CREATE VIDEOS THAT BRING CLIENTS */}
+        {currentStepIndex === 4 && (
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '24px 22px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 12px 36px rgba(15, 23, 42, 0.04)' }} className="animate-fade-in">
             {/* Header Hero Banner */}
             <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: '18px', padding: '20px 22px', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', boxShadow: '0 8px 24px rgba(15, 23, 42, 0.12)' }}>
@@ -996,8 +994,8 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
           </div>
         )}
 
-        {/* STEP 7: MODULE 6 - WEEKLY GROWTH ROUTINE PLANNER */}
-        {currentStepIndex === 7 && (
+        {/* STEP 5: MODULE 6 - WEEKLY GROWTH ROUTINE PLANNER */}
+        {currentStepIndex === 5 && (
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }} className="animate-fade-in">
             <div>
               <div style={{ fontSize: '0.64rem', fontWeight: 800, color: brand.primaryColor, textTransform: 'uppercase', letterSpacing: '0.05em' }}>MODULE 6 OF 6</div>
@@ -1039,8 +1037,8 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
           </div>
         )}
 
-        {/* STEP 8: COMPLETION & PROVIDER INTRO VIDEO SUBMISSION */}
-        {currentStepIndex === 8 && (
+        {/* STEP 6: COMPLETION & PROVIDER INTRO VIDEO SUBMISSION */}
+        {(currentStepIndex >= 6) && (
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '32px 24px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }} className="animate-fade-in">
             {isCompleted ? (
               <div style={{ textAlign: 'center', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
