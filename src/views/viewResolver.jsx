@@ -56,6 +56,7 @@ import PhysioHowItWorksLessonPage from './PhysioHowItWorksLessonPage';
 import PhysioExerciseLibraryLessonPage from './PhysioExerciseLibraryLessonPage';
 import PhysioToolsLessonPage from './PhysioToolsLessonPage';
 import PhysioNudgingLessonPage from './PhysioNudgingLessonPage';
+import PhysioTrialVsRegularLessonPage from './PhysioTrialVsRegularLessonPage';
 import PhysioCertificatePage from './PhysioCertificatePage';
 import WomenWellnessPlanGuideLessonPage from './WomenWellnessPlanGuideLessonPage';
 import WomenWellnessResourcesLessonPage from './WomenWellnessResourcesLessonPage';
@@ -95,6 +96,7 @@ const ROUTE_VIEW_REGISTRY = {
   '/task/physio-exercise-library': { default: PhysioExerciseLibraryLessonPage },
   '/task/physio-tools': { default: PhysioToolsLessonPage },
   '/task/physio-nudging': { default: PhysioNudgingLessonPage },
+  '/task/physio-trial-vs-regular': { default: PhysioTrialVsRegularLessonPage },
   '/task/physio-certificate': { default: PhysioCertificatePage },
   '/task/women-wellness-plan-guide': { default: WomenWellnessPlanGuideLessonPage },
   '/task/women-wellness-resources': { default: WomenWellnessResourcesLessonPage },

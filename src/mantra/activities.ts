@@ -516,6 +516,15 @@ export const activities: Activity[] = [
     route: '/task/physio-nudging'
   },
   {
+    lessonId: 'physio-trial-vs-regular',
+    activityId: '',
+    services: ['physiotherapy'],
+    title: 'Trial Session vs Regular Sessions',
+    rewardPoints: 5,
+    estimatedDuration: '3 min',
+    route: '/task/physio-trial-vs-regular'
+  },
+  {
     lessonId: 'physio-certificate',
     activityId: '',
     services: ['physiotherapy'],
