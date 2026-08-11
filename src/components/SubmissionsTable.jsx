@@ -805,8 +805,9 @@ export default function SubmissionsTable() {
 
     // 5. Service Filter
     if (filterVisibility.service && selectedService !== 'all') {
-      const itemService = (item.service || item.formData?.service || '').toLowerCase();
-      if (itemService !== selectedService.toLowerCase()) {
+      const itemService = normalizeService(item.service || item.formData?.service || '');
+      const normSelected = normalizeService(selectedService);
+      if (itemService !== normSelected) {
         return false;
       }
     }

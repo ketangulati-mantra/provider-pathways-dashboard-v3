@@ -24,16 +24,26 @@ export default function DeveloperLessonsPage({ onNavigate }) {
   }, [isSuperAdmin, activeTab]);
 
   useEffect(() => {
-    const current = getCurrentService();
-    if (current && current !== 'all') {
-      setSelectedService(current);
+    const searchParams = new URLSearchParams(window.location.search || '');
+    let serviceInUrl = searchParams.get('service') || searchParams.get('source');
+
+    if (!serviceInUrl && window.location.hash) {
+      const hashQueryIndex = window.location.hash.indexOf('?');
+      if (hashQueryIndex !== -1) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(hashQueryIndex));
+        serviceInUrl = hashParams.get('service') || hashParams.get('source');
+      }
+    }
+
+    if (serviceInUrl) {
+      setSelectedService(normalizeService(serviceInUrl));
     } else {
       setSelectedService('all');
     }
 
     const handleServiceChange = (e) => {
       if (e.detail && e.detail.service) {
-        setSelectedService(e.detail.service);
+        setSelectedService(normalizeService(e.detail.service));
       }
     };
 
