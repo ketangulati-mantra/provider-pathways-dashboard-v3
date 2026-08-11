@@ -1,43 +1,219 @@
 /**
  * Platform-Aware Certificate Download Service
- * 
+ *
  * Supports:
- * 1. Web Browsers (Chrome, Safari, Firefox, Edge): Preserves native HTML5 file download (<a download>).
- * 2. React Native App (iOS & Android WebViews): Performs a real native file download by bridging
- *    the certificate data/PDF payload to the React Native container via window.ReactNativeWebView.postMessage.
+ * 1. Web Browsers:
+ *    - Chrome
+ *    - Safari
+ *    - Firefox
+ *    - Edge
+ *    Uses native HTML5 <a download>.
+ *
+ * 2. React Native WebView:
+ *    - Sends a DOWNLOAD_CERTIFICATE_NATIVE message
+ *      to the React Native container.
+ *
+ * IMPORTANT:
+ * The React Native application MUST have an onMessage handler
+ * for DOWNLOAD_CERTIFICATE_NATIVE and must perform the actual
+ * native file save/download.
  */
 
-// Helper to sanitize filenames across Windows, macOS, Android & iOS
-export const sanitizeFilename = (name, defaultExt = 'png') => {
-  if (!name) return `TherapyMantra_Certificate.${defaultExt}`;
-  const cleanName = name.trim().replace(/[^a-zA-Z0-9_\-.]/g, '_');
-  if (cleanName.endsWith('.pdf') || cleanName.endsWith('.png')) {
+/**
+ * Sanitize filename across Windows, macOS, Android and iOS.
+ */
+export const sanitizeFilename = (
+  name,
+  defaultExt = 'png'
+) => {
+  const fallback = `TherapyMantra_Certificate.${defaultExt}`;
+
+  if (!name || typeof name !== 'string') {
+    return fallback;
+  }
+
+  let cleanName = name
+    .trim()
+    .replace(/[^a-zA-Z0-9_\-.]/g, '_');
+
+  if (!cleanName) {
+    return fallback;
+  }
+
+  const lowerName = cleanName.toLowerCase();
+
+  const supportedExtensions = [
+    '.pdf',
+    '.png',
+    '.jpg',
+    '.jpeg'
+  ];
+
+  const hasExtension = supportedExtensions.some((ext) =>
+    lowerName.endsWith(ext)
+  );
+
+  if (hasExtension) {
     return cleanName;
   }
+
   return `${cleanName}.${defaultExt}`;
 };
 
-// Validates PDF or PNG data URL / binary payload
+
+/**
+ * Detect MIME type from a data URL.
+ */
+const getMimeTypeFromDataUrl = (dataUrl) => {
+  if (
+    typeof dataUrl !== 'string' ||
+    !dataUrl.startsWith('data:')
+  ) {
+    return null;
+  }
+
+  const match = dataUrl.match(/^data:([^;,]+)/i);
+
+  return match ? match[1].toLowerCase() : null;
+};
+
+
+/**
+ * Validate certificate payload.
+ */
 export const validateCertificatePayload = (payload) => {
-  if (!payload) return { valid: false, reason: 'Empty payload' };
+  if (!payload) {
+    return {
+      valid: false,
+      reason: 'Empty payload'
+    };
+  }
 
   if (typeof payload === 'string') {
-    if (payload.startsWith('data:image/png') || payload.startsWith('data:image/jpeg')) {
-      return { valid: true, mimeType: payload.split(';')[0].replace('data:', ''), isImage: true };
+    // PNG
+    if (
+      payload.startsWith('data:image/png')
+    ) {
+      return {
+        valid: true,
+        mimeType: 'image/png',
+        extension: 'png',
+        isImage: true
+      };
     }
-    if (payload.startsWith('data:application/pdf') || payload.startsWith('%PDF-')) {
-      return { valid: true, mimeType: 'application/pdf', isPdf: true };
+
+    // JPEG
+    if (
+      payload.startsWith('data:image/jpeg') ||
+      payload.startsWith('data:image/jpg')
+    ) {
+      return {
+        valid: true,
+        mimeType: 'image/jpeg',
+        extension: 'jpg',
+        isImage: true
+      };
     }
+
+    // PDF data URL
+    if (
+      payload.startsWith('data:application/pdf')
+    ) {
+      return {
+        valid: true,
+        mimeType: 'application/pdf',
+        extension: 'pdf',
+        isPdf: true
+      };
+    }
+
+    // Raw PDF
+    if (payload.startsWith('%PDF-')) {
+      return {
+        valid: true,
+        mimeType: 'application/pdf',
+        extension: 'pdf',
+        isPdf: true
+      };
+    }
+
+    // Other data URLs
     if (payload.startsWith('data:')) {
-      return { valid: true, mimeType: payload.split(';')[0].replace('data:', '') };
+      const mimeType = getMimeTypeFromDataUrl(payload);
+
+      return {
+        valid: true,
+        mimeType: mimeType || 'application/octet-stream',
+        extension: 'bin'
+      };
     }
   }
 
-  return { valid: true, mimeType: 'application/octet-stream' };
+  // URL / binary / other payload
+  return {
+    valid: true,
+    mimeType: 'application/octet-stream',
+    extension: 'bin'
+  };
 };
 
+
 /**
- * Downloads / exports the certificate natively or via web anchor
+ * Detect whether the page is running inside
+ * a React Native WebView.
+ */
+const isReactNativeWebView = () => {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.ReactNativeWebView !== 'undefined' &&
+    typeof window.ReactNativeWebView.postMessage === 'function'
+  );
+};
+
+
+/**
+ * Safely extract authentication information.
+ */
+const getAuthData = () => {
+  const authData = {
+    token: '',
+    service: '',
+    uid: ''
+  };
+
+  try {
+    if (typeof window === 'undefined') {
+      return authData;
+    }
+
+    authData.token =
+      localStorage.getItem('token') ||
+      sessionStorage.getItem('token') ||
+      '';
+
+    const params = new URLSearchParams(
+      window.location.search || ''
+    );
+
+    authData.service =
+      params.get('service') ||
+      params.get('source') ||
+      '';
+
+    authData.uid =
+      params.get('uid') ||
+      params.get('upa_id') ||
+      '';
+  } catch (error) {
+    // Ignore storage/access errors.
+  }
+
+  return authData;
+};
+
+
+/**
+ * Main certificate download function.
  */
 export const downloadCertificate = async ({
   url,
@@ -49,136 +225,290 @@ export const downloadCertificate = async ({
 }) => {
   const targetPayload = dataUrl || url;
 
-  // 1. Validation
-  const validation = validateCertificatePayload(targetPayload);
+  // ---------------------------------------------------------
+  // 1. VALIDATION
+  // ---------------------------------------------------------
+
+  const validation =
+    validateCertificatePayload(targetPayload);
+
   if (!validation.valid) {
-    if (import.meta.env?.DEV || process.env.NODE_ENV !== 'production') {
-      console.error('[CertificateDownloadService] Validation failed:', {
-        reason: validation.reason,
-        url,
-        dataLength: dataUrl ? dataUrl.length : 0
-      });
-    }
-    if (showToast) {
-      showToast('Unable to download your certificate. Please try again.', 'error');
-    }
+    console.error(
+      '[CertificateDownloadService] Validation failed:',
+      validation.reason
+    );
+
+    showToast?.(
+      'Unable to download your certificate. Please try again.',
+      'error'
+    );
+
     return false;
   }
 
-  const defaultExt = validation.isPdf ? 'pdf' : 'png';
-  const cleanFilename = sanitizeFilename(fileName, defaultExt);
+  // Determine correct extension.
+  const defaultExt =
+    validation.extension ||
+    (validation.isPdf ? 'pdf' : 'png');
 
-  // 2. Authentication Context Extraction
-  let authData = { token: '', service: '', uid: '' };
-  try {
-    if (typeof window !== 'undefined') {
-      authData.token = localStorage.getItem('token') || sessionStorage.getItem('token') || '';
-      const params = new URLSearchParams(window.location.search || '');
-      authData.service = params.get('service') || params.get('source') || '';
-      authData.uid = params.get('uid') || params.get('upa_id') || '';
-    }
-  } catch (e) { }
+  const cleanFilename =
+    sanitizeFilename(fileName, defaultExt);
 
-  const isRNWebView = typeof window !== 'undefined' && !!window.ReactNativeWebView;
 
-  // Development mode logging (Hides sensitive token)
-  if (import.meta.env?.DEV || process.env.NODE_ENV !== 'production') {
-    console.log('[CertificateDownloadService] Download Request:', {
-      fileName: cleanFilename,
-      certificateId,
-      mimeType: validation.mimeType,
-      isRNWebView,
-      hasAuthToken: !!authData.token,
-      payloadSize: targetPayload ? `${Math.round(targetPayload.length / 1024)} KB` : 'N/A'
-    });
+  // ---------------------------------------------------------
+  // 2. AUTH CONTEXT
+  // ---------------------------------------------------------
+
+  const authData = getAuthData();
+
+
+  // ---------------------------------------------------------
+  // 3. PLATFORM DETECTION
+  // ---------------------------------------------------------
+
+  const isRNWebView =
+    isReactNativeWebView();
+
+
+  // ---------------------------------------------------------
+  // DEBUG LOGGING
+  // ---------------------------------------------------------
+
+  if (
+    import.meta.env?.DEV ||
+    process.env.NODE_ENV !== 'production'
+  ) {
+    console.log(
+      '[CertificateDownloadService] Download Request:',
+      {
+        fileName: cleanFilename,
+        certificateId,
+        mimeType: validation.mimeType,
+        isRNWebView,
+        hasUrl: !!url,
+        hasDataUrl: !!dataUrl,
+        hasAuthToken: !!authData.token,
+        payloadSize: targetPayload
+          ? `${Math.round(
+            targetPayload.length / 1024
+          )} KB`
+          : 'N/A'
+      }
+    );
   }
 
-  // 3. REACT NATIVE NATIVE DOWNLOAD BRIDGE
+
+  // =========================================================
+  // 4. REACT NATIVE WEBVIEW
+  // =========================================================
+
   if (isRNWebView) {
     try {
-      if (showToast) {
-        showToast('Certificate ready - saving to device…', 'info');
-      }
+      showToast?.(
+        'Preparing your certificate…',
+        'info'
+      );
 
-      window.ReactNativeWebView.postMessage(JSON.stringify({
+      /**
+       * IMPORTANT:
+       *
+       * Prefer URL over Base64 whenever available.
+       *
+       * React Native should download the URL natively.
+       *
+       * If only dataUrl exists, React Native should
+       * decode the Base64 and save it natively.
+       */
+
+      const nativeMessage = {
         type: 'DOWNLOAD_CERTIFICATE_NATIVE',
+
         action: 'download_certificate',
-        fileType: validation.mimeType.includes('pdf') ? 'pdf' : 'png',
-        dataUrl: dataUrl || '',
-        url: url || '',
+
+        fileType: validation.isPdf
+          ? 'pdf'
+          : validation.isImage
+            ? validation.extension
+            : 'png',
+
+        mimeType: validation.mimeType,
+
         filename: cleanFilename,
-        userName: userName.trim(),
-        certificateId,
+
+        /**
+         * Prefer URL.
+         */
+        url: url || null,
+
+        /**
+         * Fallback when URL is unavailable.
+         */
+        dataUrl: dataUrl || null,
+
+        userName:
+          typeof userName === 'string'
+            ? userName.trim()
+            : '',
+
+        certificateId:
+          certificateId || '',
+
+        /**
+         * Only include auth if actually required
+         * by the native implementation.
+         */
         auth: {
-          token: authData.token,
-          service: authData.service,
-          uid: authData.uid
+          token: authData.token || '',
+          service: authData.service || '',
+          uid: authData.uid || ''
         }
-      }));
+      };
 
+      window.ReactNativeWebView.postMessage(
+        JSON.stringify(nativeMessage)
+      );
+
+      /**
+       * IMPORTANT:
+       *
+       * This means the request was successfully
+       * handed to React Native.
+       *
+       * It does NOT guarantee that the file
+       * has been saved yet.
+       */
       return true;
-    } catch (rnErr) {
-      if (import.meta.env?.DEV || process.env.NODE_ENV !== 'production') {
-        console.error('[CertificateDownloadService] Native postMessage bridge error:', rnErr);
-      }
-      if (showToast) {
-        showToast('Unable to download your certificate. Please try again.', 'error');
-      }
+
+    } catch (error) {
+      console.error(
+        '[CertificateDownloadService] Native bridge error:',
+        error
+      );
+
+      showToast?.(
+        'Unable to download your certificate. Please try again.',
+        'error'
+      );
+
       return false;
     }
   }
 
-  // 4. WEB BROWSER FILE DOWNLOAD (Preserves Web Implementation)
-  if (typeof document !== 'undefined') {
-    try {
-      let downloadUrl = targetPayload;
-      let createdBlobUrl = null;
 
-      // Convert Data URI to Blob URL for reliable browser downloading
-      if (typeof targetPayload === 'string' && targetPayload.startsWith('data:')) {
-        try {
-          const res = await fetch(targetPayload);
-          const blob = await res.blob();
-          createdBlobUrl = URL.createObjectURL(blob);
-          downloadUrl = createdBlobUrl;
-        } catch (blobErr) {
-          downloadUrl = targetPayload;
-        }
-      }
+  // =========================================================
+  // 5. WEB BROWSER DOWNLOAD
+  // =========================================================
 
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = cleanFilename;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-
-      setTimeout(() => {
-        try {
-          if (document.body.contains(link)) {
-            document.body.removeChild(link);
-          }
-          if (createdBlobUrl) {
-            URL.revokeObjectURL(createdBlobUrl);
-          }
-        } catch (e) { }
-      }, 3000);
-
-      if (showToast) {
-        showToast('Certificate downloaded successfully.', 'success');
-      }
-      return true;
-    } catch (webErr) {
-      if (import.meta.env?.DEV || process.env.NODE_ENV !== 'production') {
-        console.error('[CertificateDownloadService] Web download error:', webErr);
-      }
-      if (showToast) {
-        showToast('Unable to download your certificate. Please try again.', 'error');
-      }
-      return false;
-    }
+  if (
+    typeof window === 'undefined' ||
+    typeof document === 'undefined'
+  ) {
+    return false;
   }
 
-  return false;
+  try {
+    let downloadUrl = targetPayload;
+    let createdBlobUrl = null;
+
+
+    // -------------------------------------------------------
+    // Convert Data URL → Blob URL
+    // -------------------------------------------------------
+
+    if (
+      typeof targetPayload === 'string' &&
+      targetPayload.startsWith('data:')
+    ) {
+      try {
+        const response =
+          await fetch(targetPayload);
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to read certificate: ${response.status}`
+          );
+        }
+
+        const blob =
+          await response.blob();
+
+        createdBlobUrl =
+          URL.createObjectURL(blob);
+
+        downloadUrl =
+          createdBlobUrl;
+
+      } catch (error) {
+        console.warn(
+          '[CertificateDownloadService] Blob conversion failed, falling back to data URL:',
+          error
+        );
+
+        downloadUrl =
+          targetPayload;
+      }
+    }
+
+
+    // -------------------------------------------------------
+    // Create download link
+    // -------------------------------------------------------
+
+    const link =
+      document.createElement('a');
+
+    link.href = downloadUrl;
+    link.download = cleanFilename;
+
+    /**
+     * Don't use target="_blank".
+     * It is unnecessary for downloads and can cause
+     * unwanted behavior in some WebViews/browsers.
+     */
+    link.style.display = 'none';
+
+    document.body.appendChild(link);
+
+    link.click();
+
+
+    // -------------------------------------------------------
+    // Cleanup
+    // -------------------------------------------------------
+
+    setTimeout(() => {
+      try {
+        if (link.parentNode) {
+          link.parentNode.removeChild(link);
+        }
+
+        if (createdBlobUrl) {
+          URL.revokeObjectURL(createdBlobUrl);
+        }
+      } catch (error) {
+        // Ignore cleanup errors.
+      }
+    }, 3000);
+
+
+    showToast?.(
+      'Certificate downloaded successfully.',
+      'success'
+    );
+
+    return true;
+
+  } catch (error) {
+    console.error(
+      '[CertificateDownloadService] Web download error:',
+      error
+    );
+
+    showToast?.(
+      'Unable to download your certificate. Please try again.',
+      'error'
+    );
+
+    return false;
+  }
 };
