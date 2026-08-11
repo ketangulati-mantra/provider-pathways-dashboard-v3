@@ -48,17 +48,8 @@ export default function CorporateProgramController({ onBack }) {
     loadStatus();
   }, [userId]);
 
-  // Handle "YES, I'M INTERESTED" -> Save initial interest state in DB & Open Application Modal
-  const handleExpressInterest = async () => {
-    try {
-      await fetch(`${API_BASE}/api/corporate-program/interest`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-      });
-    } catch (err) {
-      console.error('[CorporateProgramController] Error setting interest:', err);
-    }
+  // Handle "YES, I'M INTERESTED" -> Open Application Modal (only form submission records entry)
+  const handleExpressInterest = () => {
     setShowAppModal(true);
   };
 

@@ -775,7 +775,7 @@ export default function CampusAdminDashboard() {
 
                   {/* Date Applied */}
                   <td style={{ padding: '6px 10px', color: '#64748b', fontSize: '0.74rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {new Date(app.submitted_at || app.updated_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {new Date(app.submitted_at || app.updated_at || Date.now()).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </td>
 
                   {/* Submissions Count Column */}

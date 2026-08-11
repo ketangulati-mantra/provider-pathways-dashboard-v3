@@ -132,7 +132,7 @@ export default function CampusApplicationDetailsDrawer({ isOpen, onClose, applic
           background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
           color: '#ffffff',
           display: 'flex',
-          justify: 'space-between',
+          justifyContent: 'space-between',
           alignItems: 'flex-start',
           gap: '16px'
         }}>
@@ -158,20 +158,24 @@ export default function CampusApplicationDetailsDrawer({ isOpen, onClose, applic
 
           <button
             onClick={onClose}
+            aria-label="Close"
             style={{
-              background: 'rgba(255, 255, 255, 0.15)',
-              border: '1px solid rgba(255, 255, 255, 0.25)',
+              background: 'rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.35)',
               borderRadius: '50%',
-              width: '32px',
-              height: '32px',
+              width: '34px',
+              height: '34px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: '#ffffff'
+              color: '#ffffff',
+              flexShrink: 0,
+              transition: 'all 0.15s ease',
+              marginTop: '0px'
             }}
           >
-            <X size={16} />
+            <X size={18} />
           </button>
         </div>
 
@@ -352,7 +356,7 @@ export default function CampusApplicationDetailsDrawer({ isOpen, onClose, applic
           background: '#ffffff',
           display: 'flex',
           alignItems: 'center',
-          justify: 'space-between',
+          justifyContent: 'space-between',
           gap: '12px',
           flexWrap: 'wrap'
         }}>

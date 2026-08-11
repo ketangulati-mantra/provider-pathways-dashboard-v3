@@ -54,7 +54,14 @@ function SubmissionDetailsModal({ app, isOpen, onClose }) {
               <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>
                 {app.full_name || 'Applicant Details'}
               </h3>
-              <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Submitted on {new Date(app.created_at || Date.now()).toLocaleDateString()}</div>
+              <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                Submitted on {(() => {
+                  const raw = app.submitted_at || app.updated_at || app.created_at;
+                  if (!raw) return 'N/A';
+                  const d = new Date(raw);
+                  return isNaN(d.getTime()) ? 'N/A' : d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                })()}
+              </div>
             </div>
           </div>
           <button
@@ -197,12 +204,17 @@ export default function CorporateAdminDashboard() {
         return <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '3px 8px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 800, whiteSpace: 'nowrap', display: 'inline-block' }}>Approved</span>;
       case 'rejected':
         return <span style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', padding: '3px 8px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 800, whiteSpace: 'nowrap', display: 'inline-block' }}>Rejected</span>;
+      case 'interested':
+      case 'NOT_APPLIED':
+        return <span style={{ background: '#faf5ff', color: '#7e22ce', border: '1px solid #e9d5ff', padding: '3px 8px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 800, whiteSpace: 'nowrap', display: 'inline-block' }}>Initial Interest</span>;
       default:
         return <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 800, whiteSpace: 'nowrap', display: 'inline-block' }}>Submitted</span>;
     }
   };
 
-  let rawApplications = applicationsData?.applications || [];
+  let rawApplications = (applicationsData?.applications || []).filter(
+    app => app.application_status !== 'interested' && (app.full_name || app.email)
+  );
 
   // Filter applications by Date Applied
   if (dateFilter !== 'all') {
@@ -210,7 +222,9 @@ export default function CorporateAdminDashboard() {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     rawApplications = rawApplications.filter(app => {
-      const appDate = new Date(app.created_at || Date.now());
+      const rawDate = app.submitted_at || app.updated_at || app.created_at;
+      if (!rawDate) return false;
+      const appDate = new Date(rawDate);
 
       switch (dateFilter) {
         case 'today':
@@ -500,9 +514,13 @@ export default function CorporateAdminDashboard() {
                 <tr key={app.id || app.user_id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s ease' }}>
 
                   {/* Applicant Name */}
-                  <td style={{ padding: '6px 10px', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${app.full_name || 'Applicant'} (${app.email})`}>
-                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.78rem' }}>{app.full_name || 'Applicant'}</div>
-                    <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>{app.email}</div>
+                  <td style={{ padding: '6px 10px', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={app.full_name ? `${app.full_name} (${app.email || 'No Email'})` : 'Initial Interest Lead'}>
+                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.78rem', color: app.full_name ? '#0f172a' : '#6b21a8' }}>
+                      {app.full_name || (app.application_status === 'interested' ? 'Initial Interest Candidate' : 'Applicant Candidate')}
+                    </div>
+                    <div style={{ fontSize: '0.68rem', color: app.email ? '#64748b' : '#9333ea', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {app.email || (app.application_status === 'interested' ? 'Awaiting Full Form Submission' : 'Pending Details')}
+                    </div>
                   </td>
 
                   {/* Location / City */}
@@ -525,7 +543,12 @@ export default function CorporateAdminDashboard() {
 
                   {/* Date Applied */}
                   <td style={{ padding: '6px 10px', color: '#64748b', fontSize: '0.74rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {new Date(app.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {(() => {
+                      const rawDate = app.submitted_at || app.updated_at || app.created_at || app.submittedAt;
+                      if (!rawDate) return 'N/A';
+                      const d = new Date(rawDate);
+                      return isNaN(d.getTime()) ? 'N/A' : d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    })()}
                   </td>
 
                   {/* Current Status Badge */}

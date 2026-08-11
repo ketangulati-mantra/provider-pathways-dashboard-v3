@@ -125,6 +125,7 @@ export class CorporateRepository {
     try {
       const rows = await sql`
         SELECT * FROM corporate_partner_applications
+        WHERE application_status != 'interested' AND (full_name != '' OR email != '')
         ORDER BY submitted_at DESC;
       `;
       let apps = rows as unknown as CorporateApplicationRecord[];

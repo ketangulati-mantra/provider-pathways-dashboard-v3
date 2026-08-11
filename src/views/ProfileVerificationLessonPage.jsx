@@ -16,7 +16,7 @@ const STEPS = [
   'Open Profile Verification',
   'Complete Your Profile',
   'Submit For Verification',
-  'Upload Screenshot'
+  'Upload Email Screenshot'
 ];
 
 export default function ProfileVerificationLessonPage({ onBack }) {
@@ -72,7 +72,7 @@ export default function ProfileVerificationLessonPage({ onBack }) {
           </h1>
           
           <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: '0 0 32px', lineHeight: '1.5' }}>
-            A verified profile builds trust and helps you receive more bookings. Follow the simple steps below to complete your onboarding.
+            A verified profile builds trust and helps you receive more bookings. Complete verification, then upload a screenshot of your received verification email.
           </p>
 
           <Button 
@@ -125,7 +125,8 @@ export default function ProfileVerificationLessonPage({ onBack }) {
 
           <div style={{ width: '100%', marginTop: '32px', paddingTop: '32px', borderTop: '1px solid #eef0f3' }}>
             <SubmissionForm 
-              title="Upload Proof"
+              title="Upload Verification Email Screenshot"
+              proofInstruction="Please upload a screenshot of the received email confirming your profile verification. Do NOT upload ID cards or identity documents."
               lessonId={LESSON_ID}
               activityTitle={LESSON_TITLE}
               onSuccess={handleActionComplete}

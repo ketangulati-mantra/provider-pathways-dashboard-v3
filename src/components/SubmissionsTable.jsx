@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { Search, RefreshCw, Download, FileSpreadsheet, Calendar, User, ExternalLink, Filter, ChevronRight, X, Sparkles, Database, Layers, CheckCircle2, ZoomIn, ZoomOut, RotateCcw, Clock, Eye, Mail, Image, FileText, Phone, Trash2, Plus, BarChart3, Users, Video } from 'lucide-react';
+import { Search, RefreshCw, Download, FileSpreadsheet, Calendar, User, ExternalLink, Filter, ChevronRight, X, Sparkles, Database, Layers, CheckCircle2, ZoomIn, ZoomOut, RotateCcw, Clock, Eye, Mail, Image, FileText, Phone, Trash2, Plus, BarChart3, Users, Video, VideoOff } from 'lucide-react';
 import { fetchAllSubmissions, reviewSubmissionStatus, fetchSubmissionAnalytics, fetchAdminReviewers, addAdminReviewer, deleteAdminReviewer, fetchSubmissionActivities } from '../mantra/api';
 import { useToast } from './Toast';
 import { useAuth } from '../auth/AuthContext';
@@ -2675,6 +2675,24 @@ export default function SubmissionsTable() {
                             {reviewer}
                           </span>
                         </div>
+                        {(() => {
+                          const rawV = selectedSubmission.videoUrl || selectedSubmission.video_url || selectedSubmission.video || data.videoUrl || data.video_url || data.videoLink || data.video || data.url || data.file || '';
+                          const cleanV = normalizeImageUrl(rawV);
+                          return (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <span style={{ fontSize: '0.64rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Video Status:</span>
+                              {cleanV ? (
+                                <span style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid #bbf7d0', background: '#f0fdf4', color: '#16a34a', fontWeight: 800, fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  <Video size={11} color="#16a34a" /> Uploaded
+                                </span>
+                              ) : (
+                                <span style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid #fde68a', background: '#fffbe6', color: '#b45309', fontWeight: 800, fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  <VideoOff size={11} color="#b45309" /> Skipped
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
 
                     </div>
@@ -2749,20 +2767,48 @@ export default function SubmissionsTable() {
                 );
               })()}
 
-              {/* Card 5: Uploaded Video Attachment (Always visible) */}
+              {/* Card 5: Uploaded Video / Video Skipped Status (Always visible) */}
               {(() => {
                 const fd = selectedSubmission.form_data || selectedSubmission.submission_data || {};
-                const vUrl = selectedSubmission.videoUrl || selectedSubmission.video_url || selectedSubmission.video || fd.videoUrl || fd.video_url || fd.videoLink || fd.url || fd.file || '';
+                const rawVUrl = selectedSubmission.videoUrl || selectedSubmission.video_url || selectedSubmission.video || fd.videoUrl || fd.video_url || fd.videoLink || fd.video || fd.url || fd.file || '';
+                const cleanVUrl = normalizeImageUrl(rawVUrl);
+                const isSkippedVideo = !!(
+                  selectedSubmission.skipped_video ||
+                  selectedSubmission.video_skipped ||
+                  selectedSubmission.skipped ||
+                  fd.skipped_video ||
+                  fd.video_skipped ||
+                  fd.skipped ||
+                  fd.skippedVideo ||
+                  fd.videoSkipped ||
+                  selectedSubmission.video_url === 'skipped' ||
+                  fd.video_url === 'skipped' ||
+                  fd.videoUrl === 'skipped' ||
+                  !cleanVUrl
+                );
+
                 return (
                   <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '14px 16px' }}>
-                    <h4 style={{ margin: '0 0 10px', fontSize: '0.76rem', color: '#0f172a', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      Uploaded Video
-                    </h4>
-                    {vUrl ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                      <h4 style={{ margin: 0, fontSize: '0.76rem', color: '#0f172a', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        Introduction Video
+                      </h4>
+                      {cleanVUrl ? (
+                        <span style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid #bbf7d0', background: '#f0fdf4', color: '#15803d', fontWeight: 800, fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <Video size={12} color="#15803d" /> Video Uploaded
+                        </span>
+                      ) : (
+                        <span style={{ padding: '2px 10px', borderRadius: '6px', border: '1px solid #fde68a', background: '#fef3c7', color: '#b45309', fontWeight: 800, fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <VideoOff size={12} color="#b45309" /> Video Skipped
+                        </span>
+                      )}
+                    </div>
+
+                    {cleanVUrl ? (
                       <>
                         <div style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid #e2e8f0', background: '#000000' }}>
                           <video
-                            src={vUrl}
+                            src={cleanVUrl}
                             controls
                             preload="metadata"
                             style={{ width: '100%', maxHeight: '260px', display: 'block' }}
@@ -2778,7 +2824,7 @@ export default function SubmissionsTable() {
                             </div>
                           </div>
                           <a
-                            href={vUrl}
+                            href={cleanVUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid #bfdbfe', background: '#ffffff', color: '#2563eb', fontWeight: 700, fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none', cursor: 'pointer' }}
@@ -2788,12 +2834,14 @@ export default function SubmissionsTable() {
                         </div>
                       </>
                     ) : (
-                      <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '10px', border: '1px dashed #cbd5e1', textAlign: 'center' }}>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#f1f5f9', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
-                          <Eye size={18} />
+                      <div style={{ background: 'linear-gradient(135deg, #fffbe6 0%, #fef3c7 100%)', padding: '20px 16px', borderRadius: '10px', border: '1.5px dashed #f59e0b', textAlign: 'center' }}>
+                        <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#fef3c7', color: '#b45309', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px', border: '1px solid #fde68a' }}>
+                          <VideoOff size={22} />
                         </div>
-                        <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b' }}>No Video Uploaded</div>
-                        <div style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '2px' }}>Provider has not submitted an introduction video yet</div>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#92400e' }}>Video Step Skipped</div>
+                        <div style={{ fontSize: '0.74rem', color: '#b45309', marginTop: '4px', fontWeight: 600 }}>
+                          Provider opted to skip uploading an introduction video for this submission.
+                        </div>
                       </div>
                     )}
                   </div>

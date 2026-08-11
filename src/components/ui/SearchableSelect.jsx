@@ -262,7 +262,7 @@ export default function SearchableSelect({
                   padding: '10px 14px',
                   display: 'flex',
                   alignItems: 'center',
-                  justify: 'space-between',
+                  justifyContent: 'space-between',
                   cursor: 'pointer',
                   fontSize: '0.88rem',
                   background: isHighlighted ? '#eff6ff' : isSelected ? '#f8fafc' : 'transparent',

@@ -37,7 +37,7 @@ export default function AmbassadorHeader({ profile, onBack }) {
         color: '#ffffff',
         boxShadow: '0 20px 40px -15px rgba(15, 23, 42, 0.4)',
         display: 'flex',
-        justify: 'space-between',
+        justifyContent: 'space-between',
         alignItems: 'center',
         flexWrap: 'wrap',
         gap: '20px',

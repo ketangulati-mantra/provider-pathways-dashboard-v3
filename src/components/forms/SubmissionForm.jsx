@@ -6,12 +6,13 @@ import { isValidEmail, isValidPhoneNumber } from '../../mantra/validation';
 import { getCurrentUserId } from '../../mantra';
 import PhoneInputWithCountry from './PhoneInputWithCountry';
 
-export default function SubmissionForm({ 
-  onSuccess, 
+export default function SubmissionForm({
+  onSuccess,
   lessonId = "profile-verification",
   activityTitle = "Verify Your Profile",
   submissionType = "profile_verification",
   title = "Submit Your Proof",
+  proofInstruction,
   successTitle = "Submission received successfully.",
   successMessage = "Our team will review your proof shortly.",
   buttonText = "Submit Proof",
@@ -19,19 +20,19 @@ export default function SubmissionForm({
   isCompleted: isCompletedProp
 }) {
   // Check if activity is already completed in localStorage if prop is omitted
-  const isAlreadyCompleted = isCompletedProp !== undefined 
-    ? isCompletedProp 
+  const isAlreadyCompleted = isCompletedProp !== undefined
+    ? isCompletedProp
     : (() => {
-        try {
-          const userId = getCurrentUserId();
-          const saved = localStorage.getItem(`lesson_progress_${userId}_${lessonId}`);
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            return !!parsed.celebrationShown || !!parsed.actionDone;
-          }
-        } catch (e) {}
-        return false;
-      })();
+      try {
+        const userId = getCurrentUserId();
+        const saved = localStorage.getItem(`lesson_progress_${userId}_${lessonId}`);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return !!parsed.celebrationShown || !!parsed.actionDone;
+        }
+      } catch (e) { }
+      return false;
+    })();
   const { showToast } = useToast();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -49,6 +50,7 @@ export default function SubmissionForm({
     submissionType,
     successTitle,
     successMessage,
+    onSuccess
   });
 
   const [showFormAnyway, setShowFormAnyway] = useState(false);
@@ -59,8 +61,7 @@ export default function SubmissionForm({
     setIsDragging(true);
   };
 
-  const handleDragLeave = (e) => {
-    e.preventDefault();
+  const handleDragLeave = () => {
     setIsDragging(false);
   };
 
@@ -68,23 +69,19 @@ export default function SubmissionForm({
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
+      validateAndSetFile(e.dataTransfer.files[0]);
     }
   };
 
-  const handleFileSelect = (e) => {
+  const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
+      validateAndSetFile(e.target.files[0]);
     }
   };
 
-  const handleFile = (selectedFile) => {
-    const ext = selectedFile.name.split('.').pop()?.toLowerCase();
-    if (ext === 'pdf' || selectedFile.type === 'application/pdf') {
-      showToast("PDF files are not allowed. Please upload an image proof (PNG, JPG, JPEG, WEBP).", "warning");
-      return;
-    }
+  const validateAndSetFile = (selectedFile) => {
     const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    const ext = selectedFile.name.split('.').pop()?.toLowerCase() || '';
     if ((validTypes.includes(selectedFile.type) || ['png', 'jpg', 'jpeg', 'webp'].includes(ext)) && selectedFile.size <= 20 * 1024 * 1024) {
       setFile(selectedFile);
       reset();
@@ -106,7 +103,7 @@ export default function SubmissionForm({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (email && !isValidEmail(email)) {
       setEmailError('Please enter a valid, active email address.');
       showToast('Please enter a valid email address.', 'warning');
@@ -155,7 +152,7 @@ export default function SubmissionForm({
 
       {!isCompletedView ? (
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
-          
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div>
               <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left' }}>
@@ -248,7 +245,7 @@ export default function SubmissionForm({
                 ref={fileInputRef}
                 type="file"
                 accept="image/png,image/jpeg,image/jpg,image/webp"
-                onChange={handleFileSelect}
+                onChange={handleFileChange}
                 style={{ display: 'none' }}
               />
 
