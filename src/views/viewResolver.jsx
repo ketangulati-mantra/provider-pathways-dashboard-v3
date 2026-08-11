@@ -61,6 +61,7 @@ import PhysioCertificatePage from './PhysioCertificatePage';
 import WomenWellnessPlanGuideLessonPage from './WomenWellnessPlanGuideLessonPage';
 import WomenWellnessResourcesLessonPage from './WomenWellnessResourcesLessonPage';
 import WomenWellnessSensitiveDiscussionsLessonPage from './WomenWellnessSensitiveDiscussionsLessonPage';
+import WomenWellnessCertificatePage from './WomenWellnessCertificatePage';
 import CoachAccountabilityLessonPage from './CoachAccountabilityLessonPage';
 import CoachCertificatePage from './CoachCertificatePage';
 import DoctorPrescriptionLessonPage from './DoctorPrescriptionLessonPage';
@@ -101,6 +102,7 @@ const ROUTE_VIEW_REGISTRY = {
   '/task/women-wellness-plan-guide': { default: WomenWellnessPlanGuideLessonPage },
   '/task/women-wellness-resources': { default: WomenWellnessResourcesLessonPage },
   '/task/women-wellness-sensitive-discussions': { default: WomenWellnessSensitiveDiscussionsLessonPage },
+  '/task/women-wellness-certificate': { default: WomenWellnessCertificatePage },
   '/task/coach-accountability': { default: CoachAccountabilityLessonPage },
   '/task/coach-certificate': { default: CoachCertificatePage },
   '/task/doctor-prescription': { default: DoctorPrescriptionLessonPage },

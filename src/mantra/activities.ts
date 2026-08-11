@@ -561,6 +561,15 @@ export const activities: Activity[] = [
     route: '/task/women-wellness-sensitive-discussions'
   },
   {
+    lessonId: 'women-wellness-certificate',
+    activityId: '',
+    services: ['women_wellness'],
+    title: 'Download Your Women Wellness Provider Pathway Certificate',
+    rewardPoints: 0,
+    estimatedDuration: '1 min',
+    route: '/task/women-wellness-certificate'
+  },
+  {
     lessonId: 'coach-accountability',
     activityId: '',
     services: ['coaching'],
