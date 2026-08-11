@@ -152,10 +152,48 @@ const ROUTE_VIEW_REGISTRY = {
   '/task/refer-provider': { default: ReferProviderLessonPage },
   '/task/sales-partner': { default: SalesPartnerLessonPage },
   '/task/intern-certificate': { default: TherapyInternCertificatePage },
-  '/task/download-certificate': { default: CertificateDownloadPage, ocd: OcdCertificatePage, ocdmantra: OcdCertificatePage, ocd_mantra: OcdCertificatePage },
-  '/task/provider-certificate': { default: TherapyProviderCertificatePage, ocd: OcdCertificatePage, ocdmantra: OcdCertificatePage, ocd_mantra: OcdCertificatePage },
-  '/download-certificate': { default: CertificateDownloadPage, ocd: OcdCertificatePage, ocdmantra: OcdCertificatePage, ocd_mantra: OcdCertificatePage },
-  '/provider-certificate': { default: TherapyProviderCertificatePage, ocd: OcdCertificatePage, ocdmantra: OcdCertificatePage, ocd_mantra: OcdCertificatePage },
+  '/task/download-certificate': { 
+    default: CertificateDownloadPage, 
+    ocd: OcdCertificatePage, ocdmantra: OcdCertificatePage, ocd_mantra: OcdCertificatePage,
+    diet: DietCertificatePage,
+    physiotherapy: PhysioCertificatePage, physio: PhysioCertificatePage,
+    women_wellness: WomenWellnessCertificatePage, 'women-wellness': WomenWellnessCertificatePage, womenwellness: WomenWellnessCertificatePage, women: WomenWellnessCertificatePage,
+    coaching: CoachCertificatePage, coach: CoachCertificatePage,
+    psychiatry: DoctorCertificatePage, doctor: DoctorCertificatePage
+  },
+  '/task/provider-certificate': { 
+    default: TherapyProviderCertificatePage, 
+    ocd: OcdCertificatePage, ocdmantra: OcdCertificatePage, ocd_mantra: OcdCertificatePage,
+    diet: DietCertificatePage,
+    physiotherapy: PhysioCertificatePage, physio: PhysioCertificatePage,
+    women_wellness: WomenWellnessCertificatePage, 'women-wellness': WomenWellnessCertificatePage, womenwellness: WomenWellnessCertificatePage, women: WomenWellnessCertificatePage,
+    coaching: CoachCertificatePage, coach: CoachCertificatePage,
+    psychiatry: DoctorCertificatePage, doctor: DoctorCertificatePage
+  },
+  '/download-certificate': { 
+    default: CertificateDownloadPage, 
+    ocd: OcdCertificatePage, ocdmantra: OcdCertificatePage, ocd_mantra: OcdCertificatePage,
+    diet: DietCertificatePage,
+    physiotherapy: PhysioCertificatePage, physio: PhysioCertificatePage,
+    women_wellness: WomenWellnessCertificatePage, 'women-wellness': WomenWellnessCertificatePage, womenwellness: WomenWellnessCertificatePage, women: WomenWellnessCertificatePage,
+    coaching: CoachCertificatePage, coach: CoachCertificatePage,
+    psychiatry: DoctorCertificatePage, doctor: DoctorCertificatePage
+  },
+  '/provider-certificate': { 
+    default: TherapyProviderCertificatePage, 
+    ocd: OcdCertificatePage, ocdmantra: OcdCertificatePage, ocd_mantra: OcdCertificatePage,
+    diet: DietCertificatePage,
+    physiotherapy: PhysioCertificatePage, physio: PhysioCertificatePage,
+    women_wellness: WomenWellnessCertificatePage, 'women-wellness': WomenWellnessCertificatePage, womenwellness: WomenWellnessCertificatePage, women: WomenWellnessCertificatePage,
+    coaching: CoachCertificatePage, coach: CoachCertificatePage,
+    psychiatry: DoctorCertificatePage, doctor: DoctorCertificatePage
+  },
+  '/task/women-wellness-certificate': { default: WomenWellnessCertificatePage },
+  '/women-wellness-certificate': { default: WomenWellnessCertificatePage },
+  '/task/women-wellness-provider-certificate': { default: WomenWellnessCertificatePage },
+  '/women-wellness-provider-certificate': { default: WomenWellnessCertificatePage },
+  '/task/download-women-wellness-certificate': { default: WomenWellnessCertificatePage },
+  '/download-women-wellness-certificate': { default: WomenWellnessCertificatePage },
   '/task/top-listener-recognition': { default: TopListenerLessonPage },
   '/task/listener-certificate': { default: ListenerCertificatePage },
   '/task/yoga-pathway': { default: YogaPathwayLessonPage },
@@ -190,8 +228,24 @@ export const resolveLessonView = ({ currentPath, currentService, onBack, activit
     return <Component onBack={onBack} />;
   }
 
-  // Dynamic path matching for OCD Certificate
+  // Dynamic path matching for Women Wellness Certificate
   const fullUrl = typeof window !== 'undefined' ? window.location.href.toLowerCase() : '';
+  const isWomenWellnessCertMatch = 
+    currentPath.includes('women-wellness-certificate') || 
+    currentPath.includes('women_wellness_certificate') || 
+    currentPath.includes('women-wellness-provider-certificate') || 
+    currentPath.includes('download-women-wellness-certificate') || 
+    currentPath.includes('women-wellness-cert') ||
+    fullUrl.includes('women-wellness-certificate') ||
+    fullUrl.includes('women_wellness_certificate') ||
+    fullUrl.includes('women-wellness-provider-certificate') ||
+    (fullUrl.includes('women') && fullUrl.includes('wellness') && (fullUrl.includes('cert') || fullUrl.includes('download')));
+
+  if (isWomenWellnessCertMatch) {
+    return <WomenWellnessCertificatePage onBack={onBack} />;
+  }
+
+  // Dynamic path matching for OCD Certificate
   const isOcdCertMatch = 
     currentPath.includes('ocd-certificate') || 
     currentPath.includes('ocd-provider-certificate') || 
