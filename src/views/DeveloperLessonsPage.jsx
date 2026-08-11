@@ -3,7 +3,7 @@ import { Search, BookOpen, Database, Menu, GraduationCap, Building2, Clock, Arro
 import SubmissionsTable from '../components/SubmissionsTable';
 import CampusAdminDashboard from '../components/admin/CampusAdminDashboard';
 import CorporateAdminDashboard from '../components/admin/CorporateAdminDashboard';
-import { activities as mantraActivities, getCurrentService, setServiceContext, preserveQueryParams, SUPPORTED_SERVICES } from '../mantra';
+import { activities as mantraActivities, getCurrentService, setServiceContext, preserveQueryParams, SUPPORTED_SERVICES, normalizeService } from '../mantra';
 import { useAuth } from '../auth/AuthContext';
 
 const MANTRA_LOGO_URL = 'https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg';
@@ -58,11 +58,13 @@ export default function DeveloperLessonsPage({ onNavigate }) {
     const actServices = Array.isArray(act.services) ? act.services : (act.services ? [act.services] : ['*']);
     
     // 1. Check service match
+    const normSelected = normalizeService(selectedService);
     const matchesService = 
       selectedService === 'all' || 
+      normSelected === 'all' ||
       actServices.includes('*') || 
-      actServices.some(s => s.toLowerCase() === selectedService.toLowerCase()) || 
-      (act.service && act.service.toLowerCase() === selectedService.toLowerCase());
+      actServices.some(s => normalizeService(s) === normSelected) || 
+      (act.service && normalizeService(act.service) === normSelected);
 
     // 2. Check search query match
     const query = searchQuery.trim().toLowerCase();

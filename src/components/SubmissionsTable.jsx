@@ -853,10 +853,22 @@ export default function SubmissionsTable() {
       .filter(s => s && String(s).trim())
   ));
 
-  // Extract unique activity options across ALL database records & current page
+  // Extract unique activity options across registered activities, DB records & current page
   const uniqueActivitiesMap = new Map();
 
-  // 1. Include all distinct submitted activities fetched from entire DB across all pages
+  // 1. Include all registered activities from mantra/activities.ts
+  if (Array.isArray(registeredActivities)) {
+    registeredActivities.forEach(item => {
+      const titleVal = item.title || item.lessonId;
+      const formattedTitle = formatActivityTitle(titleVal, item.lessonId);
+      const key = item.lessonId || formattedTitle;
+      if (formattedTitle && !uniqueActivitiesMap.has(formattedTitle)) {
+        uniqueActivitiesMap.set(formattedTitle, { key, title: formattedTitle });
+      }
+    });
+  }
+
+  // 2. Include all distinct submitted activities fetched from entire DB across all pages
   if (Array.isArray(dbActivities)) {
     dbActivities.forEach(item => {
       const titleVal = item.title || item.activity_title || item.lesson_id;
@@ -868,7 +880,7 @@ export default function SubmissionsTable() {
     });
   }
 
-  // 2. Include any activity present in current page submissions
+  // 3. Include any activity present in current page submissions
   submissions.forEach(s => {
     const formattedTitle = formatActivityTitle(s.activity_title, s.lesson_id);
     const key = s.lesson_id || s.activity_title || formattedTitle;
