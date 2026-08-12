@@ -13,13 +13,51 @@ export default function DeveloperLessonsPage({ onNavigate }) {
   const isSuperAdmin = currentAdmin?.role === 'super_admin' || currentAdmin?.role === 'Super Admin';
   const [selectedService, setSelectedService] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('submissions');
+  const getInitialTab = () => {
+    if (typeof window !== 'undefined') {
+      const hash = (window.location.hash || '').toLowerCase();
+      if (hash.includes('campus')) return 'campus_admin';
+      if (hash.includes('corporate') || hash.includes('eap')) return 'corporate_admin';
+      if (hash.includes('users') || hash.includes('management')) return 'users';
+      if (hash.includes('lessons') || hash.includes('pathways')) return 'lessons';
+      if (hash.includes('submissions')) return 'submissions';
+      
+      const savedTab = sessionStorage.getItem('mantra_active_tab');
+      if (savedTab) return savedTab;
+    }
+    return 'submissions';
+  };
+
+  const [activeTab, setActiveTab] = useState(getInitialTab);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const searchInputRef = useRef(null);
 
+  const handleTabChange = (tabName) => {
+    setActiveTab(tabName);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('mantra_active_tab', tabName);
+      if (tabName === 'campus_admin') window.location.hash = '#/admin/campus';
+      else if (tabName === 'corporate_admin') window.location.hash = '#/admin/corporate';
+      else if (tabName === 'submissions') window.location.hash = '#/admin/dashboard';
+      else if (tabName === 'lessons') window.location.hash = '#/admin/pathways';
+    }
+  };
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = (window.location.hash || '').toLowerCase();
+      if (hash.includes('campus')) setActiveTab('campus_admin');
+      else if (hash.includes('corporate') || hash.includes('eap')) setActiveTab('corporate_admin');
+      else if (hash.includes('lessons') || hash.includes('pathways')) setActiveTab('lessons');
+      else if (hash.includes('submissions')) setActiveTab('submissions');
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   useEffect(() => {
     if (!isSuperAdmin && activeTab === 'lessons') {
-      setActiveTab('submissions');
+      handleTabChange('submissions');
     }
   }, [isSuperAdmin, activeTab]);
 
@@ -221,7 +259,7 @@ export default function DeveloperLessonsPage({ onNavigate }) {
               </div>
 
               <button
-                onClick={() => { setActiveTab('submissions'); setIsSidebarOpen(false); }}
+                onClick={() => { handleTabChange('submissions'); setIsSidebarOpen(false); }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -246,7 +284,7 @@ export default function DeveloperLessonsPage({ onNavigate }) {
               </button>
 
               <button
-                onClick={() => { setActiveTab('campus_admin'); setIsSidebarOpen(false); }}
+                onClick={() => { handleTabChange('campus_admin'); setIsSidebarOpen(false); }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -271,7 +309,7 @@ export default function DeveloperLessonsPage({ onNavigate }) {
               </button>
 
               <button
-                onClick={() => { setActiveTab('corporate_admin'); setIsSidebarOpen(false); }}
+                onClick={() => { handleTabChange('corporate_admin'); setIsSidebarOpen(false); }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -298,7 +336,7 @@ export default function DeveloperLessonsPage({ onNavigate }) {
               {/* Super Admin Only: Pathways Tab */}
               {isSuperAdmin && (
                 <button
-                  onClick={() => { setActiveTab('lessons'); setIsSidebarOpen(false); }}
+                  onClick={() => { handleTabChange('lessons'); setIsSidebarOpen(false); }}
                   style={{
                     display: 'flex',
                     alignItems: 'center',

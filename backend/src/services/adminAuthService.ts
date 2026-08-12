@@ -65,12 +65,17 @@ export async function getAllAdmins(): Promise<Omit<AdminRecord, 'password_hash'>
 }
 
 export async function countSuperAdmins(): Promise<number> {
-  const rows = await sql`
-    SELECT COUNT(*)::int as count
-    FROM admins
-    WHERE role IN ('super_admin', 'Super Admin') AND is_active = TRUE
-  `;
-  return rows[0]?.count || 0;
+  try {
+    const rows = await sql`
+      SELECT COUNT(*)::int as count
+      FROM admins
+      WHERE (role::text = 'super_admin' OR role::text = 'Super Admin') AND is_active = TRUE
+    `;
+    return rows[0]?.count || 0;
+  } catch (err) {
+    console.error('[countSuperAdmins] Error:', err);
+    return 1;
+  }
 }
 
 export async function createAdminRecord(data: {

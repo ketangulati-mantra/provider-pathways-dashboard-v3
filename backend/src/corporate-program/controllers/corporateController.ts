@@ -88,6 +88,18 @@ export async function getAdminCorporateApplications(req: Request, res: Response)
   }
 }
 
+export async function patchCorporateReviewer(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { reviewer, status } = req.body;
+    await corporateService.updateReviewer(id, reviewer, status);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[patchCorporateReviewer] Error:', err);
+    res.status(500).json({ success: false, error: 'Failed to update reviewer' });
+  }
+}
+
 // ── Learning Academy Endpoints ──
 
 export async function getLearningProgress(req: Request, res: Response): Promise<void> {

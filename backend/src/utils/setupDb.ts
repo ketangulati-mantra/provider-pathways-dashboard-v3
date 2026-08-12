@@ -328,6 +328,9 @@ export async function setupDb() {
           ALTER TABLE admins ALTER COLUMN role DROP DEFAULT;
           ALTER TABLE admins ALTER COLUMN role TYPE admin_role_type USING role::admin_role_type;
           ALTER TABLE admins ALTER COLUMN role SET DEFAULT 'admin'::admin_role_type;
+        ELSE
+          UPDATE admins SET role = 'super_admin'::admin_role_type WHERE role::text IN ('Super Admin', 'super_admin');
+          UPDATE admins SET role = 'admin'::admin_role_type WHERE role::text NOT IN ('super_admin') OR role IS NULL;
         END IF;
       END $$;
     `;

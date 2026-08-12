@@ -125,21 +125,32 @@ export default function CampusAdminDashboard() {
   };
 
   const updateAppReviewer = async (applicationId, reviewerName) => {
+    const isUnassigned = !reviewerName || reviewerName === 'Unassigned';
+    const targetStatus = isUnassigned ? 'submitted' : 'under_review';
+
+    // 1. Instant Optimistic State Update: 0ms UI update, zero loading spinner/reload
+    setApplicationsData(prev => {
+      if (!prev || !prev.applications) return prev;
+      return {
+        ...prev,
+        applications: prev.applications.map(app =>
+          app.id === applicationId ? { ...app, reviewed_by: reviewerName, application_status: targetStatus } : app
+        )
+      };
+    });
+
+    // 2. Silent background persistence (no loading spinner, no re-fetching)
     try {
-      const res = await fetch(`${API_BASE}/api/campus-program/admin/review`, {
+      await fetch(`${API_BASE}/api/campus-program/admin/review`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           applicationId,
-          action: 'under_review',
+          action: targetStatus,
           reviewerId: reviewerName,
-          reviewerNotes: `Assigned reviewer: ${reviewerName}`
+          reviewerNotes: isUnassigned ? 'Unassigned reviewer' : `Assigned reviewer: ${reviewerName}`
         })
       });
-      const json = await res.json();
-      if (json.success) {
-        fetchApplications();
-      }
     } catch (err) {
       console.error('[CampusAdminDashboard] Error updating reviewer:', err);
     }

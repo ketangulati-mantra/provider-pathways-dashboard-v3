@@ -65,16 +65,21 @@ export class CampusService {
       throw new Error('Mandatory rejection reason is required when rejecting an application.');
     }
 
-    let mappedStatus: 'approved' | 'rejected' | 'more_info_required' | 'under_review' = 'under_review';
+    const isUnassigned = !reviewerId || reviewerId === 'Unassigned' || reviewerId === 'unassigned';
+
+    let mappedStatus: 'submitted' | 'approved' | 'rejected' | 'more_info_required' | 'under_review' = isUnassigned ? 'submitted' : 'under_review';
     if (action === 'approve') mappedStatus = 'approved';
     else if (action === 'reject') mappedStatus = 'rejected';
     else if (action === 'request_info') mappedStatus = 'more_info_required';
-    else if (action === 'under_review') mappedStatus = 'under_review';
+    else if ((action as string) === 'submitted') mappedStatus = 'submitted';
+    else if (action === 'under_review') mappedStatus = isUnassigned ? 'submitted' : 'under_review';
 
     // Preserve custom reviewer name if already assigned or passed
-    const effectiveReviewer = (reviewerId && reviewerId.trim() && reviewerId !== 'admin_reviewer')
-      ? reviewerId.trim()
-      : (currentApp.reviewed_by && currentApp.reviewed_by.trim() && currentApp.reviewed_by !== 'admin_reviewer' ? currentApp.reviewed_by.trim() : 'Admin Reviewer');
+    const effectiveReviewer = isUnassigned 
+      ? 'Unassigned' 
+      : ((reviewerId && reviewerId.trim() && reviewerId !== 'admin_reviewer')
+          ? reviewerId.trim()
+          : (currentApp.reviewed_by && currentApp.reviewed_by.trim() && currentApp.reviewed_by !== 'admin_reviewer' ? currentApp.reviewed_by.trim() : 'Admin Reviewer'));
 
     const updatedApp = await this.repo.adminReviewApplication(
       applicationId,

@@ -139,6 +139,8 @@ export default function CorporateAdminDashboard() {
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'submitted' | 'approved' | 'rejected'
   const [dateFilter, setDateFilter] = useState('all');
   const [reviewerFilter, setReviewerFilter] = useState('all');
+  const [selectedLocation, setSelectedLocation] = useState('all');
+  const [selectedIndustry, setSelectedIndustry] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [applicationsData, setApplicationsData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -153,6 +155,28 @@ export default function CorporateAdminDashboard() {
   // Custom Reviewers State
   const [reviewerOptions, setReviewerOptions] = useState(DEFAULT_REVIEWERS);
   const [isManagingReviewers, setIsManagingReviewers] = useState(false);
+
+  // Filter Visibility Toggle State
+  const [filterVisibility, setFilterVisibility] = useState({
+    date: true,
+    status: true,
+    reviewer: true,
+    location: true,
+    industry: true,
+    search: true
+  });
+  const [isFilterSettingsOpen, setIsFilterSettingsOpen] = useState(false);
+  const filterSettingsRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (filterSettingsRef.current && !filterSettingsRef.current.contains(e.target)) {
+        setIsFilterSettingsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     fetchApplications();
@@ -191,10 +215,40 @@ export default function CorporateAdminDashboard() {
     }
   };
 
-  const handleReviewerChange = (app, newReviewer) => {
+  const handleReviewerChange = async (app, newReviewer) => {
     if (newReviewer === '__MANAGE__' || newReviewer === '__ADD_CUSTOM__') {
       setIsManagingReviewers(true);
       return;
+    }
+
+    const appId = app.id || app.user_id;
+    const isUnassigned = !newReviewer || newReviewer === 'Unassigned';
+    const targetStatus = isUnassigned 
+      ? 'submitted' 
+      : (app.application_status === 'approved' || app.application_status === 'rejected' ? app.application_status : 'under_review');
+
+    // 1. Instant Optimistic State Update: 0ms UI update, zero flicker/reload
+    setApplicationsData(prev => {
+      if (!prev || !prev.applications) return prev;
+      return {
+        ...prev,
+        applications: prev.applications.map(item =>
+          (item.id === app.id || item.user_id === app.user_id)
+            ? { ...item, reviewed_by: newReviewer, application_status: targetStatus }
+            : item
+        )
+      };
+    });
+
+    // 2. Silent background persistence (no loading spinner, no re-fetching)
+    try {
+      await fetch(`${API_BASE}/api/corporate-program/admin/applications/${appId}/reviewer`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewer: newReviewer, status: targetStatus })
+      });
+    } catch (err) {
+      console.error('[CorporateAdminDashboard] Error updating reviewer:', err);
     }
   };
 
@@ -215,6 +269,15 @@ export default function CorporateAdminDashboard() {
   let rawApplications = (applicationsData?.applications || []).filter(
     app => app.application_status !== 'interested' && (app.full_name || app.email)
   );
+
+  // Extract unique locations and industries for filter options
+  const uniqueLocations = Array.from(new Set(
+    rawApplications.map(app => app.city).filter(c => c && c.trim() && c !== 'Pending')
+  )).sort();
+
+  const uniqueIndustries = Array.from(new Set(
+    rawApplications.map(app => app.industries).filter(ind => ind && ind.trim())
+  )).sort();
 
   // Filter applications by Date Applied
   if (dateFilter !== 'all') {
@@ -286,14 +349,33 @@ export default function CorporateAdminDashboard() {
     });
   }
 
-  // Filter by Reviewer
+  // Filter by Reviewer, Location, and Industry
   const filteredApps = rawApplications.filter(app => {
     if (reviewerFilter !== 'all') {
       const rev = app.reviewed_by || 'Unassigned';
       if (rev !== reviewerFilter) return false;
     }
+    if (selectedLocation !== 'all') {
+      if ((app.city || '').toLowerCase() !== selectedLocation.toLowerCase()) return false;
+    }
+    if (selectedIndustry !== 'all') {
+      if ((app.industries || '').toLowerCase() !== selectedIndustry.toLowerCase()) return false;
+    }
     return true;
   });
+
+  const isAnyFilterActive = dateFilter !== 'all' || activeTab !== 'all' || reviewerFilter !== 'all' || selectedLocation !== 'all' || selectedIndustry !== 'all' || searchQuery !== '';
+
+  const handleClearAllFilters = () => {
+    setDateFilter('all');
+    setActiveTab('all');
+    setReviewerFilter('all');
+    setSelectedLocation('all');
+    setSelectedIndustry('all');
+    setSearchQuery('');
+    setCustomStartDate('');
+    setCustomEndDate('');
+  };
 
   const [adminViewMode, setAdminViewMode] = useState('applications'); // 'applications' | 'missions'
 
@@ -340,146 +422,295 @@ export default function CorporateAdminDashboard() {
         gap: '10px',
         flexWrap: 'wrap'
       }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Filter size={13} color="#2563eb" /> Filter:
-              </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Filter size={13} color="#2563eb" /> Filter:
+          </span>
 
           {/* 1. Date Applied Dropdown */}
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <select
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
+          {filterVisibility.date && (
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <select
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                style={{
+                  padding: '4px 22px 4px 8px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: '#1e293b',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  appearance: 'none',
+                  height: '28px'
+                }}
+              >
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="yesterday">Yesterday</option>
+                <option value="this_week">This Week</option>
+                <option value="this_month">This Month</option>
+                <option value="last_month">Last Month</option>
+                <option value="last_3_months">Last 3 Months</option>
+                <option value="last_6_months">Last 6 Months</option>
+                <option value="last_12_months">Last 12 Months</option>
+                <option value="custom">Custom Range...</option>
+              </select>
+              <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+
+              {/* Custom Date Inputs */}
+              {dateFilter === 'custom' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    style={{ height: '28px', padding: '0 6px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.72rem', color: '#0f172a', outline: 'none' }}
+                  />
+                  <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>to</span>
+                  <input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    style={{ height: '28px', padding: '0 6px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.72rem', color: '#0f172a', outline: 'none' }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 2. Status Filter Dropdown */}
+          {filterVisibility.status && (
+            <div style={{ position: 'relative' }}>
+              <select
+                value={activeTab}
+                onChange={(e) => setActiveTab(e.target.value)}
+                style={{
+                  padding: '4px 22px 4px 8px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: '#1e293b',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  appearance: 'none',
+                  height: '28px'
+                }}
+              >
+                <option value="all">All Statuses</option>
+                <option value="submitted">Submitted</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            </div>
+          )}
+
+          {/* 3. Reviewer Filter Dropdown */}
+          {filterVisibility.reviewer && (
+            <div style={{ position: 'relative' }}>
+              <select
+                value={reviewerFilter}
+                onChange={(e) => {
+                  if (e.target.value === '__MANAGE__') {
+                    setIsManagingReviewers(true);
+                  } else {
+                    setReviewerFilter(e.target.value);
+                  }
+                }}
+                style={{
+                  padding: '4px 22px 4px 8px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: '#1e293b',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  appearance: 'none',
+                  height: '28px'
+                }}
+              >
+                <option value="all">All Reviewers</option>
+                {reviewerOptions.map(rev => (
+                  <option key={rev} value={rev}>{rev}</option>
+                ))}
+                <option value="__MANAGE__">⚙️ Manage Reviewers...</option>
+              </select>
+              <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            </div>
+          )}
+
+          {/* 4. Location / City Filter Dropdown */}
+          {filterVisibility.location && (
+            <div style={{ position: 'relative' }}>
+              <select
+                value={selectedLocation}
+                onChange={(e) => setSelectedLocation(e.target.value)}
+                style={{
+                  padding: '4px 22px 4px 8px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: '#1e293b',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  appearance: 'none',
+                  height: '28px',
+                  maxWidth: '150px'
+                }}
+              >
+                <option value="all">All Locations</option>
+                {uniqueLocations.map(loc => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
+              </select>
+              <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            </div>
+          )}
+
+          {/* 5. Target Industry Filter Dropdown */}
+          {filterVisibility.industry && (
+            <div style={{ position: 'relative' }}>
+              <select
+                value={selectedIndustry}
+                onChange={(e) => setSelectedIndustry(e.target.value)}
+                style={{
+                  padding: '4px 22px 4px 8px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: '#1e293b',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  appearance: 'none',
+                  height: '28px',
+                  maxWidth: '170px'
+                }}
+              >
+                <option value="all">All Target Industries</option>
+                {uniqueIndustries.map(ind => (
+                  <option key={ind} value={ind}>{ind}</option>
+                ))}
+              </select>
+              <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            </div>
+          )}
+
+          {/* Filter Customizer Settings Popover */}
+          <div style={{ position: 'relative' }} ref={filterSettingsRef}>
+            <button
+              onClick={() => setIsFilterSettingsOpen(!isFilterSettingsOpen)}
+              title="Filter Options & Visibility"
               style={{
-                padding: '4px 22px 4px 8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '4px 10px',
                 borderRadius: '8px',
                 border: '1px solid #cbd5e1',
-                background: '#ffffff',
+                background: isFilterSettingsOpen ? '#eff6ff' : '#ffffff',
+                color: '#334155',
                 fontSize: '0.72rem',
                 fontWeight: 700,
-                color: '#1e293b',
-                outline: 'none',
                 cursor: 'pointer',
-                appearance: 'none',
                 height: '28px'
               }}
             >
-              <option value="all">All Time</option>
-              <option value="today">Today</option>
-              <option value="yesterday">Yesterday</option>
-              <option value="this_week">This Week</option>
-              <option value="this_month">This Month</option>
-              <option value="last_month">Last Month</option>
-              <option value="last_3_months">Last 3 Months</option>
-              <option value="last_6_months">Last 6 Months</option>
-              <option value="last_12_months">Last 12 Months</option>
-              <option value="custom">Custom Range...</option>
-            </select>
-            <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              <Filter size={12} color="#2563eb" />
+              <span>Filters</span>
+              <ChevronDown size={10} color="#64748b" />
+            </button>
 
-            {/* Custom Date Inputs */}
-            {dateFilter === 'custom' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <input
-                  type="date"
-                  value={customStartDate}
-                  onChange={(e) => setCustomStartDate(e.target.value)}
-                  style={{ height: '28px', padding: '0 6px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.72rem', color: '#0f172a', outline: 'none' }}
-                />
-                <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>to</span>
-                <input
-                  type="date"
-                  value={customEndDate}
-                  onChange={(e) => setCustomEndDate(e.target.value)}
-                  style={{ height: '28px', padding: '0 6px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.72rem', color: '#0f172a', outline: 'none' }}
-                />
+            {isFilterSettingsOpen && (
+              <div style={{
+                position: 'absolute',
+                top: '34px',
+                left: 0,
+                zIndex: 99,
+                background: '#ffffff',
+                border: '1px solid #cbd5e1',
+                borderRadius: '10px',
+                padding: '10px 14px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.12)',
+                width: '180px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
+              }}>
+                <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: '2px' }}>
+                  Visible Filters
+                </div>
+                {Object.keys(filterVisibility).map(key => (
+                  <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', cursor: 'pointer', fontWeight: 600 }}>
+                    <input
+                      type="checkbox"
+                      checked={filterVisibility[key]}
+                      onChange={(e) => setFilterVisibility(prev => ({ ...prev, [key]: e.target.checked }))}
+                    />
+                    <span style={{ textTransform: 'capitalize' }}>{key} Filter</span>
+                  </label>
+                ))}
               </div>
             )}
           </div>
 
-          {/* 2. Status Filter Dropdown: Approved, Rejected, Submitted */}
-          <div style={{ position: 'relative' }}>
-            <select
-              value={activeTab}
-              onChange={(e) => setActiveTab(e.target.value)}
+          {/* Reset All Filters Button */}
+          {isAnyFilterActive && (
+            <button
+              onClick={handleClearAllFilters}
               style={{
-                padding: '4px 22px 4px 8px',
+                padding: '4px 10px',
                 borderRadius: '8px',
-                border: '1px solid #cbd5e1',
-                background: '#ffffff',
+                border: '1px solid #fecaca',
+                background: '#fef2f2',
+                color: '#dc2626',
                 fontSize: '0.72rem',
-                fontWeight: 700,
-                color: '#1e293b',
-                outline: 'none',
+                fontWeight: 800,
                 cursor: 'pointer',
-                appearance: 'none',
-                height: '28px'
+                height: '28px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
               }}
             >
-              <option value="all">All Statuses</option>
-              <option value="submitted">Submitted</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-            </select>
-            <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-          </div>
-
-          {/* 3. Reviewer Filter Dropdown */}
-          <div style={{ position: 'relative' }}>
-            <select
-              value={reviewerFilter}
-              onChange={(e) => {
-                if (e.target.value === '__MANAGE__') {
-                  setIsManagingReviewers(true);
-                } else {
-                  setReviewerFilter(e.target.value);
-                }
-              }}
-              style={{
-                padding: '4px 22px 4px 8px',
-                borderRadius: '8px',
-                border: '1px solid #cbd5e1',
-                background: '#ffffff',
-                fontSize: '0.72rem',
-                fontWeight: 700,
-                color: '#1e293b',
-                outline: 'none',
-                cursor: 'pointer',
-                appearance: 'none',
-                height: '28px'
-              }}
-            >
-              <option value="all">All Reviewers</option>
-              {reviewerOptions.map(rev => (
-                <option key={rev} value={rev}>{rev}</option>
-              ))}
-              <option value="__MANAGE__">⚙️ Manage Reviewers...</option>
-            </select>
-            <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-          </div>
+              <X size={12} /> Clear Filters
+            </button>
+          )}
         </div>
 
         {/* Search Input */}
-        <div style={{ position: 'relative', width: '180px' }}>
-          <Search size={12} color="#94a3b8" style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)' }} />
-          <input
-            type="text"
-            placeholder="Search name, city..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: '100%',
-              height: '28px',
-              padding: '0 8px 0 26px',
-              borderRadius: '8px',
-              border: '1px solid #cbd5e1',
-              fontSize: '0.72rem',
-              color: '#0f172a',
-              outline: 'none',
-              boxSizing: 'border-box'
-            }}
-          />
-        </div>
+        {filterVisibility.search && (
+          <div style={{ position: 'relative', width: '200px' }}>
+            <Search size={12} color="#94a3b8" style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)' }} />
+            <input
+              type="text"
+              placeholder="Search name, city, industry..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                height: '28px',
+                padding: '0 8px 0 26px',
+                borderRadius: '8px',
+                border: '1px solid #cbd5e1',
+                fontSize: '0.72rem',
+                color: '#0f172a',
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Main Table — 7-column layout (Submissions column removed) */}

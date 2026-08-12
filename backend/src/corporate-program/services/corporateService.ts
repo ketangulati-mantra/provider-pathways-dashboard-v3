@@ -41,6 +41,10 @@ export class CorporateService {
     };
   }
 
+  async updateReviewer(id: string, reviewer: string, status?: string): Promise<boolean> {
+    return corporateRepository.updateReviewer(id, reviewer, status);
+  }
+
   // ── Learning Academy Methods ──
 
   async getLearningProgress(userId: string) {

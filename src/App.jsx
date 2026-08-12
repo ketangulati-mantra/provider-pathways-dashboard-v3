@@ -135,7 +135,18 @@ function App() {
     const activeBase = envBase || currentSubpath;
     const fullPath = path === '/' ? (activeBase || '/') : ((activeBase + path).replace('//', '/'));
     const targetUrl = preserveQueryParams(fullPath);
-    window.history.replaceState(null, '', targetUrl);
+    
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('mantra_last_path', path);
+      if (path && path !== '/' && !path.startsWith('/admin')) {
+        window.location.hash = `#${path}`;
+      } else {
+        window.history.replaceState(null, '', targetUrl);
+      }
+    } else {
+      window.history.replaceState(null, '', targetUrl);
+    }
+    
     setCurrentPath(path);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
