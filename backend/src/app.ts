@@ -94,8 +94,26 @@ app.get('*', (req, res, next) => {
     } else if (fs.existsSync(inDist)) {
       return res.sendFile(inDist);
     }
+
+    // Smart Fallback: If an old build bundle JS file is requested, serve the latest index-*.js entry bundle
+    if (filename.startsWith('index-') && filename.endsWith('.js')) {
+      const assetsDir = path.join(distPath, 'assets');
+      if (fs.existsSync(assetsDir)) {
+        const assetsFiles = fs.readdirSync(assetsDir);
+        const latestMainJs = assetsFiles.find(f => f.startsWith('index-') && f.endsWith('.js'));
+        if (latestMainJs) {
+          return res.sendFile(path.join(assetsDir, latestMainJs));
+        }
+      }
+    }
+
     return res.status(404).send('Asset not found');
   }
+
+  // Prevent browser caching for SPA index.html to guarantee instant updates on new deployments
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   
   res.sendFile(path.join(distPath, 'index.html'), (err) => {
     if (err) next();

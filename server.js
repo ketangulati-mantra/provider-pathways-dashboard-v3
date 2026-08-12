@@ -60,6 +60,19 @@ const server = http.createServer((req, res) => {
           filePath = inAssets;
         } else if (fs.existsSync(inDist)) {
           filePath = inDist;
+        } else if (filename.startsWith('index-') && filename.endsWith('.js')) {
+          const assetsDir = path.join(DIST_DIR, 'assets');
+          if (fs.existsSync(assetsDir)) {
+            const assetsFiles = fs.readdirSync(assetsDir);
+            const latestMainJs = assetsFiles.find(f => f.startsWith('index-') && f.endsWith('.js'));
+            if (latestMainJs) {
+              filePath = path.join(assetsDir, latestMainJs);
+            } else {
+              filePath = path.join(DIST_DIR, 'index.html');
+            }
+          } else {
+            filePath = path.join(DIST_DIR, 'index.html');
+          }
         } else {
           filePath = path.join(DIST_DIR, 'index.html');
         }
@@ -78,7 +91,13 @@ const server = http.createServer((req, res) => {
         res.end('Server Error');
         return;
       }
-      res.writeHead(200, { 'Content-Type': contentType });
+      const headers = { 'Content-Type': contentType };
+      if (filePath.endsWith('index.html')) {
+        headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+        headers['Pragma'] = 'no-cache';
+        headers['Expires'] = '0';
+      }
+      res.writeHead(200, headers);
       res.end(content, 'utf-8');
     });
   });
