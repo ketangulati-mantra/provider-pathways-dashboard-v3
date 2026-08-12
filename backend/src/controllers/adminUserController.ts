@@ -261,7 +261,8 @@ export async function deleteAdmin(req: AuthRequest, res: Response) {
       success: true,
       message: 'Admin user deleted successfully.'
     });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: 'Failed to delete admin user.' });
+  } catch (err: any) {
+    console.error('❌ deleteAdmin Error:', err);
+    return res.status(500).json({ success: false, error: err?.message || 'Failed to delete admin user.' });
   }
 }
