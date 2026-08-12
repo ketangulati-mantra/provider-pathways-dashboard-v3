@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 /**
  * Mantra Care Platform Configuration
  */
@@ -6,11 +8,12 @@ let cachedSubpathPrefix: string | null = null;
 const getDynamicApiBase = () => {
   if (typeof window === 'undefined') return '';
   
-  if (import.meta.env.VITE_BACKEND_URL) {
-    return import.meta.env.VITE_BACKEND_URL.replace(/\/api\/?$/, '');
+  const metaEnv = (import.meta as any).env;
+  if (metaEnv?.VITE_BACKEND_URL) {
+    return metaEnv.VITE_BACKEND_URL.replace(/\/api\/?$/, '');
   }
 
-  if (!import.meta.env.PROD) {
+  if (!metaEnv?.PROD) {
     return 'http://localhost:5000';
   }
 
