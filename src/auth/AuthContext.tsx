@@ -64,9 +64,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       const apiBase = getApiBase();
+      const token = typeof localStorage !== 'undefined' ? localStorage.getItem('mantra_admin_token') : null;
+      const headers: Record<string, string> = { 'Accept': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${apiBase}/admin/auth/me`, {
         method: 'GET',
-        headers: { 'Accept': 'application/json' },
+        headers,
         credentials: 'include'
       });
 
@@ -74,6 +80,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (res.ok && data.success && data.authenticated && data.admin) {
         setAdmin(data.admin);
         setIsAuthenticated(true);
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.setItem('user_id', data.admin.email || String(data.admin.id));
+          sessionStorage.setItem('admin_user', JSON.stringify(data.admin));
+        }
         setError(null);
       } else {
         setAdmin(null);
@@ -112,6 +122,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (res.ok && data.success && data.admin) {
         setAdmin(data.admin);
         setIsAuthenticated(true);
+        if (data.token && typeof localStorage !== 'undefined') {
+          localStorage.setItem('mantra_admin_token', data.token);
+        }
         if (typeof sessionStorage !== 'undefined') {
           sessionStorage.setItem('user_id', data.admin.email || String(data.admin.id));
           sessionStorage.setItem('admin_user', JSON.stringify(data.admin));
@@ -154,6 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         sessionStorage.removeItem('admin_user');
       }
       if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('mantra_admin_token');
         localStorage.removeItem('mantra_user_id');
         localStorage.removeItem('mantra_guest_session_id');
       }

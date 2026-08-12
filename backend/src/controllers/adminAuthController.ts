@@ -58,7 +58,7 @@ export async function login(req: AuthRequest, res: Response) {
     await updateAdminLastLogin(admin.id);
 
     const payload: AdminJwtPayload = {
-      id: Number(admin.id),
+      id: String(admin.user_id || admin.id) as any,
       name: admin.name,
       email: admin.email,
       role: admin.role,
@@ -70,6 +70,7 @@ export async function login(req: AuthRequest, res: Response) {
 
     return res.json({
       success: true,
+      token,
       message: 'Signed in successfully.',
       admin: payload
     });
@@ -89,36 +90,47 @@ export async function logout(req: AuthRequest, res: Response) {
       httpOnly: true,
       path: '/'
     });
-    return res.json({
-      success: true,
-      message: 'Signed out successfully.'
-    });
+    return res.json({ success: true, message: 'Logged out successfully.' });
   } catch (err) {
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to complete sign out.'
-    });
+    return res.status(500).json({ success: false, error: 'Failed to logout.' });
   }
 }
 
 // GET /api/admin/auth/me
 export async function getMe(req: AuthRequest, res: Response) {
   try {
-    if (!req.admin) {
-      return res.status(401).json({
-        success: false,
+    let token = req.cookies?.[COOKIE_NAME];
+    if (!token && req.headers.authorization) {
+      const parts = req.headers.authorization.split(' ');
+      if (parts.length === 2 && parts[0] === 'Bearer') {
+        token = parts[1];
+      }
+    }
+
+    if (!token) {
+      return res.status(200).json({
+        success: true,
         authenticated: false,
-        error: 'Not authenticated'
+        admin: null
       });
     }
 
-    const admin = await findAdminById(req.admin.id);
+    const decoded = jwt.verify(token, config.jwtSecret) as AdminJwtPayload;
+    if (!decoded || !decoded.id) {
+      return res.status(200).json({
+        success: true,
+        authenticated: false,
+        admin: null
+      });
+    }
+
+    const admin = await findAdminById(decoded.id);
     if (!admin || !admin.is_active) {
       res.clearCookie(COOKIE_NAME);
-      return res.status(403).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         authenticated: false,
-        error: 'Account disabled or no longer exists.'
+        admin: null
       });
     }
 
@@ -126,7 +138,7 @@ export async function getMe(req: AuthRequest, res: Response) {
       success: true,
       authenticated: true,
       admin: {
-        id: Number(admin.id),
+        id: String(admin.user_id || admin.id),
         name: admin.name,
         email: admin.email,
         role: admin.role,
@@ -135,10 +147,10 @@ export async function getMe(req: AuthRequest, res: Response) {
       }
     });
   } catch (err) {
-    return res.status(500).json({
-      success: false,
+    return res.status(200).json({
+      success: true,
       authenticated: false,
-      error: 'Failed to verify session status.'
+      admin: null
     });
   }
 }

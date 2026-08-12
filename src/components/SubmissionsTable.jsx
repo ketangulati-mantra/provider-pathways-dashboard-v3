@@ -501,6 +501,43 @@ export default function SubmissionsTable() {
   const [reviewerOptions, setReviewerOptions] = useState(['Unassigned']);
   const [isManagingReviewers, setIsManagingReviewers] = useState(false);
   const [newReviewerName, setNewReviewerName] = useState('');
+  const [availableUsers, setAvailableUsers] = useState([]);
+  const [isLoadingAvailableUsers, setIsLoadingAvailableUsers] = useState(false);
+  const [selectedUserToAdd, setSelectedUserToAdd] = useState('');
+
+  const fetchAvailableUsers = async () => {
+    try {
+      setIsLoadingAvailableUsers(true);
+      const apiBase = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null ? MANTRA_CONFIG.apiBaseUrl : (import.meta.env.PROD ? '' : 'http://localhost:5000');
+      
+      let res = await fetch(`${apiBase}/api/users/non-reviewers`);
+      let json = await res.json().catch(() => null);
+
+      if (!json || !json.success || !Array.isArray(json.users) || json.users.length === 0) {
+        res = await fetch(`${apiBase}/api/admin/available-users`);
+        json = await res.json().catch(() => null);
+      }
+
+      if (!json || !json.success || !Array.isArray(json.users) || json.users.length === 0) {
+        res = await fetch(`${apiBase}/api/submissions/admin/available-users`);
+        json = await res.json().catch(() => null);
+      }
+
+      if (json && json.success && Array.isArray(json.users)) {
+        setAvailableUsers(json.users);
+      }
+    } catch (err) {
+      console.error('Error fetching available users:', err);
+    } finally {
+      setIsLoadingAvailableUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isManagingReviewers) {
+      fetchAvailableUsers();
+    }
+  }, [isManagingReviewers]);
 
   // Custom Searchable Activity Selector state
   const [isActivityDropdownOpen, setIsActivityDropdownOpen] = useState(false);
@@ -2989,51 +3026,73 @@ export default function SubmissionsTable() {
               </button>
             </div>
 
-            {/* Add New Reviewer Form */}
+            {/* Add New Reviewer Selector Form */}
             <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9', background: '#ffffff' }}>
               <label style={{ fontSize: '0.68rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
-                Add New Reviewer
+                Select User to Add as Reviewer
               </label>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  handleAddReviewer();
+                  const targetName = selectedUserToAdd || newReviewerName;
+                  if (targetName) {
+                    handleAddReviewer(targetName);
+                    setSelectedUserToAdd('');
+                    setNewReviewerName('');
+                  }
                 }}
                 style={{ display: 'flex', gap: '8px' }}
               >
-                <input
-                  type="text"
-                  placeholder="Enter reviewer full name..."
-                  value={newReviewerName}
-                  onChange={(e) => setNewReviewerName(e.target.value)}
-                  style={{
-                    flex: 1,
-                    height: '32px',
-                    padding: '0 10px',
-                    borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.78rem',
-                    outline: 'none',
-                    background: '#f8fafc',
-                    color: '#0f172a'
-                  }}
-                />
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <select
+                    value={selectedUserToAdd}
+                    onChange={(e) => setSelectedUserToAdd(e.target.value)}
+                    disabled={isLoadingAvailableUsers || availableUsers.length === 0}
+                    style={{
+                      width: '100%',
+                      height: '34px',
+                      padding: '0 10px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      outline: 'none',
+                      background: '#f8fafc',
+                      color: selectedUserToAdd ? '#0f172a' : '#64748b',
+                      cursor: (isLoadingAvailableUsers || availableUsers.length === 0) ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    <option value="">
+                      {isLoadingAvailableUsers
+                        ? 'Loading users from users table...'
+                        : availableUsers.length === 0
+                        ? 'No remaining users available'
+                        : 'Choose an existing user from users table...'}
+                    </option>
+                    {availableUsers.map((u) => (
+                      <option key={u.id || u.user_id || u.email} value={u.name}>
+                        {u.name} {u.email ? `(${u.email})` : ''} — {u.role || 'User'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <button
                   type="submit"
-                  disabled={!newReviewerName.trim()}
+                  disabled={!selectedUserToAdd}
                   style={{
-                    height: '32px',
+                    height: '34px',
                     padding: '0 14px',
                     borderRadius: '8px',
                     border: 'none',
-                    background: newReviewerName.trim() ? 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)' : '#e2e8f0',
-                    color: newReviewerName.trim() ? '#ffffff' : '#94a3b8',
+                    background: selectedUserToAdd ? 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)' : '#e2e8f0',
+                    color: selectedUserToAdd ? '#ffffff' : '#94a3b8',
                     fontWeight: 700,
                     fontSize: '0.76rem',
-                    cursor: newReviewerName.trim() ? 'pointer' : 'not-allowed',
+                    cursor: selectedUserToAdd ? 'pointer' : 'not-allowed',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '4px'
+                    gap: '4px',
+                    whiteSpace: 'nowrap'
                   }}
                 >
                   <Plus size={14} /> Add

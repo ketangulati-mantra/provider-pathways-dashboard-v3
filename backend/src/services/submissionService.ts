@@ -225,28 +225,20 @@ export const submissionService = {
         );
       `;
 
+      // Get reviewers from users table where is_reviewer = TRUE
+      const userReviewers = await sql`
+        SELECT DISTINCT name, email
+        FROM users
+        WHERE is_reviewer IS TRUE AND name IS NOT NULL AND name != ''
+        ORDER BY name ASC;
+      `;
+
       const existing = await sql`SELECT name FROM admin_reviewers ORDER BY id ASC;`;
-      if (existing.length === 0) {
-        const defaults = ['Unassigned', 'Ketan', 'Team Member', 'Pooja', 'Mantra Admin'];
-        for (const d of defaults) {
-          try {
-            await sql`INSERT INTO admin_reviewers (name) VALUES (${d}) ON CONFLICT DO NOTHING;`;
-          } catch (e) {}
-        }
-        const updated = await sql`SELECT name FROM admin_reviewers ORDER BY id ASC;`;
-        return updated.map((r: any) => r.name);
-      }
-
-      let subReviewers: any[] = [];
-      try {
-        subReviewers = await sql`SELECT DISTINCT reviewed_by FROM activity_submissions WHERE reviewed_by IS NOT NULL;`;
-      } catch (e) {}
-
       const set = new Set<string>();
-      existing.forEach((r: any) => { if (r.name) set.add(r.name); });
-      subReviewers.forEach((s: any) => { if (s.reviewed_by && s.reviewed_by.trim()) set.add(s.reviewed_by.trim()); });
+      set.add('Unassigned');
 
-      if (!set.has('Unassigned')) set.add('Unassigned');
+      userReviewers.forEach((r: any) => { if (r.name && r.name.trim()) set.add(r.name.trim()); });
+      existing.forEach((r: any) => { if (r.name && r.name.trim()) set.add(r.name.trim()); });
 
       return Array.from(set);
     } catch (err) {
@@ -273,6 +265,17 @@ export const submissionService = {
       ON CONFLICT (name) DO NOTHING;
     `;
 
+    // Mark is_reviewer = TRUE in users table
+    try {
+      await sql`
+        UPDATE users
+        SET is_reviewer = TRUE, updated_at = CURRENT_TIMESTAMP
+        WHERE LOWER(name) = ${trimmed.toLowerCase()} OR LOWER(email) = ${trimmed.toLowerCase()};
+      `;
+    } catch (err) {
+      console.error('[submissionService] Error updating users.is_reviewer:', err);
+    }
+
     return this.getReviewers();
   },
 
@@ -282,26 +285,22 @@ export const submissionService = {
       throw new Error('Cannot delete default Unassigned option');
     }
 
-    await sql`
-      CREATE TABLE IF NOT EXISTS admin_reviewers (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) UNIQUE NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      );
-    `;
-
-    await sql`
-      DELETE FROM admin_reviewers WHERE LOWER(name) = LOWER(${trimmed});
-    `;
-
     try {
       await sql`
-        UPDATE activity_submissions
-        SET reviewed_by = 'Unassigned', updated_at = CURRENT_TIMESTAMP
-        WHERE LOWER(reviewed_by) = LOWER(${trimmed});
+        DELETE FROM admin_reviewers
+        WHERE LOWER(name) = ${trimmed.toLowerCase()};
+      `;
+    } catch (e) {}
+
+    // Mark is_reviewer = FALSE in users table
+    try {
+      await sql`
+        UPDATE users
+        SET is_reviewer = FALSE, updated_at = CURRENT_TIMESTAMP
+        WHERE LOWER(name) = ${trimmed.toLowerCase()} OR LOWER(email) = ${trimmed.toLowerCase()};
       `;
     } catch (err) {
-      console.warn('[submissionService] Error resetting activity_submissions for deleted reviewer:', err);
+      console.error('[submissionService] Error unsetting users.is_reviewer:', err);
     }
 
     return this.getReviewers();

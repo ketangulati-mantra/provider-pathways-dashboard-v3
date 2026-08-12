@@ -23,6 +23,6 @@ router.post('/logout', logout);
 router.get('/status', getStatus);
 
 // Protected authentication route
-router.get('/me', authenticateAdmin, getMe);
+router.get('/me', getMe);
 
 export default router;

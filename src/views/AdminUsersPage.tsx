@@ -4,7 +4,7 @@ import {
   Edit2, Key, Power, Trash2, AlertCircle, X, Loader2, ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
-import { useToast } from '../components';
+import { useToast } from '../components/Toast';
 
 export interface AdminUserItem {
   id: number;
@@ -624,7 +624,7 @@ export default function AdminUsersPage() {
           </div>
         ) : (
           <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden' }}>
-            
+
             {/* Hover Scroll Navigator - LEFT */}
             <div
               onMouseEnter={() => startHoverScroll('left')}
@@ -713,218 +713,218 @@ export default function AdminUsersPage() {
 
             <div ref={tableScrollRef} style={{ overflowX: 'auto', scrollBehavior: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.82rem' }}>
-              <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                  {adminColumns.map((col, index) => (
-                    <th
-                      key={col.id}
-                      draggable
-                      onDragStart={(e) => handleAdminColDragStart(e, index)}
-                      onDragOver={handleAdminColDragOver}
-                      onDrop={(e) => handleAdminColDrop(e, index)}
-                      onDragEnd={() => setDraggedAdminColIndex(null)}
-                      style={{
-                        padding: '8px 14px',
-                        fontWeight: 800,
-                        color: '#475569',
-                        fontSize: '0.72rem',
-                        textTransform: 'uppercase',
-                        cursor: 'grab',
-                        userSelect: 'none',
-                        textAlign: (col.align as any) || 'left',
-                        background: draggedAdminColIndex === index ? '#e2e8f0' : 'transparent',
-                        borderLeft: draggedAdminColIndex === index ? '2px solid #3b82f6' : 'none',
-                        transition: 'background 0.15s ease'
-                      }}
-                      title="Drag left or right to reorder column position"
-                    >
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        <span style={{ opacity: 0.5, fontSize: '0.65rem', cursor: 'grab' }}>⋮⋮</span>
-                        {col.label}
-                      </span>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAdmins.map((item) => {
-                  const isSuper = item.role === 'super_admin' || item.role === 'Super Admin';
-                  const isCurrentSelf = currentAdmin?.id === item.id;
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                    {adminColumns.map((col, index) => (
+                      <th
+                        key={col.id}
+                        draggable
+                        onDragStart={(e) => handleAdminColDragStart(e, index)}
+                        onDragOver={handleAdminColDragOver}
+                        onDrop={(e) => handleAdminColDrop(e, index)}
+                        onDragEnd={() => setDraggedAdminColIndex(null)}
+                        style={{
+                          padding: '8px 14px',
+                          fontWeight: 800,
+                          color: '#475569',
+                          fontSize: '0.72rem',
+                          textTransform: 'uppercase',
+                          cursor: 'grab',
+                          userSelect: 'none',
+                          textAlign: (col.align as any) || 'left',
+                          background: draggedAdminColIndex === index ? '#e2e8f0' : 'transparent',
+                          borderLeft: draggedAdminColIndex === index ? '2px solid #3b82f6' : 'none',
+                          transition: 'background 0.15s ease'
+                        }}
+                        title="Drag left or right to reorder column position"
+                      >
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ opacity: 0.5, fontSize: '0.65rem', cursor: 'grab' }}>⋮⋮</span>
+                          {col.label}
+                        </span>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredAdmins.map((item) => {
+                    const isSuper = item.role === 'super_admin' || item.role === 'Super Admin';
+                    const isCurrentSelf = currentAdmin?.id === item.id;
 
-                  return (
-                    <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s ease' }}>
-                      {adminColumns.map((col) => {
-                        if (col.id === 'name') {
-                          return (
-                            <td key={col.id} style={{ padding: '8px 14px' }}>
-                              <div style={{ fontWeight: 800, color: '#0f172a' }}>
-                                {item.name} {isCurrentSelf && <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1d4ed8', padding: '1px 6px', borderRadius: '4px', marginLeft: '6px' }}>You</span>}
-                              </div>
-                              <div style={{ fontSize: '0.76rem', color: '#64748b' }}>{item.email}</div>
-                            </td>
-                          );
-                        }
+                    return (
+                      <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s ease' }}>
+                        {adminColumns.map((col) => {
+                          if (col.id === 'name') {
+                            return (
+                              <td key={col.id} style={{ padding: '8px 14px' }}>
+                                <div style={{ fontWeight: 800, color: '#0f172a' }}>
+                                  {item.name} {isCurrentSelf && <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1d4ed8', padding: '1px 6px', borderRadius: '4px', marginLeft: '6px' }}>You</span>}
+                                </div>
+                                <div style={{ fontSize: '0.76rem', color: '#64748b' }}>{item.email}</div>
+                              </td>
+                            );
+                          }
 
-                        if (col.id === 'role') {
-                          return (
-                            <td key={col.id} style={{ padding: '8px 14px' }}>
-                              <span
-                                style={{
-                                  padding: '3px 8px',
-                                  borderRadius: '6px',
-                                  fontSize: '0.72rem',
-                                  fontWeight: 800,
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                  background: isSuper ? '#f3e8ff' : '#eff6ff',
-                                  color: isSuper ? '#7e22ce' : '#1d4ed8',
-                                  border: `1px solid ${isSuper ? '#e9d5ff' : '#bfdbfe'}`
-                                }}
-                              >
-                                {isSuper ? <ShieldCheck size={13} /> : <Shield size={13} />}
-                                {isSuper ? 'Super Admin' : 'Admin'}
-                              </span>
-                            </td>
-                          );
-                        }
-
-                        if (col.id === 'status') {
-                          return (
-                            <td key={col.id} style={{ padding: '8px 14px' }}>
-                              <span
-                                style={{
-                                  padding: '3px 8px',
-                                  borderRadius: '6px',
-                                  fontSize: '0.72rem',
-                                  fontWeight: 800,
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                  background: item.is_active ? '#ecfdf5' : '#fef2f2',
-                                  color: item.is_active ? '#047857' : '#b91c1c',
-                                  border: `1px solid ${item.is_active ? '#a7f3d0' : '#fecaca'}`
-                                }}
-                              >
-                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: item.is_active ? '#10b981' : '#ef4444' }} />
-                                {item.is_active ? 'Active' : 'Inactive'}
-                              </span>
-                            </td>
-                          );
-                        }
-
-                        if (col.id === 'lastLogin') {
-                          return (
-                            <td key={col.id} style={{ padding: '8px 14px', color: '#64748b', fontSize: '0.78rem' }}>
-                              {item.last_login_at ? new Date(item.last_login_at).toLocaleDateString() : 'Never'}
-                            </td>
-                          );
-                        }
-
-                        if (col.id === 'createdDate') {
-                          return (
-                            <td key={col.id} style={{ padding: '8px 14px', color: '#64748b', fontSize: '0.78rem' }}>
-                              {item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A'}
-                            </td>
-                          );
-                        }
-
-                        if (col.id === 'actions') {
-                          return (
-                            <td key={col.id} style={{ padding: '8px 14px', textAlign: 'right' }}>
-                              <div style={{ display: 'inline-flex', gap: '6px' }}>
-                                {/* EDIT BUTTON */}
-                                <button
-                                  onClick={() => {
-                                    setEditingAdmin(item);
-                                    setFormName(item.name);
-                                    setFormEmail(item.email);
-                                    setFormRole((item.role === 'super_admin' || item.role === 'Super Admin') ? 'super_admin' : 'admin');
-                                    setFormIsActive(item.is_active);
-                                    setFormError(null);
-                                  }}
-                                  title="Edit Admin"
+                          if (col.id === 'role') {
+                            return (
+                              <td key={col.id} style={{ padding: '8px 14px' }}>
+                                <span
                                   style={{
-                                    padding: '6px 10px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #cbd5e1',
-                                    background: '#ffffff',
-                                    color: '#475569',
-                                    cursor: 'pointer'
+                                    padding: '3px 8px',
+                                    borderRadius: '6px',
+                                    fontSize: '0.72rem',
+                                    fontWeight: 800,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    background: isSuper ? '#f3e8ff' : '#eff6ff',
+                                    color: isSuper ? '#7e22ce' : '#1d4ed8',
+                                    border: `1px solid ${isSuper ? '#e9d5ff' : '#bfdbfe'}`
                                   }}
                                 >
-                                  <Edit2 size={14} />
-                                </button>
+                                  {isSuper ? <ShieldCheck size={13} /> : <Shield size={13} />}
+                                  {isSuper ? 'Super Admin' : 'Admin'}
+                                </span>
+                              </td>
+                            );
+                          }
 
-                                {/* RESET PASSWORD BUTTON */}
-                                <button
-                                  onClick={() => {
-                                    setResettingPasswordAdmin(item);
-                                    setFormPassword('');
-                                    setFormConfirmPassword('');
-                                    setFormError(null);
-                                  }}
-                                  title="Reset Password"
+                          if (col.id === 'status') {
+                            return (
+                              <td key={col.id} style={{ padding: '8px 14px' }}>
+                                <span
                                   style={{
-                                    padding: '6px 10px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #cbd5e1',
-                                    background: '#ffffff',
-                                    color: '#0284c7',
-                                    cursor: 'pointer'
+                                    padding: '3px 8px',
+                                    borderRadius: '6px',
+                                    fontSize: '0.72rem',
+                                    fontWeight: 800,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    background: item.is_active ? '#ecfdf5' : '#fef2f2',
+                                    color: item.is_active ? '#047857' : '#b91c1c',
+                                    border: `1px solid ${item.is_active ? '#a7f3d0' : '#fecaca'}`
                                   }}
                                 >
-                                  <Key size={14} />
-                                </button>
+                                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: item.is_active ? '#10b981' : '#ef4444' }} />
+                                  {item.is_active ? 'Active' : 'Inactive'}
+                                </span>
+                              </td>
+                            );
+                          }
 
-                                {/* TOGGLE STATUS BUTTON */}
-                                <button
-                                  onClick={() => handleToggleStatus(item)}
-                                  disabled={isCurrentSelf}
-                                  title={isCurrentSelf ? 'Self Protection: Cannot deactivate yourself' : (item.is_active ? 'Deactivate Admin' : 'Activate Admin')}
-                                  style={{
-                                    padding: '6px 10px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #cbd5e1',
-                                    background: item.is_active ? '#fff7ed' : '#ecfdf5',
-                                    color: item.is_active ? '#c2410c' : '#047857',
-                                    cursor: isCurrentSelf ? 'not-allowed' : 'pointer',
-                                    opacity: isCurrentSelf ? 0.5 : 1
-                                  }}
-                                >
-                                  <Power size={14} />
-                                </button>
+                          if (col.id === 'lastLogin') {
+                            return (
+                              <td key={col.id} style={{ padding: '8px 14px', color: '#64748b', fontSize: '0.78rem' }}>
+                                {item.last_login_at ? new Date(item.last_login_at).toLocaleDateString() : 'Never'}
+                              </td>
+                            );
+                          }
 
-                                {/* DELETE BUTTON */}
-                                <button
-                                  onClick={() => setDeletingAdmin(item)}
-                                  disabled={isCurrentSelf}
-                                  title={isCurrentSelf ? 'Self Protection: Cannot delete yourself' : 'Delete Admin'}
-                                  style={{
-                                    padding: '6px 10px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #fecaca',
-                                    background: '#fef2f2',
-                                    color: '#dc2626',
-                                    cursor: isCurrentSelf ? 'not-allowed' : 'pointer',
-                                    opacity: isCurrentSelf ? 0.5 : 1
-                                  }}
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            </td>
-                          );
-                        }
+                          if (col.id === 'createdDate') {
+                            return (
+                              <td key={col.id} style={{ padding: '8px 14px', color: '#64748b', fontSize: '0.78rem' }}>
+                                {item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A'}
+                              </td>
+                            );
+                          }
 
-                        return null;
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                          if (col.id === 'actions') {
+                            return (
+                              <td key={col.id} style={{ padding: '8px 14px', textAlign: 'right' }}>
+                                <div style={{ display: 'inline-flex', gap: '6px' }}>
+                                  {/* EDIT BUTTON */}
+                                  <button
+                                    onClick={() => {
+                                      setEditingAdmin(item);
+                                      setFormName(item.name);
+                                      setFormEmail(item.email);
+                                      setFormRole((item.role === 'super_admin' || item.role === 'Super Admin') ? 'super_admin' : 'admin');
+                                      setFormIsActive(item.is_active);
+                                      setFormError(null);
+                                    }}
+                                    title="Edit Admin"
+                                    style={{
+                                      padding: '6px 10px',
+                                      borderRadius: '8px',
+                                      border: '1px solid #cbd5e1',
+                                      background: '#ffffff',
+                                      color: '#475569',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    <Edit2 size={14} />
+                                  </button>
+
+                                  {/* RESET PASSWORD BUTTON */}
+                                  <button
+                                    onClick={() => {
+                                      setResettingPasswordAdmin(item);
+                                      setFormPassword('');
+                                      setFormConfirmPassword('');
+                                      setFormError(null);
+                                    }}
+                                    title="Reset Password"
+                                    style={{
+                                      padding: '6px 10px',
+                                      borderRadius: '8px',
+                                      border: '1px solid #cbd5e1',
+                                      background: '#ffffff',
+                                      color: '#0284c7',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    <Key size={14} />
+                                  </button>
+
+                                  {/* TOGGLE STATUS BUTTON */}
+                                  <button
+                                    onClick={() => handleToggleStatus(item)}
+                                    disabled={isCurrentSelf}
+                                    title={isCurrentSelf ? 'Self Protection: Cannot deactivate yourself' : (item.is_active ? 'Deactivate Admin' : 'Activate Admin')}
+                                    style={{
+                                      padding: '6px 10px',
+                                      borderRadius: '8px',
+                                      border: '1px solid #cbd5e1',
+                                      background: item.is_active ? '#fff7ed' : '#ecfdf5',
+                                      color: item.is_active ? '#c2410c' : '#047857',
+                                      cursor: isCurrentSelf ? 'not-allowed' : 'pointer',
+                                      opacity: isCurrentSelf ? 0.5 : 1
+                                    }}
+                                  >
+                                    <Power size={14} />
+                                  </button>
+
+                                  {/* DELETE BUTTON */}
+                                  <button
+                                    onClick={() => setDeletingAdmin(item)}
+                                    disabled={isCurrentSelf}
+                                    title={isCurrentSelf ? 'Self Protection: Cannot delete yourself' : 'Delete Admin'}
+                                    style={{
+                                      padding: '6px 10px',
+                                      borderRadius: '8px',
+                                      border: '1px solid #fecaca',
+                                      background: '#fef2f2',
+                                      color: '#dc2626',
+                                      cursor: isCurrentSelf ? 'not-allowed' : 'pointer',
+                                      opacity: isCurrentSelf ? 0.5 : 1
+                                    }}
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              </td>
+                            );
+                          }
+
+                          return null;
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
