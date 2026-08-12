@@ -25,6 +25,8 @@ export default function CampusAdminDashboard() {
   const [applicationsData, setApplicationsData] = useState(null);
   const [analyticsData, setAnalyticsData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   // Custom Reviewers State
   const [reviewerOptions, setReviewerOptions] = useState(DEFAULT_REVIEWERS);
@@ -770,7 +772,7 @@ export default function CampusAdminDashboard() {
                 </td>
               </tr>
             ) : (
-              rawApplications.map((app) => (
+              (rawApplications.slice((currentPage - 1) * pageSize, currentPage * pageSize)).map((app) => (
                 <tr key={app.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s ease' }}>
                   
                   {/* Applicant Name with Ellipsis & Hover Tooltip */}
@@ -858,6 +860,69 @@ export default function CampusAdminDashboard() {
             )}
           </tbody>
         </table>
+
+        {/* Pagination Footer Controls */}
+        {rawApplications.length > 0 && (() => {
+          const totalPages = Math.max(1, Math.ceil(rawApplications.length / pageSize));
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#475569', fontWeight: 600 }}>
+                <span>Rows per page:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
+                  style={{ padding: '3px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.76rem', fontWeight: 700, outline: 'none', cursor: 'pointer' }}
+                >
+                  <option value={25}>25 records</option>
+                  <option value={50}>50 records</option>
+                  <option value={100}>100 records</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <span style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 600 }}>
+                  Page <strong style={{ color: '#0f172a' }}>{currentPage}</strong> of <strong style={{ color: '#0f172a' }}>{totalPages}</strong> ({rawApplications.length} total records)
+                </span>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage <= 1}
+                    title="First Page"
+                    style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: currentPage <= 1 ? '#f1f5f9' : '#ffffff', color: currentPage <= 1 ? '#94a3b8' : '#334155', fontSize: '0.74rem', fontWeight: 700, cursor: currentPage <= 1 ? 'not-allowed' : 'pointer' }}
+                  >
+                    «
+                  </button>
+
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage <= 1}
+                    style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: currentPage <= 1 ? '#f1f5f9' : '#ffffff', color: currentPage <= 1 ? '#94a3b8' : '#334155', fontSize: '0.74rem', fontWeight: 700, cursor: currentPage <= 1 ? 'not-allowed' : 'pointer' }}
+                  >
+                    Previous
+                  </button>
+
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage >= totalPages}
+                    style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: currentPage >= totalPages ? '#f1f5f9' : '#ffffff', color: currentPage >= totalPages ? '#94a3b8' : '#334155', fontSize: '0.74rem', fontWeight: 700, cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer' }}
+                  >
+                    Next
+                  </button>
+
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage >= totalPages}
+                    title="Last Page"
+                    style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: currentPage >= totalPages ? '#f1f5f9' : '#ffffff', color: currentPage >= totalPages ? '#94a3b8' : '#334155', fontSize: '0.74rem', fontWeight: 700, cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer' }}
+                  >
+                    »
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Custom Reviewer Input Modal */}

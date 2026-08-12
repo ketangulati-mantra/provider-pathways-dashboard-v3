@@ -2530,6 +2530,24 @@ export default function SubmissionsTable() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <button
+                onClick={() => loadSubmissions(1)}
+                disabled={loading || (pagination.currentPage || 1) <= 1}
+                title="First Page"
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  background: (pagination.currentPage || 1) <= 1 ? '#f1f5f9' : '#ffffff',
+                  color: (pagination.currentPage || 1) <= 1 ? '#94a3b8' : '#334155',
+                  fontSize: '0.74rem',
+                  fontWeight: 700,
+                  cursor: (pagination.currentPage || 1) <= 1 ? 'not-allowed' : 'pointer'
+                }}
+              >
+                «
+              </button>
+
+              <button
                 onClick={() => loadSubmissions((pagination.currentPage || 1) - 1)}
                 disabled={loading || (pagination.currentPage || 1) <= 1}
                 style={{
@@ -2561,6 +2579,24 @@ export default function SubmissionsTable() {
                 }}
               >
                 Next
+              </button>
+
+              <button
+                onClick={() => loadSubmissions(pagination.totalPages || 1)}
+                disabled={loading || (pagination.currentPage || 1) >= (pagination.totalPages || 1)}
+                title="Last Page"
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  background: (pagination.currentPage || 1) >= (pagination.totalPages || 1) ? '#f1f5f9' : '#ffffff',
+                  color: (pagination.currentPage || 1) >= (pagination.totalPages || 1) ? '#94a3b8' : '#334155',
+                  fontSize: '0.74rem',
+                  fontWeight: 700,
+                  cursor: (pagination.currentPage || 1) >= (pagination.totalPages || 1) ? 'not-allowed' : 'pointer'
+                }}
+              >
+                »
               </button>
             </div>
           </div>
