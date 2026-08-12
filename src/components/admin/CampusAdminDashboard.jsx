@@ -6,6 +6,7 @@ import RejectReasonModal from './RejectReasonModal';
 import RequestMoreInfoModal from './RequestMoreInfoModal';
 import ManageReviewersModal from './ManageReviewersModal';
 import { MANTRA_CONFIG } from '../../mantra';
+import { useAuth } from '../../auth/AuthContext';
 
 const API_BASE = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null ? MANTRA_CONFIG.apiBaseUrl : (import.meta.env.PROD ? '' : 'http://localhost:5000');
 
@@ -14,6 +15,9 @@ const DEFAULT_REVIEWERS = [
 ];
 
 export default function CampusAdminDashboard() {
+  const { admin: currentAdmin } = useAuth();
+  const loggedInReviewerName = currentAdmin?.name || 'Admin';
+
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'more_info_required'
   const [dateFilter, setDateFilter] = useState('all'); // 'all' | 'today' | '7days' | '30days' | 'this_month'
   const [reviewerFilter, setReviewerFilter] = useState('all'); // 'all' | reviewerName
@@ -127,6 +131,7 @@ export default function CampusAdminDashboard() {
   const updateAppReviewer = async (applicationId, reviewerName) => {
     const isUnassigned = !reviewerName || reviewerName === 'Unassigned';
     const targetStatus = isUnassigned ? 'submitted' : 'under_review';
+    const effectiveReviewer = isUnassigned ? 'Unassigned' : reviewerName;
 
     // 1. Instant Optimistic State Update: 0ms UI update, zero loading spinner/reload
     setApplicationsData(prev => {
@@ -134,7 +139,7 @@ export default function CampusAdminDashboard() {
       return {
         ...prev,
         applications: prev.applications.map(app =>
-          app.id === applicationId ? { ...app, reviewed_by: reviewerName, application_status: targetStatus } : app
+          app.id === applicationId ? { ...app, reviewed_by: effectiveReviewer, application_status: targetStatus } : app
         )
       };
     });
@@ -147,8 +152,8 @@ export default function CampusAdminDashboard() {
         body: JSON.stringify({
           applicationId,
           action: targetStatus,
-          reviewerId: reviewerName,
-          reviewerNotes: isUnassigned ? 'Unassigned reviewer' : `Assigned reviewer: ${reviewerName}`
+          reviewerId: effectiveReviewer,
+          reviewerNotes: isUnassigned ? 'Unassigned reviewer' : `Assigned reviewer: ${effectiveReviewer}`
         })
       });
     } catch (err) {
@@ -180,7 +185,7 @@ export default function CampusAdminDashboard() {
           applicationId: rejectModalApp.id,
           action: 'reject',
           reviewReason: reason,
-          reviewerId: rejectModalApp.reviewed_by || 'Admin Reviewer'
+          reviewerId: loggedInReviewerName
         })
       });
       const json = await res.json();
@@ -206,7 +211,7 @@ export default function CampusAdminDashboard() {
           action: 'request_info',
           requestedFields,
           reviewerNotes,
-          reviewerId: requestInfoModalApp.reviewed_by || 'Admin Reviewer'
+          reviewerId: loggedInReviewerName
         })
       });
       const json = await res.json();

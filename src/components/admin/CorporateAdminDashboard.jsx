@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { Search, Eye, Filter, CheckCircle2, XCircle, Clock, Building2, Calendar, UserCheck, Plus, ChevronDown, X } from 'lucide-react';
 import ManageReviewersModal from './ManageReviewersModal';
 import { MANTRA_CONFIG } from '../../mantra';
+import { useAuth } from '../../auth/AuthContext';
 
 const API_BASE = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null ? MANTRA_CONFIG.apiBaseUrl : (import.meta.env.PROD ? '' : 'http://localhost:5000');
 

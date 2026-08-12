@@ -1,20 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { User, X, Plus, Trash2 } from 'lucide-react';
+import { User, X, Plus, Trash2, ChevronDown, Loader2 } from 'lucide-react';
+import { MANTRA_CONFIG } from '../../mantra';
+
+const API_BASE = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null ? MANTRA_CONFIG.apiBaseUrl : (import.meta.env.PROD ? '' : 'http://localhost:5000');
 
 export default function ManageReviewersModal({ isOpen, onClose, reviewerOptions = [], onAddReviewer, onDeleteReviewer }) {
-  const [newReviewerName, setNewReviewerName] = useState('');
+  const [selectedUserName, setSelectedUserName] = useState('');
+  const [allUsers, setAllUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchUsers();
+    }
+  }, [isOpen]);
+
+  const fetchUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const res = await fetch(`${API_BASE}/api/admin/available-users`);
+      const json = await res.json();
+      if (json.success && Array.isArray(json.users)) {
+        setAllUsers(json.users);
+      }
+    } catch (err) {
+      console.error('[ManageReviewersModal] Error fetching users:', err);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  // Filter out users who are ALREADY reviewers
+  const availableUsers = allUsers.filter(u => {
+    if (!u.name || !u.name.trim()) return false;
+    const cleanName = u.name.trim();
+    if (cleanName === 'Unassigned') return false;
+    return !reviewerOptions.includes(cleanName);
+  });
+
+  const handleAdd = (e) => {
     e.preventDefault();
-    const trimmed = newReviewerName.trim();
-    if (trimmed) {
+    if (selectedUserName && selectedUserName.trim()) {
       if (onAddReviewer) {
-        onAddReviewer(trimmed);
+        onAddReviewer(selectedUserName.trim());
       }
-      setNewReviewerName('');
+      setSelectedUserName('');
     }
   };
 
@@ -38,7 +71,7 @@ export default function ManageReviewersModal({ isOpen, onClose, reviewerOptions 
           background: '#ffffff',
           borderRadius: '16px',
           width: '100%',
-          maxWidth: '420px',
+          maxWidth: '460px',
           boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
           overflow: 'hidden',
           animation: 'scaleUp 0.15s ease-out'
@@ -55,7 +88,7 @@ export default function ManageReviewersModal({ isOpen, onClose, reviewerOptions 
               <h3 style={{ margin: 0, fontSize: '0.96rem', fontWeight: 800, color: '#0f172a' }}>
                 Manage Reviewers
               </h3>
-              <div style={{ fontSize: '0.68rem', color: '#64748b' }}>Add or remove reviewer names from your team list</div>
+              <div style={{ fontSize: '0.68rem', color: '#64748b' }}>Select existing users to assign as reviewers</div>
             </div>
           </div>
           <button 
@@ -66,56 +99,82 @@ export default function ManageReviewersModal({ isOpen, onClose, reviewerOptions 
           </button>
         </div>
 
-        {/* Add New Reviewer Form */}
+        {/* Add Reviewer Selector Form */}
         <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9', background: '#ffffff' }}>
           <label style={{ fontSize: '0.68rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
-            Add New Reviewer
+            Select Existing User to Add as Reviewer
           </label>
           <form 
-            onSubmit={handleSubmit}
+            onSubmit={handleAdd}
             style={{ display: 'flex', gap: '8px' }}
           >
-            <input
-              type="text"
-              placeholder="Enter reviewer full name..."
-              value={newReviewerName}
-              onChange={(e) => setNewReviewerName(e.target.value)}
-              style={{
-                flex: 1,
-                height: '32px',
-                padding: '0 10px',
-                borderRadius: '8px',
-                border: '1px solid #cbd5e1',
-                fontSize: '0.78rem',
-                outline: 'none',
-                background: '#f8fafc',
-                color: '#0f172a'
-              }}
-            />
+            <div style={{ position: 'relative', flex: 1 }}>
+              <select
+                value={selectedUserName}
+                onChange={(e) => setSelectedUserName(e.target.value)}
+                disabled={loadingUsers || availableUsers.length === 0}
+                style={{
+                  width: '100%',
+                  height: '34px',
+                  padding: '0 26px 0 10px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  outline: 'none',
+                  background: '#f8fafc',
+                  color: selectedUserName ? '#0f172a' : '#64748b',
+                  appearance: 'none',
+                  cursor: (loadingUsers || availableUsers.length === 0) ? 'not-allowed' : 'pointer'
+                }}
+              >
+                <option value="">
+                  {loadingUsers
+                    ? 'Loading existing users...'
+                    : availableUsers.length === 0
+                    ? 'No remaining users available'
+                    : 'Choose an existing user...'}
+                </option>
+                {availableUsers.map((u) => (
+                  <option key={u.id || u.name} value={u.name}>
+                    {u.name} {u.email ? `(${u.email})` : u.role ? `(${u.role})` : ''}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            </div>
+
             <button
               type="submit"
-              disabled={!newReviewerName.trim()}
+              disabled={!selectedUserName}
               style={{
-                height: '32px',
+                height: '34px',
                 padding: '0 14px',
                 borderRadius: '8px',
                 border: 'none',
-                background: newReviewerName.trim() ? 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)' : '#e2e8f0',
-                color: newReviewerName.trim() ? '#ffffff' : '#94a3b8',
+                background: selectedUserName ? 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)' : '#e2e8f0',
+                color: selectedUserName ? '#ffffff' : '#94a3b8',
                 fontWeight: 700,
                 fontSize: '0.76rem',
-                cursor: newReviewerName.trim() ? 'pointer' : 'not-allowed',
+                cursor: selectedUserName ? 'pointer' : 'not-allowed',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px'
+                gap: '4px',
+                whiteSpace: 'nowrap'
               }}
             >
-              <Plus size={14} /> Add
+              <Plus size={14} /> Add Reviewer
             </button>
           </form>
+
+          {availableUsers.length === 0 && !loadingUsers && (
+            <div style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '6px', fontStyle: 'italic' }}>
+              All registered users in the system are currently added to the reviewer list.
+            </div>
+          )}
         </div>
 
-        {/* Existing Reviewers List */}
+        {/* Active Reviewers List */}
         <div style={{ padding: '14px 18px', maxHeight: '260px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>
             Active Reviewers ({reviewerOptions.length})

@@ -321,4 +321,57 @@ export const submissionController = {
       next(error);
     }
   },
+
+  async getAvailableUsers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { sql } = await import('../db/client.js');
+      const { getAllAdmins } = await import('../services/adminAuthService.js');
+
+      const admins = await getAllAdmins();
+      const adminUsers = (admins || []).map(a => ({
+        id: `admin_${a.id}`,
+        name: a.name,
+        email: a.email,
+        role: a.role || 'Admin'
+      }));
+
+      const submissionUsers = await sql`
+        SELECT DISTINCT full_name as name, email FROM activity_submissions WHERE full_name IS NOT NULL AND full_name != ''
+        UNION
+        SELECT DISTINCT full_name as name, email FROM campus_ambassador_applications WHERE full_name IS NOT NULL AND full_name != ''
+        UNION
+        SELECT DISTINCT full_name as name, email FROM corporate_partner_applications WHERE full_name IS NOT NULL AND full_name != ''
+      `;
+
+      const candidateUsers = (submissionUsers as any[]).map((u, i) => ({
+        id: `user_${i}`,
+        name: u.name,
+        email: u.email || '',
+        role: 'User'
+      }));
+
+      const nameSet = new Set<string>();
+      const combined: Array<{ id: string; name: string; email: string; role: string }> = [];
+
+      for (const u of [...adminUsers, ...candidateUsers]) {
+        if (u.name && u.name.trim() && !nameSet.has(u.name.trim().toLowerCase())) {
+          nameSet.add(u.name.trim().toLowerCase());
+          combined.push({
+            id: String(u.id),
+            name: u.name.trim(),
+            email: u.email || '',
+            role: u.role || 'User'
+          });
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        users: combined
+      });
+    } catch (error) {
+      console.error('❌ Error fetching available users for reviewers:', error);
+      next(error);
+    }
+  },
 };

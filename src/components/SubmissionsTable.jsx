@@ -267,18 +267,46 @@ const formatActivityTitle = (title, lessonId) => {
   const lower = (title || '').toLowerCase();
   const lId = (lessonId || '').toLowerCase();
 
-  if (lower.includes('ocd') || lId.includes('ocd')) {
+  // Specific Lesson Initiatives
+  if (lId === 'fundraising' || lower.includes('fund raising') || lower.includes('fundraising')) {
+    return 'Fund Raising for Mantra Foundation';
+  }
+  if (lId === 'campus-awareness' || lower.includes('campus ambassador')) {
+    return 'Campus Ambassador Program';
+  }
+  if (lId === 'corporate-eap' || lower.includes('corporate growth partner')) {
+    return 'Corporate Growth Partner Program';
+  }
+  if (lId === 'intern-program' || lower.includes('intern program')) {
+    return 'Mantra Foundation Therapy Intern Program';
+  }
+  if (lId === 'recruit-interns' || lower.includes('recruit')) {
+    return 'Help Recruit New Therapy Interns';
+  }
+  if (lId === 'sales-partner' || lower.includes('sales partner')) {
+    return 'Mantra Sales Partner';
+  }
+  if (lId === 'community-management' || lower.includes('community management')) {
+    return 'Community Management';
+  }
+  if (lId === 'content-creation' || lower.includes('content creation')) {
+    return 'Content Creation for Mental Health';
+  }
+
+  // Intro Video Marketing Lessons
+  if (lId === 'ocd-market-yourself' || lower.includes('ocdmantra')) {
     return 'OCD intro video';
   }
-  if (lower.includes('physio') || lId.includes('physio')) {
+  if (lId === 'physio-market-yourself' || lower.includes('physiomantra')) {
     return 'Physio intro video';
   }
-  if (lower.includes('therapy') || lId.includes('therapy')) {
+  if (lId === 'market-yourself' || lower.includes('therapymantra')) {
     return 'Therapy intro video';
   }
-  if (lower.includes('mantra') || lId.includes('market') || lId.includes('grow')) {
+  if (lId === 'mantra-market-yourself' || lower.includes('mantracare')) {
     return 'Mantra intro video';
   }
+
   return title || 'Mantra intro video';
 };
 
@@ -625,8 +653,18 @@ export default function SubmissionsTable() {
 
   const handleStatusChange = async (submissionId, newStatus) => {
     try {
-      setSubmissions(prev => prev.map(s => s.id === submissionId ? { ...s, status: newStatus } : s));
-      const res = await reviewSubmissionStatus(submissionId, newStatus);
+      const activeAdminName = currentAdmin?.name || 'Admin';
+      const isUnassigned = newStatus === 'pending';
+      const reviewerVal = isUnassigned ? 'Unassigned' : activeAdminName;
+
+      setSubmissions(prev => prev.map(s => s.id === submissionId ? {
+        ...s,
+        status: newStatus,
+        reviewed_by: reviewerVal,
+        reviewedBy: reviewerVal
+      } : s));
+
+      const res = await reviewSubmissionStatus(submissionId, newStatus, reviewerVal);
       if (res.success || res.data || res.status) {
         showToast(`Status updated to '${STATUS_CONFIG[newStatus]?.label || newStatus}'`, 'success');
       }
@@ -2399,7 +2437,6 @@ export default function SubmissionsTable() {
                                 {reviewerOptions.map(r => (
                                   <option key={r} value={r}>{r}</option>
                                 ))}
-                                <option value="__ADD_NEW__">+ Add Reviewer...</option>
                                 <option value="__MANAGE__">⚙️ Manage Reviewers...</option>
                               </select>
                             </td>

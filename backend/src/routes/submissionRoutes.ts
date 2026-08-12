@@ -13,6 +13,7 @@ router.get('/admin/submissions/activities', submissionController.getActivities);
 
 // GET, POST, DELETE /api/admin/reviewers - Reviewers CRUD
 router.get('/admin/reviewers', submissionController.getReviewers);
+router.get('/admin/available-users', submissionController.getAvailableUsers);
 router.post('/admin/reviewers', submissionController.addReviewer);
 router.delete('/admin/reviewers/:name', submissionController.deleteReviewer);
 
