@@ -142,11 +142,11 @@ export async function updateAdmin(req: AuthRequest, res: Response) {
       message: 'Admin account updated successfully.',
       admin: updated
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error('❌ updateAdmin Error:', err);
     return res.status(500).json({
       success: false,
-      error: 'Failed to update admin account.'
+      error: err?.message || 'Failed to update admin account.'
     });
   }
 }
