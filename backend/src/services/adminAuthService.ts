@@ -82,21 +82,13 @@ export async function createAdminRecord(data: {
   const normalizedEmail = data.email.trim().toLowerCase();
   const normalizedRole = data.role === 'super_admin' || data.role === 'Super Admin' || data.role === 'superadmin' ? 'super_admin' : 'admin';
 
-  try {
-    const rows = await sql`
-      INSERT INTO admins (name, email, password_hash, role, is_active)
-      VALUES (${data.name.trim()}, ${normalizedEmail}, ${data.password_hash}, ${normalizedRole}::admin_role_type, TRUE)
-      RETURNING id, name, email, role, is_active, last_login_at, created_at, updated_at
-    `;
-    return rows[0] as Omit<AdminRecord, 'password_hash'>;
-  } catch (e) {
-    const rows = await sql`
-      INSERT INTO admins (name, email, password_hash, role, is_active)
-      VALUES (${data.name.trim()}, ${normalizedEmail}, ${data.password_hash}, ${normalizedRole}, TRUE)
-      RETURNING id, name, email, role, is_active, last_login_at, created_at, updated_at
-    `;
-    return rows[0] as Omit<AdminRecord, 'password_hash'>;
-  }
+  const rows = await sql`
+    INSERT INTO admins (name, email, password_hash, role, is_active)
+    VALUES (${data.name.trim()}, ${normalizedEmail}, ${data.password_hash}, ${normalizedRole}, TRUE)
+    RETURNING id, name, email, role, is_active, last_login_at, created_at, updated_at
+  `;
+
+  return rows[0] as Omit<AdminRecord, 'password_hash'>;
 }
 
 export async function updateAdminRecord(
@@ -106,28 +98,20 @@ export async function updateAdminRecord(
   const existing = await findAdminById(id);
   if (!existing) return null;
 
-  const newName = data.name !== undefined ? data.name.trim() : existing.name;
-  const newEmail = data.email !== undefined ? data.email.trim().toLowerCase() : existing.email;
+  const newName = data.name !== undefined && data.name.trim() ? data.name.trim() : existing.name;
+  const newEmail = data.email !== undefined && data.email.trim() ? data.email.trim().toLowerCase() : existing.email;
   const newRole = data.role !== undefined ? (data.role === 'super_admin' || data.role === 'Super Admin' || data.role === 'superadmin' ? 'super_admin' : 'admin') : existing.role;
   const newActive = data.is_active !== undefined ? Boolean(data.is_active) : existing.is_active;
 
-  try {
-    const rows = await sql`
-      UPDATE admins
-      SET name = ${newName}, email = ${newEmail}, role = ${newRole}::admin_role_type, is_active = ${newActive}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ${id}
-      RETURNING id, name, email, role, is_active, last_login_at, created_at, updated_at
-    `;
-    return rows[0] as Omit<AdminRecord, 'password_hash'>;
-  } catch (e) {
-    const rows = await sql`
-      UPDATE admins
-      SET name = ${newName}, email = ${newEmail}, role = ${newRole}, is_active = ${newActive}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ${id}
-      RETURNING id, name, email, role, is_active, last_login_at, created_at, updated_at
-    `;
-    return rows[0] as Omit<AdminRecord, 'password_hash'>;
-  }
+  const rows = await sql`
+    UPDATE admins
+    SET name = ${newName}, email = ${newEmail}, role = ${newRole}, is_active = ${newActive}, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ${id}
+    RETURNING id, name, email, role, is_active, last_login_at, created_at, updated_at
+  `;
+
+  if (!rows || rows.length === 0) return existing;
+  return rows[0] as Omit<AdminRecord, 'password_hash'>;
 }
 
 export async function updateAdminStatusRecord(id: number, is_active: boolean): Promise<boolean> {
