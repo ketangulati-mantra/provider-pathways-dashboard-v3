@@ -66,6 +66,8 @@ app.use('/assets', express.static(path.join(distPath, 'assets')));
 
 const subpaths = [
   '/app/content/provider_pathways',
+  '/provider_activity/app/content',
+  '/app/content',
   '/provider_pathways_dashboard_v3',
   '/provider_pathways_dashboard_v2',
   '/provider_dashboard_v1',

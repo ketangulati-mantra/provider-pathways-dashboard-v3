@@ -65,27 +65,32 @@ function App() {
 
     let p = window.location.pathname;
     const base = envBase ? envBase.replace(/\/$/, '') : '';
-    
-    if (base && p.startsWith(base)) {
-      p = p.slice(base.length) || '/';
-    } else if (p.startsWith('/app/content/provider_pathways')) {
-      p = p.slice('/app/content/provider_pathways'.length) || '/';
-    } else if (p.startsWith('/provider_pathways_dashboard_v3')) {
-      p = p.slice('/provider_pathways_dashboard_v3'.length) || '/';
-    } else if (p.startsWith('/provider_pathways_dashboard_v2')) {
-      p = p.slice('/provider_pathways_dashboard_v2'.length) || '/';
-    } else if (p.startsWith('/provider_dashboard_v1')) {
-      p = p.slice('/provider_dashboard_v1'.length) || '/';
-    } else if (p.startsWith('/provider_pathways_dashboard_v1')) {
-      p = p.slice('/provider_pathways_dashboard_v1'.length) || '/';
-    } else if (p.startsWith('/provider_pathways_v2_testing')) {
-      p = p.slice('/provider_pathways_v2_testing'.length) || '/';
-    } else if (p.startsWith('/provider_pathways')) {
-      p = p.slice('/provider_pathways'.length) || '/';
-    } else if (p.startsWith('/provider_pathway')) {
-      p = p.slice('/provider_pathway'.length) || '/';
-    } else if (p.startsWith('/provider_activity')) {
-      p = p.slice('/provider_activity'.length) || '/';
+
+    const knownPrefixes = [
+      base,
+      '/app/content/provider_pathways',
+      '/provider_activity/app/content',
+      '/app/content',
+      '/provider_pathways_dashboard_v3',
+      '/provider_pathways_dashboard_v2',
+      '/provider_dashboard_v1',
+      '/provider_pathways_dashboard_v1',
+      '/provider_pathways_v2_testing',
+      '/provider_pathways',
+      '/provider_pathway',
+      '/provider_activity'
+    ].filter(Boolean);
+
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const prefix of knownPrefixes) {
+        if (prefix !== '/' && p.startsWith(prefix)) {
+          p = p.slice(prefix.length) || '/';
+          changed = true;
+          break;
+        }
+      }
     }
 
     if (p && !p.startsWith('/task/') && !p.startsWith('/admin') && p !== '/' && p !== '/provider_activity') {

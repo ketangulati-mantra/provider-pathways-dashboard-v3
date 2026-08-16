@@ -29,6 +29,8 @@ const server = http.createServer((req, res) => {
   // Strip known subpath prefixes if present (longest prefix first with boundary check)
   const knownPrefixes = [
     '/app/content/provider_pathways',
+    '/provider_activity/app/content',
+    '/app/content',
     '/provider_pathways_dashboard_v3',
     '/provider_pathways_dashboard_v2',
     '/provider_pathways_dashboard_v1',
@@ -39,10 +41,15 @@ const server = http.createServer((req, res) => {
     '/provider_activity'
   ];
 
-  for (const prefix of knownPrefixes) {
-    if (reqPath === prefix || reqPath.startsWith(prefix + '/')) {
-      reqPath = reqPath.slice(prefix.length) || '/';
-      break;
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const prefix of knownPrefixes) {
+      if (reqPath === prefix || reqPath.startsWith(prefix + '/')) {
+        reqPath = reqPath.slice(prefix.length) || '/';
+        changed = true;
+        break;
+      }
     }
   }
 
