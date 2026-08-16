@@ -1,11 +1,13 @@
 # Dependencies
 node_modules
+backend/node_modules
 .pnp
 .pnp.js
 
 # Build output
 .next
 dist
+backend/dist
 out
 
 # Version control

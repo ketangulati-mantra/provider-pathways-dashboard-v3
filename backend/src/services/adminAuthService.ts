@@ -76,7 +76,7 @@ export async function getAllAdmins(): Promise<Omit<AdminRecord, 'password_hash'>
     FROM users
     ORDER BY created_at DESC
   `;
-  return rows.map(r => ({
+  return rows.map((r: Record<string, any>) => ({
     ...r,
     allowed_pages: Array.isArray(r.allowed_pages) ? r.allowed_pages : ['submissions', 'corporate_admin', 'campus_admin', 'lessons']
   })) as Omit<AdminRecord, 'password_hash'>[];
