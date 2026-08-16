@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, AlertCircle, Loader2 } from 'lucide-react';
+import { User, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 
 const MANTRA_CARE_LOGO_URL = 'https://res.cloudinary.com/hxbamdqf/image/upload/v1786010770/MantraCareLogo_jjuy1c.png';
@@ -8,6 +8,7 @@ export default function AdminLoginPage() {
   const { login, isAuthenticated, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -160,24 +161,47 @@ export default function AdminLoginPage() {
               }}
             />
 
-            <input
-              type="password"
-              required
-              placeholder="••••••••••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: '6px',
-                border: '1px solid #dbeafe',
-                background: '#eff6ff',
-                fontSize: '0.86rem',
-                outline: 'none',
-                color: '#1e293b',
-                boxSizing: 'border-box'
-              }}
-            />
+            <div style={{ position: 'relative', width: '100%' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                placeholder="••••••••••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 42px 10px 14px',
+                  borderRadius: '6px',
+                  border: '1px solid #dbeafe',
+                  background: '#eff6ff',
+                  fontSize: '0.86rem',
+                  outline: 'none',
+                  color: '#1e293b',
+                  boxSizing: 'border-box'
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#64748b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '4px'
+                }}
+                title={showPassword ? 'Hide Password' : 'Show Password'}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
 
             <button
               type="submit"

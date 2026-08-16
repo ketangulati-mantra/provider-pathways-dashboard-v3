@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Users, UserPlus, ShieldCheck, Shield, Search, Filter, RefreshCw,
-  Edit2, Key, Power, Trash2, AlertCircle, X, Loader2, ArrowLeft
+  Edit2, Key, Power, Trash2, AlertCircle, X, Loader2, ArrowLeft, Eye, EyeOff
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
@@ -192,6 +192,8 @@ export default function AdminUsersPage() {
   ]);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const fetchAdmins = async () => {
     try {
@@ -1030,12 +1032,74 @@ export default function AdminUsersPage() {
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, color: '#334155', marginBottom: '4px' }}>Password</label>
-                <input type="password" required autoComplete="new-password" value={formPassword} onChange={(e) => setFormPassword(e.target.value)} placeholder="••••••••" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                <div style={{ position: 'relative', width: '100%' }}>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    autoComplete="new-password"
+                    value={formPassword}
+                    onChange={(e) => setFormPassword(e.target.value)}
+                    placeholder="••••••••"
+                    style={{ width: '100%', padding: '10px 42px 10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#64748b',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '4px'
+                    }}
+                    title={showPassword ? 'Hide Password' : 'Show Password'}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, color: '#334155', marginBottom: '4px' }}>Confirm Password</label>
-                <input type="password" required autoComplete="new-password" value={formConfirmPassword} onChange={(e) => setFormConfirmPassword(e.target.value)} placeholder="••••••••" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                <div style={{ position: 'relative', width: '100%' }}>
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    autoComplete="new-password"
+                    value={formConfirmPassword}
+                    onChange={(e) => setFormConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    style={{ width: '100%', padding: '10px 42px 10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#64748b',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '4px'
+                    }}
+                    title={showConfirmPassword ? 'Hide Password' : 'Show Password'}
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
@@ -1148,12 +1212,72 @@ export default function AdminUsersPage() {
             <form onSubmit={handleResetPasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, color: '#334155', marginBottom: '4px' }}>New Password</label>
-                <input type="password" required value={formPassword} onChange={(e) => setFormPassword(e.target.value)} placeholder="••••••••" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                <div style={{ position: 'relative', width: '100%' }}>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={formPassword}
+                    onChange={(e) => setFormPassword(e.target.value)}
+                    placeholder="••••••••"
+                    style={{ width: '100%', padding: '10px 42px 10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#64748b',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '4px'
+                    }}
+                    title={showPassword ? 'Hide Password' : 'Show Password'}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, color: '#334155', marginBottom: '4px' }}>Confirm New Password</label>
-                <input type="password" required value={formConfirmPassword} onChange={(e) => setFormConfirmPassword(e.target.value)} placeholder="••••••••" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                <div style={{ position: 'relative', width: '100%' }}>
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    value={formConfirmPassword}
+                    onChange={(e) => setFormConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    style={{ width: '100%', padding: '10px 42px 10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#64748b',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '4px'
+                    }}
+                    title={showConfirmPassword ? 'Hide Password' : 'Show Password'}
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
