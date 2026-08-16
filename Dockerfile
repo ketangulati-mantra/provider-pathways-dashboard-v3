@@ -1,36 +1,44 @@
+# Stage 1: Build Stage
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy root and backend package files
-COPY package*.json ./
-COPY backend/package*.json ./backend/
+# Copy root and backend package configuration files explicitly
+COPY package.json package-lock.json* ./
+COPY backend/package.json backend/package-lock.json* ./backend/
 
-# Install root & backend dependencies
-RUN npm ci || npm i
-RUN cd backend && (npm ci || npm i)
+# Install root & backend build dependencies
+RUN npm install
+RUN cd backend && npm install
 
-# Copy source files
+# Copy application source code
 COPY . .
 
-# Build frontend static bundle
+# Build Vite static frontend (/app/dist)
 RUN npm run build
 
-# Build backend TypeScript
+# Build TypeScript backend (/app/backend/dist)
 RUN cd backend && npm run build
 
+# Stage 2: Production Runtime Stage
 FROM node:20-alpine AS runner
 WORKDIR /app
+
 ENV NODE_ENV=production
 ENV PORT=80
 
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/backend/package*.json ./backend/
+# Copy root & backend package files explicitly (prevent wildcard file overwrites)
+COPY package.json package-lock.json* ./
+COPY backend/package.json backend/package-lock.json* ./backend/
+
+# Copy built frontend static bundle & compiled backend output from builder stage
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/backend/dist ./backend/dist
 
-# Install production dependencies only
-RUN npm ci --omit=dev || npm i --only=production
-RUN cd backend && (npm ci --omit=dev || npm i --only=production)
+# Install production dependencies
+RUN npm install --only=production
+RUN cd backend && npm install --only=production
 
 EXPOSE 80
+
+# Start unified Express server (serves API & static frontend SPA)
 CMD ["node", "backend/dist/server.js"]
