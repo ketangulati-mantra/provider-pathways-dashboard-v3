@@ -7,7 +7,7 @@ import {
   useToast
 } from '../components';
 import { completeLesson, goToDashboard } from '../mantra';
-import { 
+import {
   Smartphone, Calendar, Users, Award, Star, CheckCircle2
 } from 'lucide-react';
 import './MobileAppLessonPage.css';
@@ -15,35 +15,35 @@ import './MobileAppLessonPage.css';
 export default function MobileAppLessonPage({ onBack }) {
   const lessonId = 'mobile-app';
 
-  
 
-  const { 
-    lessonProgress, 
-    showCelebrate, 
-    handleCloseCelebration, 
-    handleActionComplete 
+
+  const {
+    lessonProgress,
+    showCelebrate,
+    handleCloseCelebration,
+    handleActionComplete
   } = useLessonCompletion(lessonId, onBack, {
     hasVideo: false,
     hasQuiz: false,
     hasAction: true
   });
-const rewardPoints = 5;
+  const rewardPoints = 5;
 
   // Factual product overview steps using MantraPartner App branding
   const steps = [
-    { 
+    {
       number: 1,
-      title: 'Download the App', 
+      title: 'Download the App',
       desc: 'Search "MantraPartner" on the iOS App Store or Google Play Store to install the application on your mobile device.'
     },
-    { 
+    {
       number: 2,
-      title: 'Log In Securely', 
+      title: 'Log In Securely',
       desc: 'Sign in with your existing provider credentials registered during your clinic setup.'
     },
-    { 
+    {
       number: 3,
-      title: 'Enable Push Notifications', 
+      title: 'Enable Push Notifications',
       desc: 'Allow notification permissions to receive instant booking alerts and respond within the 2-hour SLA.'
     }
   ];
@@ -52,7 +52,7 @@ const rewardPoints = 5;
   // Triggers actual database updates and navigation through integration layer
   return (
     <div className="mobile-app-lesson-container animate-fade-in">
-      <Header 
+      <Header
         title="Download & Review MantraPartner App"
         onBack={onBack}
         progress={lessonProgress}
@@ -60,7 +60,7 @@ const rewardPoints = 5;
       />
 
       <div className="lesson-wrapper">
-        
+
         {/* 1. Hero Section */}
         <section className="app-hero-section">
           <div className="hero-content">
@@ -172,42 +172,42 @@ const rewardPoints = 5;
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%', marginTop: '4px' }}>
             <div className="accurate-store-badges-row">
               {/* Google Play Store Badge Link */}
-              <a 
-                href="https://play.google.com/store/apps/details?id=org.mantracare.partner.app&hl=en_IN" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://play.google.com/store/apps/details?id=org.mantracare.partner.app&hl=en_IN"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="official-badge-link"
               >
-                <img 
-                  src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
-                  alt="Get it on Google Play" 
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
+                  alt="Get it on Google Play"
                   style={{ height: '40px', display: 'block' }}
                 />
               </a>
 
               {/* Apple App Store Badge Link */}
-              <a 
-                href="https://apps.apple.com/in/app/mantracare-partner/id1603403683" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://apps.apple.com/in/app/mantracare-partner/id1603403683"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="official-badge-link"
               >
-                <img 
-                  src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
-                  alt="Download on the App Store" 
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg"
+                  alt="Download on the App Store"
                   style={{ height: '40px', display: 'block' }}
                 />
               </a>
             </div>
 
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               onClick={handleActionComplete}
-              style={{ 
-                display: 'inline-flex', 
-                alignItems: 'center', 
-                gap: '6px', 
-                padding: '10px 24px', 
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '10px 24px',
                 fontSize: '0.85rem',
                 marginTop: '4px'
               }}
@@ -222,7 +222,7 @@ const rewardPoints = 5;
 
       {/* 6. Celebration Overlay Screen */}
       {showCelebrate && (
-        <CompletionScreen 
+        <CompletionScreen
           points={rewardPoints}
           title="Lesson Complete"
           subtitle="Ready for the next lesson"

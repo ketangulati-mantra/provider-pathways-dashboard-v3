@@ -2,6 +2,8 @@ import React from 'react';
 import LessonTemplate from './LessonTemplate';
 import DeveloperLessonsPage from './DeveloperLessonsPage';
 import IntroductionLessonPage from './IntroductionLessonPage';
+import MantraGrowthJourneyPage from './MantraGrowthJourneyPage';
+import MantraEhrLessonPage from './MantraEhrLessonPage';
 import AdminLoginPage from './AdminLoginPage';
 import AdminUsersPage from './AdminUsersPage';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
@@ -81,6 +83,8 @@ import GrowYourPracticeAcademy from '../components/corporate/GrowYourPracticeAca
 const ROUTE_VIEW_REGISTRY = {
   '/': { default: (props) => <ProtectedRoute><DeveloperLessonsPage {...props} /></ProtectedRoute> },
   '/provider_activity': { default: (props) => <ProtectedRoute><DeveloperLessonsPage {...props} /></ProtectedRoute> },
+  '/task/growth-journey': { default: MantraGrowthJourneyPage },
+  '/task/ehr-mantra-ai': { default: MantraEhrLessonPage },
   '/admin/login': { default: AdminLoginPage },
   '/admin/dashboard': { default: (props) => <ProtectedRoute><DeveloperLessonsPage {...props} /></ProtectedRoute> },
   '/admin/users': { default: (props) => <ProtectedRoute requireSuperAdmin><AdminUsersPage {...props} /></ProtectedRoute> },

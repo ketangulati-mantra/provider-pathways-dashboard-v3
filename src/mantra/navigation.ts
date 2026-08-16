@@ -46,18 +46,18 @@ export const preserveQueryParams = (targetPath: string): string => {
 };
 
 /**
- * Centrally detects execution context and handles exit / back actions:
+ * Centrally detects execution context and handles exit / back actions across all 3 contexts:
  * 1. React Native WebView -> window.ReactNativeWebView.postMessage({ action: "exit" })
  * 2. iframe inside provider.mantracare.com -> window.parent.postMessage({ action: "exit" }, "https://provider.mantracare.com")
  * 3. Standalone browser -> window.location.href = "https://provider.mantracare.com"
  */
-export const handleExit = () => {
-  if (typeof window === 'undefined') return;
+export function handleExit() {
+  if (typeof window === "undefined") return;
 
   // 1. React Native WebView
   if (window.ReactNativeWebView) {
     window.ReactNativeWebView.postMessage(
-      JSON.stringify({ action: 'exit' })
+      JSON.stringify({ action: "exit" })
     );
     return;
   }
@@ -65,37 +65,37 @@ export const handleExit = () => {
   // 2. iframe inside provider.mantracare.com
   if (window.parent !== window) {
     window.parent.postMessage(
-      { action: 'exit' },
-      'https://provider.mantracare.com'
+      { action: "exit" },
+      "https://provider.mantracare.com"
     );
     return;
   }
 
   // 3. Standalone browser
-  window.location.href = 'https://provider.mantracare.com';
-};
+  window.location.href = "https://provider.mantracare.com";
+}
 
 /**
  * Navigates to a specific screen inside the native React Native app (e.g. after task completion)
  */
-export const navigateToNativeScreen = (
-  screen: string = 'Home',
-  params?: Record<string, any>
-) => {
-  if (typeof window === 'undefined') return;
+export function navigateToNativeScreen(
+  screen: string = "Home",
+  params: Record<string, any> = {}
+) {
+  if (typeof window === "undefined") return;
   if (window.ReactNativeWebView) {
     window.ReactNativeWebView.postMessage(
       JSON.stringify({
-        action: 'navigate',
+        action: "navigate",
         screen,
-        params
+        params,
       })
     );
   }
-};
+}
 
 /**
- * Handles back routing, delegating to handleExit.
+ * Handles back routing, delegating to handleExit or onBackCallback.
  */
 export const goBack = (onBackCallback?: () => void) => {
   if (onBackCallback) {

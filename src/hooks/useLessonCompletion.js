@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { completeLesson, getCurrentUserId, goToDashboard } from '../mantra';
+import { completeLesson, getCurrentUserId, goToDashboard, navigateToNativeScreen } from '../mantra';
 import { useToast } from '../components';
 
 /**
@@ -146,7 +146,6 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
   }; */
 
   const handleCloseCelebration = async () => {
-
     setShowCelebrate(false);
 
     setCompletedSteps((prev) => ({
@@ -156,7 +155,12 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
 
     await completeLesson(lessonId);
 
-    goToDashboard();
+    navigateToNativeScreen('Home');
+    if (onBack) {
+      onBack();
+    } else {
+      goToDashboard();
+    }
   };
 
   const isCompleted = 

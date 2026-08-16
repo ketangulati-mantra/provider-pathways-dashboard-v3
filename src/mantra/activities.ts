@@ -19,6 +19,24 @@ export interface Activity {
 
 export const activities: Activity[] = [
   {
+    lessonId: 'growth-journey',
+    activityId: '',
+    services: ['*'],
+    title: 'Mantra Growth Journey',
+    rewardPoints: 25,
+    estimatedDuration: '2 min',
+    route: '/task/growth-journey'
+  },
+  {
+    lessonId: 'ehr-mantra-ai',
+    activityId: '',
+    services: ['*'],
+    title: 'Run Your Practice Smarter with Mantra EHR + MantraAI',
+    rewardPoints: 10,
+    estimatedDuration: '3 min',
+    route: '/task/ehr-mantra-ai'
+  },
+  {
     lessonId: 'introduction',
     activityId: '',
     services: ['*'],
