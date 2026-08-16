@@ -2,7 +2,10 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy root and backend package configuration files explicitly
+# Set NODE_ENV to development for build stage so devDependencies are installed
+ENV NODE_ENV=development
+
+# Copy package configuration files explicitly
 COPY package.json package-lock.json* ./
 COPY backend/package.json backend/package-lock.json* ./backend/
 
@@ -35,8 +38,8 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/backend/dist ./backend/dist
 
 # Install production dependencies
-RUN npm install --only=production
-RUN cd backend && npm install --only=production
+RUN npm install --omit=dev || npm install --only=production
+RUN cd backend && (npm install --omit=dev || npm install --only=production)
 
 EXPOSE 80
 
