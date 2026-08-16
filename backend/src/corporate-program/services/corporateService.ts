@@ -35,9 +35,37 @@ export class CorporateService {
 
   async getAdminApplications(statusFilter?: string, searchQuery?: string) {
     const apps = await corporateRepository.getAllApplications(statusFilter, searchQuery);
+    const totalApplications = apps.length;
+
+    let pendingCount = 0;
+    let underReviewCount = 0;
+    let reviewedCount = 0;
+    let mailSentCount = 0;
+
+    apps.forEach((a: any) => {
+      const st = (a.application_status || 'submitted').toLowerCase();
+      if (st === 'submitted' || st === 'pending' || st === '') {
+        pendingCount++;
+      } else if (st === 'under_review') {
+        underReviewCount++;
+      } else if (st === 'reviewed' || st === 'approved') {
+        reviewedCount++;
+      } else if (st === 'mail_sent') {
+        mailSentCount++;
+      }
+    });
+
     return {
       applications: apps,
-      totalCount: apps.length
+      totalApplications,
+      pendingCount,
+      statusCounts: {
+        pending: pendingCount,
+        underReview: underReviewCount,
+        reviewed: reviewedCount,
+        mailSent: mailSentCount,
+        all: totalApplications
+      }
     };
   }
 

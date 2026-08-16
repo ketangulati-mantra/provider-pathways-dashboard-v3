@@ -4,6 +4,7 @@ import { Search, RefreshCw, Download, FileSpreadsheet, Calendar, User, ExternalL
 import { fetchAllSubmissions, reviewSubmissionStatus, fetchSubmissionAnalytics, fetchAdminReviewers, addAdminReviewer, deleteAdminReviewer, fetchSubmissionActivities } from '../mantra/api';
 import { useToast } from './Toast';
 import { useAuth } from '../auth/AuthContext';
+import ManageReviewersModal from './admin/ManageReviewersModal';
 import { activities as registeredActivities } from '../mantra/activities';
 import { COUNTRY_LIST } from '../utils/countryData';
 
@@ -372,6 +373,7 @@ export default function SubmissionsTable() {
   const { showToast } = useToast();
   const { admin: currentAdmin } = useAuth();
   const [submissions, setSubmissions] = useState([]);
+  const [statusCounts, setStatusCounts] = useState({ pending: 0, underReview: 0, reviewed: 0, mailSent: 0, total: 0 });
   const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalRecords: 0 });
   const [limit, setLimit] = useState(25);
   const [loading, setLoading] = useState(true);
@@ -479,6 +481,9 @@ export default function SubmissionsTable() {
 
     if (res.success) {
       setSubmissions(res.data || []);
+      if (res.statusCounts) {
+        setStatusCounts(res.statusCounts);
+      }
       if (res.pagination) {
         setPagination(res.pagination);
       }
@@ -566,7 +571,7 @@ export default function SubmissionsTable() {
     status: true,
     activity: true,
     search: true,
-    reviewer: false,
+    reviewer: true,
     service: false,
     country: false,
     skippedVideo: false
@@ -675,12 +680,6 @@ export default function SubmissionsTable() {
     }
   };
 
-  // Counts calculation
-  const pendingCount = submissions.filter(s => (!s.status || s.status === 'pending')).length;
-  const underReviewCount = submissions.filter(s => s.status === 'under_review').length;
-  const reviewedCount = submissions.filter(s => (s.status === 'reviewed' || s.status === 'approved')).length;
-  const mailSentCount = submissions.filter(s => s.status === 'mail_sent').length;
-
   const STATUS_CONFIG = {
     pending: { label: 'Pending', bg: '#fef3c7', border: '#fde68a', color: '#b45309' },
     under_review: { label: 'Under Review', bg: '#ffedd5', border: '#fed7aa', color: '#c2410c' },
@@ -689,48 +688,79 @@ export default function SubmissionsTable() {
   };
 
   const handleStatusChange = async (submissionId, newStatus) => {
+    let prevSubmission = null;
+
+    // Optimistic Real-Time UI Update (Instant response, zero full table reloads)
+    setSubmissions(prev => prev.map(s => {
+      if (s.id === submissionId) {
+        prevSubmission = s;
+        if (newStatus === 'pending') {
+          return {
+            ...s,
+            status: 'pending',
+            reviewed_by: 'Unassigned',
+            reviewedBy: 'Unassigned',
+            reviewed_by_user_id: null,
+            reviewed_at: null
+          };
+        } else {
+          const activeAdminName = currentAdmin?.name || currentAdmin?.email || 'Admin';
+          const isCurrentlyUnassigned = !s.reviewed_by || s.reviewed_by === 'Unassigned';
+          return {
+            ...s,
+            status: newStatus,
+            reviewed_by: isCurrentlyUnassigned ? activeAdminName : s.reviewed_by,
+            reviewedBy: isCurrentlyUnassigned ? activeAdminName : (s.reviewedBy || s.reviewed_by)
+          };
+        }
+      }
+      return s;
+    }));
+
+    showToast(`Status updated to '${STATUS_CONFIG[newStatus]?.label || newStatus}'`, 'success');
+
+    // Background API Sync (No loading spinner or full table reload)
     try {
-      const activeAdminName = currentAdmin?.name || 'Admin';
-      const isUnassigned = newStatus === 'pending';
-      const reviewerVal = isUnassigned ? 'Unassigned' : activeAdminName;
-
-      setSubmissions(prev => prev.map(s => s.id === submissionId ? {
-        ...s,
-        status: newStatus,
-        reviewed_by: reviewerVal,
-        reviewedBy: reviewerVal
-      } : s));
-
-      const res = await reviewSubmissionStatus(submissionId, newStatus, reviewerVal);
-      if (res.success || res.data || res.status) {
-        showToast(`Status updated to '${STATUS_CONFIG[newStatus]?.label || newStatus}'`, 'success');
+      const res = await reviewSubmissionStatus(submissionId, newStatus);
+      if (res.success && res.data) {
+        setSubmissions(prev => prev.map(s => s.id === submissionId ? { ...s, ...res.data } : s));
+        loadReviewers();
+      } else if (res.error) {
+        showToast(res.error, 'error');
+        if (prevSubmission) {
+          setSubmissions(prev => prev.map(s => s.id === submissionId ? prevSubmission : s));
+        }
       }
     } catch (err) {
       console.error('[SubmissionsTable] Error updating status:', err);
-      showToast('Failed to update status', 'error');
+      showToast('Failed to sync status with server', 'error');
+      if (prevSubmission) {
+        setSubmissions(prev => prev.map(s => s.id === submissionId ? prevSubmission : s));
+      }
     }
   };
 
-  const handleReviewerChange = async (submissionId, newReviewer) => {
-    if (newReviewer === '__MANAGE__') {
-      setIsManagingReviewers(true);
-      return;
-    }
-    let finalReviewer = newReviewer;
-    if (newReviewer === '__ADD_NEW__') {
-      const customName = prompt('Enter Reviewer Name:');
-      if (!customName || !customName.trim()) return;
-      finalReviewer = customName.trim();
-      handleAddReviewer(finalReviewer);
-    }
-
+  const handleClaimSubmission = async (submissionId) => {
     try {
-      setSubmissions(prev => prev.map(s => s.id === submissionId ? { ...s, reviewed_by: finalReviewer } : s));
-      await reviewSubmissionStatus(submissionId, undefined, '', finalReviewer);
-      showToast(`Assigned reviewer: ${finalReviewer}`, 'success');
+      const apiBase = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null 
+        ? MANTRA_CONFIG.apiBaseUrl 
+        : (import.meta.env.PROD ? '' : 'http://localhost:5000');
+
+      const res = await fetch(`${apiBase}/api/activity-submissions/${submissionId}/claim`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast(json.message || 'Submission claimed successfully', 'success');
+        loadSubmissions(pagination.currentPage, limit);
+      } else {
+        showToast(json.error || 'Failed to claim submission', 'error');
+      }
     } catch (err) {
-      console.error('[SubmissionsTable] Error updating reviewer:', err);
-      showToast('Failed to update reviewer', 'error');
+      console.error('[SubmissionsTable] Error claiming submission:', err);
+      showToast('Failed to claim submission', 'error');
     }
   };
 
@@ -764,19 +794,51 @@ export default function SubmissionsTable() {
     if (!item) return false;
     const data = item.form_data || item.submission_data || item.formData || item.submissionData || {};
     const subType = String(item.submission_type || item.submissionType || '').toLowerCase();
-    return (
+    const lessonId = String(item.lesson_id || item.lessonId || '').toLowerCase();
+    const title = String(item.activity_title || item.activityTitle || '').toLowerCase();
+
+    const isExplicitSkipped = (
       item.video_skipped === true ||
       item.video_skipped === 'true' ||
+      item.skipped_video === true ||
+      item.skipped === true ||
       subType === 'skipped_video' ||
       subType === 'no_video' ||
       subType === 'skipped' ||
       data.skippedVideo === true ||
       data.videoSkipped === true ||
       data.video_skipped === true ||
+      data.skipped_video === true ||
       data.skipped === true ||
       data.videoStatus === 'skipped' ||
-      data.video_status === 'skipped'
+      data.video_status === 'skipped' ||
+      item.video_url === 'skipped' ||
+      data.video_url === 'skipped' ||
+      data.videoUrl === 'skipped'
     );
+
+    if (isExplicitSkipped) return true;
+
+    // Check if this is Mantra intro video or related video activity
+    const isVideoActivity = (
+      lessonId.includes('mantra-intro-video') ||
+      lessonId.includes('intro-video') ||
+      lessonId.includes('market-yourself') ||
+      lessonId.includes('grow-your-practice') ||
+      title.includes('mantra intro video') ||
+      title.includes('intro video') ||
+      subType.includes('video')
+    );
+
+    if (isVideoActivity) {
+      const rawVUrl = item.videoUrl || item.video_url || item.video || item.proof_url || item.proofUrl || data.videoUrl || data.video_url || data.videoLink || data.video || data.url || data.file || '';
+      const cleanVUrl = normalizeImageUrl(rawVUrl);
+      if (!cleanVUrl) {
+        return true; // Provider opted to skip uploading video
+      }
+    }
+
+    return false;
   };
 
   const extractProofImage = (sub) => {
@@ -1476,7 +1538,7 @@ export default function SubmissionsTable() {
           </div>
           <div>
             <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Pending</div>
-            <div style={{ fontSize: '0.98rem', fontWeight: 900, color: '#92400e', lineHeight: 1, marginTop: '1px' }}>{pendingCount}</div>
+            <div style={{ fontSize: '0.98rem', fontWeight: 900, color: '#92400e', lineHeight: 1, marginTop: '1px' }}>{statusCounts.pending}</div>
           </div>
         </div>
 
@@ -1487,7 +1549,7 @@ export default function SubmissionsTable() {
           </div>
           <div>
             <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#c2410c', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Under Review</div>
-            <div style={{ fontSize: '0.98rem', fontWeight: 900, color: '#9a3412', lineHeight: 1, marginTop: '1px' }}>{underReviewCount}</div>
+            <div style={{ fontSize: '0.98rem', fontWeight: 900, color: '#9a3412', lineHeight: 1, marginTop: '1px' }}>{statusCounts.underReview}</div>
           </div>
         </div>
 
@@ -1498,7 +1560,7 @@ export default function SubmissionsTable() {
           </div>
           <div>
             <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#15803d', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Reviewed</div>
-            <div style={{ fontSize: '0.98rem', fontWeight: 900, color: '#166534', lineHeight: 1, marginTop: '1px' }}>{reviewedCount}</div>
+            <div style={{ fontSize: '0.98rem', fontWeight: 900, color: '#166534', lineHeight: 1, marginTop: '1px' }}>{statusCounts.reviewed}</div>
           </div>
         </div>
 
@@ -1509,7 +1571,7 @@ export default function SubmissionsTable() {
           </div>
           <div>
             <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Mail Sent</div>
-            <div style={{ fontSize: '0.98rem', fontWeight: 900, color: '#0f172a', lineHeight: 1, marginTop: '1px' }}>{mailSentCount}</div>
+            <div style={{ fontSize: '0.98rem', fontWeight: 900, color: '#0f172a', lineHeight: 1, marginTop: '1px' }}>{statusCounts.mailSent}</div>
           </div>
         </div>
 
@@ -2452,30 +2514,27 @@ export default function SubmissionsTable() {
                         }
 
                         if (col.id === 'reviewedBy') {
+                          const isAssigned = currentReviewer && currentReviewer !== 'Unassigned';
+                          const reviewerDisplayName = isAssigned ? (item.reviewer_name || currentReviewer) : 'Unassigned';
+
                           return (
                             <td key={col.id} style={{ padding: '6px 8px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
-                              <select
-                                value={currentReviewer}
-                                onChange={(e) => handleReviewerChange(item.id, e.target.value)}
+                              <span
                                 style={{
-                                  padding: '2px 6px',
+                                  padding: '3px 8px',
                                   borderRadius: '6px',
-                                  border: '1px solid #cbd5e1',
-                                  background: currentReviewer !== 'Unassigned' ? '#eff6ff' : '#f8fafc',
-                                  color: currentReviewer !== 'Unassigned' ? '#1d4ed8' : '#64748b',
+                                  border: isAssigned ? '1px solid #bfdbfe' : '1px solid #e2e8f0',
+                                  background: isAssigned ? '#eff6ff' : '#f8fafc',
+                                  color: isAssigned ? '#1d4ed8' : '#64748b',
                                   fontWeight: 700,
                                   fontSize: '0.70rem',
-                                  cursor: 'pointer',
-                                  outline: 'none',
-                                  width: '100%',
-                                  minWidth: '110px'
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px'
                                 }}
                               >
-                                {reviewerOptions.map(r => (
-                                  <option key={r} value={r}>{r}</option>
-                                ))}
-                                <option value="__MANAGE__">⚙️ Manage Reviewers...</option>
-                              </select>
+                                {reviewerDisplayName}
+                              </span>
                             </td>
                           );
                         }
@@ -2782,12 +2841,36 @@ export default function SubmissionsTable() {
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <span style={{ fontSize: '0.64rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Reviewed By:</span>
                           <span style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', background: reviewer !== 'Unassigned' ? '#eff6ff' : '#f8fafc', color: reviewer !== 'Unassigned' ? '#1d4ed8' : '#64748b', fontWeight: 700, fontSize: '0.72rem' }}>
-                            {reviewer}
+                            {selectedSubmission.reviewer_name || reviewer}
                           </span>
                         </div>
+                        {selectedSubmission.reviewed_at && (
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span style={{ fontSize: '0.64rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Reviewed At:</span>
+                            <span style={{ fontSize: '0.70rem', fontWeight: 600, color: '#0f172a' }}>
+                              {formatDate(selectedSubmission.reviewed_at)}
+                            </span>
+                          </div>
+                        )}
                         {(() => {
                           const rawV = selectedSubmission.videoUrl || selectedSubmission.video_url || selectedSubmission.video || data.videoUrl || data.video_url || data.videoLink || data.video || data.url || data.file || '';
                           const cleanV = normalizeImageUrl(rawV);
+                          const lessonId = String(selectedSubmission.lesson_id || selectedSubmission.lessonId || '').toLowerCase();
+                          const title = String(selectedSubmission.activity_title || selectedSubmission.activityTitle || '').toLowerCase();
+                          const subType = String(selectedSubmission.submission_type || selectedSubmission.submissionType || '').toLowerCase();
+
+                          const isVideoActivity = (
+                            lessonId.includes('mantra-intro-video') ||
+                            lessonId.includes('intro-video') ||
+                            lessonId.includes('market-yourself') ||
+                            lessonId.includes('grow-your-practice') ||
+                            title.includes('mantra intro video') ||
+                            title.includes('intro video') ||
+                            subType.includes('video')
+                          );
+
+                          if (!isVideoActivity && !cleanV) return null;
+
                           return (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                               <span style={{ fontSize: '0.64rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Video Status:</span>
@@ -2877,25 +2960,27 @@ export default function SubmissionsTable() {
                 );
               })()}
 
-              {/* Card 5: Uploaded Video / Video Skipped Status (Always visible) */}
+              {/* Card 5: Uploaded Video / Video Skipped Status (Only visible for video activities or if video is present) */}
               {(() => {
                 const fd = selectedSubmission.form_data || selectedSubmission.submission_data || {};
                 const rawVUrl = selectedSubmission.videoUrl || selectedSubmission.video_url || selectedSubmission.video || fd.videoUrl || fd.video_url || fd.videoLink || fd.video || fd.url || fd.file || '';
                 const cleanVUrl = normalizeImageUrl(rawVUrl);
-                const isSkippedVideo = !!(
-                  selectedSubmission.skipped_video ||
-                  selectedSubmission.video_skipped ||
-                  selectedSubmission.skipped ||
-                  fd.skipped_video ||
-                  fd.video_skipped ||
-                  fd.skipped ||
-                  fd.skippedVideo ||
-                  fd.videoSkipped ||
-                  selectedSubmission.video_url === 'skipped' ||
-                  fd.video_url === 'skipped' ||
-                  fd.videoUrl === 'skipped' ||
-                  !cleanVUrl
+
+                const lessonId = String(selectedSubmission.lesson_id || selectedSubmission.lessonId || '').toLowerCase();
+                const title = String(selectedSubmission.activity_title || selectedSubmission.activityTitle || '').toLowerCase();
+                const subType = String(selectedSubmission.submission_type || selectedSubmission.submissionType || '').toLowerCase();
+
+                const isVideoActivity = (
+                  lessonId.includes('mantra-intro-video') ||
+                  lessonId.includes('intro-video') ||
+                  lessonId.includes('market-yourself') ||
+                  lessonId.includes('grow-your-practice') ||
+                  title.includes('mantra intro video') ||
+                  title.includes('intro video') ||
+                  subType.includes('video')
                 );
+
+                if (!isVideoActivity && !cleanVUrl) return null;
 
                 return (
                   <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '14px 16px' }}>
@@ -2975,200 +3060,12 @@ export default function SubmissionsTable() {
         document.body
       )}
 
-      {/* MODAL 3: Manage & Delete Reviewers Modal */}
-      {isManagingReviewers && ReactDOM.createPortal(
-        <div
-          onClick={() => setIsManagingReviewers(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(15, 23, 42, 0.65)',
-            backdropFilter: 'blur(6px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999999,
-            padding: '20px'
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: '#ffffff',
-              borderRadius: '16px',
-              width: '100%',
-              maxWidth: '440px',
-              display: 'flex',
-              flexDirection: 'column',
-              boxShadow: '0 20px 40px -10px rgba(15, 23, 42, 0.35)',
-              border: '1px solid #e2e8f0',
-              overflow: 'hidden'
-            }}
-          >
-            {/* Modal Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '28px', height: '28px', borderRadius: '7px', background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <User size={14} />
-                </div>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: '0.96rem', fontWeight: 800, color: '#0f172a' }}>
-                    Manage Reviewers
-                  </h3>
-                  <div style={{ fontSize: '0.68rem', color: '#64748b' }}>Add or remove reviewer names from your team list</div>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsManagingReviewers(false)}
-                style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}
-              >
-                <X size={14} />
-              </button>
-            </div>
-
-            {/* Add New Reviewer Selector Form */}
-            <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9', background: '#ffffff' }}>
-              <label style={{ fontSize: '0.68rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
-                Select User to Add as Reviewer
-              </label>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const targetName = selectedUserToAdd || newReviewerName;
-                  if (targetName) {
-                    handleAddReviewer(targetName);
-                    setSelectedUserToAdd('');
-                    setNewReviewerName('');
-                  }
-                }}
-                style={{ display: 'flex', gap: '8px' }}
-              >
-                <div style={{ position: 'relative', flex: 1 }}>
-                  <select
-                    value={selectedUserToAdd}
-                    onChange={(e) => setSelectedUserToAdd(e.target.value)}
-                    disabled={isLoadingAvailableUsers || availableUsers.length === 0}
-                    style={{
-                      width: '100%',
-                      height: '34px',
-                      padding: '0 10px',
-                      borderRadius: '8px',
-                      border: '1px solid #cbd5e1',
-                      fontSize: '0.78rem',
-                      fontWeight: 600,
-                      outline: 'none',
-                      background: '#f8fafc',
-                      color: selectedUserToAdd ? '#0f172a' : '#64748b',
-                      cursor: (isLoadingAvailableUsers || availableUsers.length === 0) ? 'not-allowed' : 'pointer'
-                    }}
-                  >
-                    <option value="">
-                      {isLoadingAvailableUsers
-                        ? 'Loading users from users table...'
-                        : availableUsers.length === 0
-                        ? 'No remaining users available'
-                        : 'Choose an existing user from users table...'}
-                    </option>
-                    {availableUsers.map((u) => (
-                      <option key={u.id || u.user_id || u.email} value={u.name}>
-                        {u.name} {u.email ? `(${u.email})` : ''} — {u.role || 'User'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <button
-                  type="submit"
-                  disabled={!selectedUserToAdd}
-                  style={{
-                    height: '34px',
-                    padding: '0 14px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: selectedUserToAdd ? 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)' : '#e2e8f0',
-                    color: selectedUserToAdd ? '#ffffff' : '#94a3b8',
-                    fontWeight: 700,
-                    fontSize: '0.76rem',
-                    cursor: selectedUserToAdd ? 'pointer' : 'not-allowed',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  <Plus size={14} /> Add
-                </button>
-              </form>
-            </div>
-
-            {/* Existing Reviewers List */}
-            <div style={{ padding: '14px 18px', maxHeight: '260px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>
-                Active Reviewers ({reviewerOptions.length})
-              </div>
-              {reviewerOptions.map((reviewer) => (
-                <div
-                  key={reviewer}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    background: '#f8fafc',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid #f1f5f9',
-                    fontSize: '0.78rem'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: reviewer !== 'Unassigned' ? '#eff6ff' : '#f1f5f9', color: reviewer !== 'Unassigned' ? '#2563eb' : '#64748b', fontSize: '0.68rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {reviewer.slice(0, 1).toUpperCase()}
-                    </div>
-                    <span style={{ fontWeight: 700, color: '#0f172a' }}>{reviewer}</span>
-                    {reviewer === 'Unassigned' && (
-                      <span style={{ fontSize: '0.62rem', color: '#94a3b8', background: '#e2e8f0', padding: '1px 5px', borderRadius: '4px' }}>Default</span>
-                    )}
-                  </div>
-
-                  {reviewer !== 'Unassigned' && (
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteReviewer(reviewer)}
-                      title={`Delete reviewer ${reviewer}`}
-                      style={{
-                        background: '#fee2e2',
-                        border: '1px solid #fca5a5',
-                        color: '#dc2626',
-                        width: '26px',
-                        height: '26px',
-                        borderRadius: '6px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s'
-                      }}
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Modal Footer */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '12px 18px', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
-              <button
-                onClick={() => setIsManagingReviewers(false)}
-                style={{ padding: '6px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontWeight: 700, cursor: 'pointer', fontSize: '0.76rem' }}
-              >
-                Done
-              </button>
-            </div>
-
-          </div>
-        </div>,
-        document.body
-      )}
+      {/* MODAL 3: Manage Reviewers Modal */}
+      <ManageReviewersModal
+        isOpen={isManagingReviewers}
+        onClose={() => setIsManagingReviewers(false)}
+        onReviewersChange={(newReviewers) => setReviewerOptions(newReviewers)}
+      />
 
       {/* Custom Date Range Modal for Table Filter */}
       {isCustomDateModalOpen && ReactDOM.createPortal(

@@ -24,7 +24,13 @@ export default function DeveloperLessonsPage({ onNavigate }) {
     role: 'super_admin'
   };
 
-  const isSuperAdmin = true;
+  const isSuperAdmin = displayAdmin?.role === 'super_admin' || displayAdmin?.role === 'Super Admin' || displayAdmin?.role === 'superadmin';
+  const allowedPages = isSuperAdmin 
+    ? ['submissions', 'corporate_admin', 'campus_admin', 'lessons']
+    : (Array.isArray(displayAdmin?.allowed_pages) && displayAdmin.allowed_pages.length > 0 
+        ? displayAdmin.allowed_pages 
+        : ['submissions', 'corporate_admin', 'campus_admin', 'lessons']);
+
   const [selectedService, setSelectedService] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const getInitialTab = () => {
@@ -43,6 +49,14 @@ export default function DeveloperLessonsPage({ onNavigate }) {
   };
 
   const [activeTab, setActiveTab] = useState(getInitialTab);
+
+  useEffect(() => {
+    if (!isSuperAdmin && !allowedPages.includes(activeTab)) {
+      if (allowedPages.length > 0) {
+        setActiveTab(allowedPages[0]);
+      }
+    }
+  }, [activeTab, allowedPages, isSuperAdmin]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const searchInputRef = useRef(null);
 
@@ -272,83 +286,88 @@ export default function DeveloperLessonsPage({ onNavigate }) {
                 Platform Modules
               </div>
 
-              <button
-                onClick={() => { handleTabChange('submissions'); setIsSidebarOpen(false); }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: activeTab === 'submissions' ? '#043263' : '#f8fafc',
-                  color: activeTab === 'submissions' ? '#ffffff' : '#334155',
-                  fontWeight: 700,
-                  fontSize: '0.82rem',
-                  cursor: 'pointer',
-                  boxShadow: activeTab === 'submissions' ? '0 2px 8px rgba(4, 50, 99, 0.2)' : 'none',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Database size={15} color={activeTab === 'submissions' ? '#ffffff' : '#043263'} />
-                  <span>Form Submissions</span>
-                </div>
-                <ChevronRight size={14} opacity={0.6} />
-              </button>
+              {allowedPages.includes('submissions') && (
+                <button
+                  onClick={() => { handleTabChange('submissions'); setIsSidebarOpen(false); }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: activeTab === 'submissions' ? '#043263' : '#f8fafc',
+                    color: activeTab === 'submissions' ? '#ffffff' : '#334155',
+                    fontWeight: 700,
+                    fontSize: '0.82rem',
+                    cursor: 'pointer',
+                    boxShadow: activeTab === 'submissions' ? '0 2px 8px rgba(4, 50, 99, 0.2)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Database size={15} color={activeTab === 'submissions' ? '#ffffff' : '#043263'} />
+                    <span>Form Submissions</span>
+                  </div>
+                  <ChevronRight size={14} opacity={0.6} />
+                </button>
+              )}
 
-              <button
-                onClick={() => { handleTabChange('campus_admin'); setIsSidebarOpen(false); }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: activeTab === 'campus_admin' ? '#043263' : '#f8fafc',
-                  color: activeTab === 'campus_admin' ? '#ffffff' : '#334155',
-                  fontWeight: 700,
-                  fontSize: '0.82rem',
-                  cursor: 'pointer',
-                  boxShadow: activeTab === 'campus_admin' ? '0 2px 8px rgba(4, 50, 99, 0.2)' : 'none',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <GraduationCap size={15} color={activeTab === 'campus_admin' ? '#ffffff' : '#043263'} />
-                  <span>Campus Program</span>
-                </div>
-                <ChevronRight size={14} opacity={0.6} />
-              </button>
+              {allowedPages.includes('campus_admin') && (
+                <button
+                  onClick={() => { handleTabChange('campus_admin'); setIsSidebarOpen(false); }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: activeTab === 'campus_admin' ? '#043263' : '#f8fafc',
+                    color: activeTab === 'campus_admin' ? '#ffffff' : '#334155',
+                    fontWeight: 700,
+                    fontSize: '0.82rem',
+                    cursor: 'pointer',
+                    boxShadow: activeTab === 'campus_admin' ? '0 2px 8px rgba(4, 50, 99, 0.2)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <GraduationCap size={15} color={activeTab === 'campus_admin' ? '#ffffff' : '#043263'} />
+                    <span>Campus Program</span>
+                  </div>
+                  <ChevronRight size={14} opacity={0.6} />
+                </button>
+              )}
 
-              <button
-                onClick={() => { handleTabChange('corporate_admin'); setIsSidebarOpen(false); }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: activeTab === 'corporate_admin' ? '#043263' : '#f8fafc',
-                  color: activeTab === 'corporate_admin' ? '#ffffff' : '#334155',
-                  fontWeight: 700,
-                  fontSize: '0.82rem',
-                  cursor: 'pointer',
-                  boxShadow: activeTab === 'corporate_admin' ? '0 2px 8px rgba(4, 50, 99, 0.2)' : 'none',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Building2 size={15} color={activeTab === 'corporate_admin' ? '#ffffff' : '#043263'} />
-                  <span>EAP Interests</span>
-                </div>
-                <ChevronRight size={14} opacity={0.6} />
-              </button>
+              {allowedPages.includes('corporate_admin') && (
+                <button
+                  onClick={() => { handleTabChange('corporate_admin'); setIsSidebarOpen(false); }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: activeTab === 'corporate_admin' ? '#043263' : '#f8fafc',
+                    color: activeTab === 'corporate_admin' ? '#ffffff' : '#334155',
+                    fontWeight: 700,
+                    fontSize: '0.82rem',
+                    cursor: 'pointer',
+                    boxShadow: activeTab === 'corporate_admin' ? '0 2px 8px rgba(4, 50, 99, 0.2)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Building2 size={15} color={activeTab === 'corporate_admin' ? '#ffffff' : '#043263'} />
+                    <span>EAP Interests</span>
+                  </div>
+                  <ChevronRight size={14} opacity={0.6} />
+                </button>
+              )}
 
-              {/* Super Admin Only: Pathways Tab */}
-              {isSuperAdmin && (
+              {allowedPages.includes('lessons') && (
                 <button
                   onClick={() => { handleTabChange('lessons'); setIsSidebarOpen(false); }}
                   style={{

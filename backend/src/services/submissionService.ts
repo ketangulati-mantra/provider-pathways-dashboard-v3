@@ -25,11 +25,144 @@ export interface GetSubmissionsQuery {
 export interface ReviewSubmissionInput {
   status?: string;
   reviewedBy?: string;
+  reviewerUserId?: string;
+  reviewerName?: string;
   reviewNotes?: string;
+  forceReassign?: boolean;
+}
+
+// Ensure schema has reviewed_by_user_id and reviewed_at columns
+let isSchemaEnsured = false;
+async function ensureSubmissionsSchema() {
+  if (isSchemaEnsured) return;
+  try {
+    await sql`
+      ALTER TABLE activity_submissions 
+      ADD COLUMN IF NOT EXISTS reviewed_by_user_id VARCHAR(255);
+    `;
+    await sql`
+      ALTER TABLE activity_submissions 
+      ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMP WITH TIME ZONE;
+    `;
+    isSchemaEnsured = true;
+  } catch (err) {
+    console.error('[submissionService] Schema migration check warning:', err);
+  }
+}
+
+function isVideoSkippedSubmission(s: any): boolean {
+  if (!s) return false;
+  
+  const fd = s.form_data || s.submission_data || s.formData || s.submissionData || {};
+  const lessonId = String(s.lesson_id || s.lessonId || '').toLowerCase();
+  const title = String(s.activity_title || s.activityTitle || '').toLowerCase();
+  const subType = String(s.submission_type || s.submissionType || '').toLowerCase();
+  
+  const isExplicitSkipped = (
+    s.skipped_video === true ||
+    s.video_skipped === true ||
+    s.video_skipped === 'true' ||
+    s.skipped === true ||
+    subType === 'skipped_video' ||
+    subType === 'no_video' ||
+    subType === 'skipped' ||
+    fd.skippedVideo === true ||
+    fd.videoSkipped === true ||
+    fd.video_skipped === true ||
+    fd.skipped_video === true ||
+    fd.skipped === true ||
+    fd.videoStatus === 'skipped' ||
+    fd.video_status === 'skipped' ||
+    s.video_url === 'skipped' ||
+    fd.video_url === 'skipped' ||
+    fd.videoUrl === 'skipped'
+  );
+
+  if (isExplicitSkipped) return true;
+
+  const isVideoActivity = (
+    lessonId.includes('mantra-intro-video') ||
+    lessonId.includes('intro-video') ||
+    lessonId.includes('market-yourself') ||
+    lessonId.includes('grow-your-practice') ||
+    title.includes('mantra intro video') ||
+    title.includes('intro video') ||
+    subType.includes('video')
+  );
+
+  if (isVideoActivity) {
+    const rawVUrl = s.videoUrl || s.video_url || s.video || s.proof_url || s.proofUrl || fd.videoUrl || fd.video_url || fd.videoLink || fd.video || fd.url || fd.file || '';
+    let cleanVUrl = String(rawVUrl).trim().replace(/^['"]|['"]$/g, '');
+    if (!cleanVUrl || ['null', 'undefined', 'none', 'n/a', 'skipped'].includes(cleanVUrl.toLowerCase())) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// Helper to enrich raw submission rows with reviewer user object
+async function enrichSubmissions(rawSubmissions: any[]) {
+  if (!rawSubmissions || rawSubmissions.length === 0) return [];
+  
+  // Collect all non-null reviewed_by_user_id values
+  const reviewerUserIds = Array.from(
+    new Set(rawSubmissions.map((s) => s.reviewed_by_user_id).filter(Boolean))
+  );
+
+  let reviewerMap = new Map<string, { user_id: string; name: string; email: string }>();
+
+  if (reviewerUserIds.length > 0) {
+    try {
+      const reviewerUsers = await sql`
+        SELECT user_id, name, email
+        FROM users
+        WHERE user_id::text IN ${sql(reviewerUserIds.map(String))};
+      `;
+      (reviewerUsers || []).forEach((u: any) => {
+        reviewerMap.set(String(u.user_id), {
+          user_id: String(u.user_id),
+          name: u.name || u.email || String(u.user_id),
+          email: u.email || ''
+        });
+      });
+    } catch (err) {
+      console.error('[submissionService] Error querying reviewer users:', err);
+    }
+  }
+
+  return rawSubmissions.map((s: any) => {
+    const reviewerUserId = s.reviewed_by_user_id ? String(s.reviewed_by_user_id) : null;
+    let reviewerObj = null;
+
+    if (reviewerUserId && reviewerMap.has(reviewerUserId)) {
+      reviewerObj = reviewerMap.get(reviewerUserId);
+    } else if (s.reviewed_by && s.reviewed_by !== 'Unassigned') {
+      reviewerObj = {
+        user_id: reviewerUserId || '',
+        name: s.reviewed_by,
+        email: ''
+      };
+    }
+
+    const reviewerDisplayName = reviewerObj?.name || s.reviewed_by || 'Unassigned';
+
+    return {
+      ...s,
+      reviewed_by_user_id: reviewerUserId,
+      reviewed_at: s.reviewed_at || null,
+      reviewed_by: reviewerDisplayName,
+      reviewer_details: reviewerObj,
+      reviewer_name: reviewerDisplayName,
+      reviewer_email: reviewerObj?.email || ''
+    };
+  });
 }
 
 export const submissionService = {
   async createSubmission(input: CreateSubmissionInput) {
+    await ensureSubmissionsSchema();
+
     const {
       userId,
       service,
@@ -73,110 +206,75 @@ export const submissionService = {
       RETURNING *;
     `;
 
-    return result[0];
+    const enriched = await enrichSubmissions(result);
+    return enriched[0];
   },
 
   async getAnalytics(options: { range?: string; startDate?: string; endDate?: string }) {
+    await ensureSubmissionsSchema();
+
     const now = new Date();
-    let start: Date;
-    let end: Date = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    let filterDate: Date | null = null;
 
-    const range = options.range || 'this_month';
-
-    if (range === 'custom' && options.startDate) {
-      start = new Date(options.startDate);
-      start.setHours(0, 0, 0, 0);
-      if (options.endDate) {
-        end = new Date(options.endDate);
-        end.setHours(23, 59, 59, 999);
+    if (options.startDate) {
+      filterDate = new Date(options.startDate);
+    } else if (options.range) {
+      switch (options.range.toLowerCase()) {
+        case '7d':
+        case '7days':
+          filterDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case '30d':
+        case '30days':
+          filterDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case '90d':
+        case '90days':
+          filterDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+          break;
+        case 'all':
+          filterDate = null;
+          break;
+        default:
+          filterDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
       }
-    } else if (range === 'today') {
-      start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-    } else if (range === 'yesterday') {
-      start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0, 0);
-      end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999);
-    } else if (range === 'this_week') {
-      const current = new Date();
-      const day = current.getDay();
-      const diff = current.getDate() - day + (day === 0 ? -6 : 1);
-      start = new Date(current.setDate(diff));
-      start.setHours(0, 0, 0, 0);
-    } else if (range === 'this_month') {
-      start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-    } else if (range === 'last_month') {
-      start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
-      end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-    } else if (range === 'last_3_months') {
-      start = new Date(now.getFullYear(), now.getMonth() - 2, 1, 0, 0, 0, 0);
-    } else if (range === 'last_6_months') {
-      start = new Date(now.getFullYear(), now.getMonth() - 5, 1, 0, 0, 0, 0);
-    } else if (range === 'last_12_months') {
-      start = new Date(now.getFullYear(), now.getMonth() - 11, 1, 0, 0, 0, 0);
-    } else {
-      start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
     }
 
-    const startISO = start.toISOString();
-    const endISO = end.toISOString();
+    let allSubmissions = await sql`
+      SELECT * FROM activity_submissions
+      ORDER BY created_at DESC;
+    `;
 
-    let submissions: any[] = [];
-    try {
-      submissions = await sql`
-        SELECT * FROM activity_submissions
-        WHERE created_at >= ${startISO}::timestamptz AND created_at <= ${endISO}::timestamptz
-        ORDER BY created_at DESC;
-      `;
-    } catch (err) {
-      console.warn('[submissionService] Error querying submissions for analytics:', err);
+    if (filterDate) {
+      const minTime = filterDate.getTime();
+      allSubmissions = allSubmissions.filter((s: any) => new Date(s.created_at).getTime() >= minTime);
     }
 
-    let completions: any[] = [];
-    try {
-      completions = await sql`
-        SELECT * FROM user_activity_completions
-        WHERE completed_at >= ${startISO}::timestamptz AND completed_at <= ${endISO}::timestamptz
-        ORDER BY completed_at DESC;
-      `;
-    } catch (err) {
-      // Table might not exist yet or empty
+    if (options.endDate) {
+      const maxTime = new Date(options.endDate).getTime();
+      allSubmissions = allSubmissions.filter((s: any) => new Date(s.created_at).getTime() <= maxTime);
     }
-
-    const providerIds = new Set<string>();
-    submissions.forEach((s: any) => { if (s.user_id) providerIds.add(String(s.user_id)); });
-    completions.forEach((c: any) => { if (c.user_id) providerIds.add(String(c.user_id)); });
 
     const activityCountMap = new Map<string, { activityId: string; activityName: string; count: number }>();
-
-    completions.forEach((c: any) => {
-      const lessonId = c.lesson_id || 'unknown';
-      const name = c.metadata?.activityTitle || c.metadata?.title || lessonId;
-      const key = lessonId;
-      if (!activityCountMap.has(key)) {
-        activityCountMap.set(key, { activityId: lessonId, activityName: name, count: 0 });
-      }
-      activityCountMap.get(key)!.count += 1;
-    });
-
-    submissions.forEach((s: any) => {
-      const lessonId = s.lesson_id || 'unknown';
-      const name = s.activity_title || lessonId;
-      const key = lessonId;
-      if (!activityCountMap.has(key)) {
-        activityCountMap.set(key, { activityId: lessonId, activityName: name, count: 0 });
-      }
-      const existsInCompletions = completions.some((c: any) => c.user_id === s.user_id && c.lesson_id === s.lesson_id);
-      if (!existsInCompletions) {
-        activityCountMap.get(key)!.count += 1;
-      }
-    });
-
     const videoSubmissionMap = new Map<string, { activityId: string; activityName: string; total: number; uploaded: number; skipped: number }>();
+    const providerIds = new Set<string>();
 
-    submissions.forEach((s: any) => {
+    allSubmissions.forEach((s: any) => {
+      if (s.user_id) providerIds.add(s.user_id);
+
+      const actKey = s.lesson_id || s.activity_title || 'unknown-activity';
+      const actTitle = s.activity_title || s.lesson_id || 'Unknown Activity';
+      if (!activityCountMap.has(actKey)) {
+        activityCountMap.set(actKey, { activityId: actKey, activityName: actTitle, count: 0 });
+      }
+      activityCountMap.get(actKey)!.count += 1;
+
+      const subDataStr = JSON.stringify(s.submission_data || {}).toLowerCase();
+      const formDataStr = JSON.stringify(s.form_data || {}).toLowerCase();
       const subType = (s.submission_type || '').toLowerCase();
-      const formData = typeof s.form_data === 'object' && s.form_data ? s.form_data : {};
-      const hasVideo = subType === 'video_introduction' || !!formData.videoUrl || !!formData.video_url;
-      const isSkipped = subType === 'skipped_video' || formData.skipped === true;
+
+      const hasVideo = subDataStr.includes('video') || formDataStr.includes('video') || subDataStr.includes('cloudinary');
+      const isSkipped = subDataStr.includes('skipped') || formDataStr.includes('skipped');
 
       if (hasVideo || isSkipped || subType.includes('video') || (s.lesson_id || '').includes('market-yourself') || (s.lesson_id || '').includes('growth')) {
         const lessonId = s.lesson_id || 'video-activity';
@@ -217,15 +315,6 @@ export const submissionService = {
 
   async getReviewers() {
     try {
-      await sql`
-        CREATE TABLE IF NOT EXISTS admin_reviewers (
-          id SERIAL PRIMARY KEY,
-          name VARCHAR(255) UNIQUE NOT NULL,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-        );
-      `;
-
-      // Get reviewers from users table where is_reviewer = TRUE
       const userReviewers = await sql`
         SELECT DISTINCT name, email
         FROM users
@@ -233,97 +322,70 @@ export const submissionService = {
         ORDER BY name ASC;
       `;
 
-      const existing = await sql`SELECT name FROM admin_reviewers ORDER BY id ASC;`;
+      const submissionReviewers = await sql`
+        SELECT DISTINCT reviewed_by
+        FROM activity_submissions
+        WHERE reviewed_by IS NOT NULL AND reviewed_by != '' AND reviewed_by != 'Unassigned';
+      `;
+
       const set = new Set<string>();
       set.add('Unassigned');
 
-      userReviewers.forEach((r: any) => { if (r.name && r.name.trim()) set.add(r.name.trim()); });
-      existing.forEach((r: any) => { if (r.name && r.name.trim()) set.add(r.name.trim()); });
+      userReviewers.forEach((r: any) => {
+        if (r.name && r.name.trim()) set.add(r.name.trim());
+      });
+
+      submissionReviewers.forEach((r: any) => {
+        if (r.reviewed_by && r.reviewed_by.trim()) set.add(r.reviewed_by.trim());
+      });
 
       return Array.from(set);
     } catch (err) {
-      console.error('[submissionService] Error fetching reviewers:', err);
-      return ['Unassigned', 'Ketan', 'Team Member', 'Pooja', 'Mantra Admin'];
+      console.error('[submissionService] Error fetching reviewers from users table:', err);
+      return ['Unassigned'];
     }
   },
 
-  async addReviewer(name: string) {
-    const trimmed = name ? name.trim() : '';
-    if (!trimmed) throw new Error('Reviewer name cannot be empty');
+  async addReviewer(identifier: string) {
+    const trimmed = identifier ? identifier.trim() : '';
+    if (!trimmed) throw new Error('Reviewer identifier cannot be empty');
 
     await sql`
-      CREATE TABLE IF NOT EXISTS admin_reviewers (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) UNIQUE NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      );
+      UPDATE users
+      SET is_reviewer = TRUE, updated_at = CURRENT_TIMESTAMP
+      WHERE user_id::text = ${trimmed} OR LOWER(name) = ${trimmed.toLowerCase()} OR LOWER(email) = ${trimmed.toLowerCase()};
     `;
-
-    await sql`
-      INSERT INTO admin_reviewers (name)
-      VALUES (${trimmed})
-      ON CONFLICT (name) DO NOTHING;
-    `;
-
-    // Mark is_reviewer = TRUE in users table
-    try {
-      await sql`
-        UPDATE users
-        SET is_reviewer = TRUE, updated_at = CURRENT_TIMESTAMP
-        WHERE LOWER(name) = ${trimmed.toLowerCase()} OR LOWER(email) = ${trimmed.toLowerCase()};
-      `;
-    } catch (err) {
-      console.error('[submissionService] Error updating users.is_reviewer:', err);
-    }
 
     return this.getReviewers();
   },
 
-  async deleteReviewer(name: string) {
-    const trimmed = name ? name.trim() : '';
+  async deleteReviewer(identifier: string) {
+    const trimmed = identifier ? identifier.trim() : '';
     if (!trimmed || trimmed === 'Unassigned') {
       throw new Error('Cannot delete default Unassigned option');
     }
 
-    try {
-      await sql`
-        DELETE FROM admin_reviewers
-        WHERE LOWER(name) = ${trimmed.toLowerCase()};
-      `;
-    } catch (e) {}
-
-    // Mark is_reviewer = FALSE in users table
-    try {
-      await sql`
-        UPDATE users
-        SET is_reviewer = FALSE, updated_at = CURRENT_TIMESTAMP
-        WHERE LOWER(name) = ${trimmed.toLowerCase()} OR LOWER(email) = ${trimmed.toLowerCase()};
-      `;
-    } catch (err) {
-      console.error('[submissionService] Error unsetting users.is_reviewer:', err);
-    }
+    await sql`
+      UPDATE users
+      SET is_reviewer = FALSE, updated_at = CURRENT_TIMESTAMP
+      WHERE user_id::text = ${trimmed} OR LOWER(name) = ${trimmed.toLowerCase()} OR LOWER(email) = ${trimmed.toLowerCase()};
+    `;
 
     return this.getReviewers();
   },
 
   async getUniqueActivities() {
     try {
-      const result = await sql`
+      const activities = await sql`
         SELECT DISTINCT lesson_id, activity_title
         FROM activity_submissions
-        WHERE activity_title IS NOT NULL OR lesson_id IS NOT NULL;
+        WHERE lesson_id IS NOT NULL AND lesson_id != ''
+        ORDER BY activity_title ASC, lesson_id ASC;
       `;
-      const map = new Map<string, { key: string; title: string }>();
-      result.forEach((row: any) => {
-        const title = row.activity_title || row.lesson_id;
-        if (title && title.trim()) {
-          const key = row.lesson_id || title;
-          if (!map.has(title)) {
-            map.set(title, { key, title });
-          }
-        }
-      });
-      return Array.from(map.values());
+      return activities.map((a: any) => ({
+        id: a.lesson_id,
+        title: a.activity_title || a.lesson_id
+      }));
     } catch (err) {
       console.error('[submissionService] Error fetching unique activities:', err);
       return [];
@@ -331,8 +393,10 @@ export const submissionService = {
   },
 
   async getAllSubmissions(options: GetSubmissionsQuery = {}) {
-    const page = Math.max(1, Number(options.page) || 1);
-    const limit = Math.min(100, Math.max(1, Number(options.limit) || 20));
+    await ensureSubmissionsSchema();
+
+    const page = options.page && options.page > 0 ? options.page : 1;
+    const limit = options.limit && options.limit > 0 ? options.limit : 50;
     const offset = (page - 1) * limit;
 
     const status = options.status?.trim();
@@ -341,10 +405,15 @@ export const submissionService = {
     const submissionType = options.submissionType?.trim();
     const search = options.search?.trim();
 
-    let submissions = await sql`
+    let rawSubmissions = await sql`
       SELECT * FROM activity_submissions
       ORDER BY created_at DESC;
     `;
+
+    let submissions = await enrichSubmissions(rawSubmissions);
+
+    // Exclude skipped video submissions for Mantra intro video or related activities from dashboard list
+    submissions = submissions.filter((s: any) => !isVideoSkippedSubmission(s));
 
     if (status) {
       submissions = submissions.filter((s: any) => (s.status || 'pending').toLowerCase() === status.toLowerCase());
@@ -354,7 +423,10 @@ export const submissionService = {
       if (reviewedBy === 'Unassigned') {
         submissions = submissions.filter((s: any) => !s.reviewed_by || s.reviewed_by === 'Unassigned');
       } else {
-        submissions = submissions.filter((s: any) => s.reviewed_by?.toLowerCase() === reviewedBy.toLowerCase());
+        submissions = submissions.filter((s: any) => 
+          (s.reviewed_by || '').toLowerCase() === reviewedBy.toLowerCase() ||
+          (s.reviewed_by_user_id || '').toLowerCase() === reviewedBy.toLowerCase()
+        );
       }
     }
 
@@ -373,6 +445,7 @@ export const submissionService = {
         s.user_id?.toLowerCase().includes(q) ||
         s.lesson_id?.toLowerCase().includes(q) ||
         (s.reviewed_by || '').toLowerCase().includes(q) ||
+        (s.reviewer_email || '').toLowerCase().includes(q) ||
         JSON.stringify(s.form_data || {}).toLowerCase().includes(q) ||
         JSON.stringify(s.submission_data || {}).toLowerCase().includes(q)
       );
@@ -394,10 +467,37 @@ export const submissionService = {
 
     const totalRecords = submissions.length;
     const totalPages = Math.ceil(totalRecords / limit);
+
+    // Compute consolidated status counts across ALL records in DB (All pages included)
+    let pendingCount = 0;
+    let underReviewCount = 0;
+    let reviewedCount = 0;
+    let mailSentCount = 0;
+
+    submissions.forEach((s: any) => {
+      const st = String(s.status || 'pending').toLowerCase().trim();
+      if (st === 'pending' || st === '') {
+        pendingCount++;
+      } else if (st === 'under_review') {
+        underReviewCount++;
+      } else if (st === 'reviewed' || st === 'approved') {
+        reviewedCount++;
+      } else if (st === 'mail_sent') {
+        mailSentCount++;
+      }
+    });
+
     const paginatedSubmissions = submissions.slice(offset, offset + limit);
 
     return {
       submissions: paginatedSubmissions,
+      statusCounts: {
+        pending: pendingCount,
+        underReview: underReviewCount,
+        reviewed: reviewedCount,
+        mailSent: mailSentCount,
+        total: totalRecords
+      },
       pagination: {
         totalRecords,
         totalPages,
@@ -408,62 +508,168 @@ export const submissionService = {
   },
 
   async getSubmissionById(id: string) {
+    await ensureSubmissionsSchema();
+
     const rows = await sql`
       SELECT * FROM activity_submissions 
-      WHERE id::text = ${id};
+      WHERE id::text = ${String(id).trim()};
     `;
-    return rows[0] || null;
+    if (!rows || rows.length === 0) return null;
+    const enriched = await enrichSubmissions(rows);
+    return enriched[0];
   },
 
   async getSubmissionsByUser(userId: string) {
-    return await sql`
+    await ensureSubmissionsSchema();
+
+    const rows = await sql`
       SELECT * FROM activity_submissions 
       WHERE user_id = ${userId}
       ORDER BY created_at DESC;
     `;
+    return await enrichSubmissions(rows);
+  },
+
+  async claimSubmission(id: string, reviewerUserId: string, reviewerName: string) {
+    await ensureSubmissionsSchema();
+
+    const cleanId = String(id).trim();
+    const cleanUserId = String(reviewerUserId).trim();
+    const cleanName = String(reviewerName || reviewerUserId).trim();
+
+    // Concurrency protection: Only assign if reviewed_by_user_id IS NULL or 'Unassigned'
+    const rows = await sql`
+      UPDATE activity_submissions
+      SET reviewed_by_user_id = ${cleanUserId},
+          reviewed_by = ${cleanName},
+          reviewed_at = CURRENT_TIMESTAMP,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id::text = ${cleanId}
+        AND (
+          reviewed_by_user_id IS NULL OR 
+          reviewed_by_user_id = '' OR
+          reviewed_by IS NULL OR 
+          reviewed_by = 'Unassigned' OR
+          reviewed_by_user_id::text = ${cleanUserId}
+        )
+      RETURNING *;
+    `;
+
+    if (!rows || rows.length === 0) {
+      // Check if already claimed by someone else
+      const existing = await sql`SELECT * FROM activity_submissions WHERE id::text = ${cleanId};`;
+      if (existing && existing.length > 0) {
+        const currentAssigned = existing[0];
+        const enrichedCurrent = await enrichSubmissions(existing);
+        const name = enrichedCurrent[0]?.reviewed_by || 'another reviewer';
+        throw new Error(`This submission has already been assigned to ${name}.`);
+      }
+      throw new Error(`Submission '${cleanId}' not found.`);
+    }
+
+    const enriched = await enrichSubmissions(rows);
+    return enriched[0];
   },
 
   async reviewSubmission(id: string, input: ReviewSubmissionInput) {
-    const { status, reviewedBy, reviewNotes } = input;
+    await ensureSubmissionsSchema();
+
+    const { status, reviewerUserId, reviewerName, reviewNotes, forceReassign } = input;
 
     const cleanStatus = status ? String(status).toLowerCase().trim() : null;
-    const cleanReviewer = reviewedBy !== undefined ? String(reviewedBy).trim() : null;
     const cleanNotes = reviewNotes !== undefined ? String(reviewNotes).trim() : null;
     const stringId = String(id).trim();
+    const targetUserId = reviewerUserId ? String(reviewerUserId).trim() : null;
+    const targetName = reviewerName ? String(reviewerName).trim() : null;
+
+    // Check existing submission first
+    const existingRows = await sql`SELECT * FROM activity_submissions WHERE id::text = ${stringId};`;
+    if (!existingRows || existingRows.length === 0) {
+      return null;
+    }
+    const current = existingRows[0];
+    const prevReviewerId = current.reviewed_by_user_id ? String(current.reviewed_by_user_id).trim() : null;
+    const prevReviewerName = current.reviewed_by ? String(current.reviewed_by).trim() : null;
 
     let rows;
-    if (cleanStatus && cleanReviewer !== null) {
+
+    if (cleanStatus === 'pending') {
+      // Reverting to Pending resets reviewer assignment to Unassigned
       rows = await sql`
         UPDATE activity_submissions
-        SET status = ${cleanStatus}, reviewed_by = ${cleanReviewer}, updated_at = CURRENT_TIMESTAMP
-        WHERE id::text = ${stringId}
-        RETURNING *;
-      `;
-    } else if (cleanStatus) {
-      rows = await sql`
-        UPDATE activity_submissions
-        SET status = ${cleanStatus}, updated_at = CURRENT_TIMESTAMP
-        WHERE id::text = ${stringId}
-        RETURNING *;
-      `;
-    } else if (cleanReviewer !== null) {
-      rows = await sql`
-        UPDATE activity_submissions
-        SET reviewed_by = ${cleanReviewer}, updated_at = CURRENT_TIMESTAMP
-        WHERE id::text = ${stringId}
-        RETURNING *;
-      `;
-    } else if (cleanNotes !== null) {
-      rows = await sql`
-        UPDATE activity_submissions
-        SET review_notes = ${cleanNotes}, updated_at = CURRENT_TIMESTAMP
+        SET 
+          status = 'pending',
+          reviewed_by_user_id = NULL,
+          reviewed_by = 'Unassigned',
+          reviewed_at = NULL,
+          review_notes = COALESCE(${cleanNotes}, review_notes),
+          updated_at = CURRENT_TIMESTAMP
         WHERE id::text = ${stringId}
         RETURNING *;
       `;
     } else {
-      rows = await sql`SELECT * FROM activity_submissions WHERE id::text = ${stringId};`;
+      // If already claimed by another reviewer and forceReassign is false, prevent overwrite
+      if (
+        !forceReassign &&
+        targetUserId &&
+        current.reviewed_by_user_id &&
+        String(current.reviewed_by_user_id) !== targetUserId
+      ) {
+        // Keep existing assignment if already assigned
+      }
+
+      rows = await sql`
+        UPDATE activity_submissions
+        SET 
+          status = COALESCE(${cleanStatus}, status),
+          reviewed_by_user_id = COALESCE(reviewed_by_user_id, ${targetUserId}),
+          reviewed_by = CASE 
+            WHEN reviewed_by IS NULL OR reviewed_by = 'Unassigned' THEN COALESCE(${targetName}, 'Unassigned')
+            ELSE reviewed_by 
+          END,
+          reviewed_at = COALESCE(reviewed_at, CURRENT_TIMESTAMP),
+          review_notes = COALESCE(${cleanNotes}, review_notes),
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id::text = ${stringId}
+        RETURNING *;
+      `;
+
+      const finalRow = rows && rows[0];
+      const activeUserId = finalRow?.reviewed_by_user_id || targetUserId;
+      const activeName = finalRow?.reviewed_by || targetName;
+
+      if (activeUserId || activeName) {
+        await sql`
+          UPDATE users
+          SET is_reviewer = TRUE, updated_at = CURRENT_TIMESTAMP
+          WHERE (user_id::text = ${activeUserId || ''} OR LOWER(name) = ${String(activeName || '').toLowerCase()} OR LOWER(email) = ${String(activeName || '').toLowerCase()});
+        `.catch(() => null);
+      }
     }
 
-    return rows[0] || null;
+    // Sync is_reviewer = FALSE in users table if previous reviewer has 0 remaining active reviews
+    if (prevReviewerName && prevReviewerName !== 'Unassigned') {
+      const check = await sql`
+        SELECT COUNT(*)::int as count 
+        FROM activity_submissions 
+        WHERE (reviewed_by_user_id::text = ${prevReviewerId || ''} OR LOWER(reviewed_by) = ${prevReviewerName.toLowerCase()})
+          AND reviewed_by IS NOT NULL 
+          AND reviewed_by != 'Unassigned'
+          AND status != 'pending';
+      `;
+      const count = check[0]?.count || 0;
+      if (count === 0) {
+        await sql`
+          UPDATE users
+          SET is_reviewer = FALSE, updated_at = CURRENT_TIMESTAMP
+          WHERE user_id::text = ${prevReviewerId || ''} 
+             OR LOWER(name) = ${prevReviewerName.toLowerCase()} 
+             OR LOWER(email) = ${prevReviewerName.toLowerCase()};
+        `.catch(() => null);
+      }
+    }
+
+    const enriched = await enrichSubmissions(rows);
+    return enriched[0] || null;
   }
 };

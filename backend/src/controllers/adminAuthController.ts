@@ -62,7 +62,8 @@ export async function login(req: AuthRequest, res: Response) {
       name: admin.name,
       email: admin.email,
       role: admin.role,
-      is_active: admin.is_active
+      is_active: admin.is_active,
+      allowed_pages: admin.allowed_pages || ['submissions', 'corporate_admin', 'campus_admin', 'lessons']
     };
 
     const token = jwt.sign(payload, config.jwtSecret, { expiresIn: '7d' });
@@ -143,6 +144,7 @@ export async function getMe(req: AuthRequest, res: Response) {
         email: admin.email,
         role: admin.role,
         is_active: admin.is_active,
+        allowed_pages: Array.isArray(admin.allowed_pages) ? admin.allowed_pages : ['submissions', 'corporate_admin', 'campus_admin', 'lessons'],
         last_login_at: admin.last_login_at
       }
     });

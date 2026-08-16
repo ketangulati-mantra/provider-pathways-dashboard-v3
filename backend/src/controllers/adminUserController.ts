@@ -33,7 +33,7 @@ export async function listAdmins(req: AuthRequest, res: Response) {
 // POST /api/admin/users
 export async function createAdmin(req: AuthRequest, res: Response) {
   try {
-    const { name, email, password, role } = req.body || {};
+    const { name, email, password, role, allowed_pages } = req.body || {};
 
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -62,7 +62,8 @@ export async function createAdmin(req: AuthRequest, res: Response) {
       name,
       email,
       password_hash,
-      role: role || 'admin'
+      role: role || 'admin',
+      allowed_pages: Array.isArray(allowed_pages) ? allowed_pages : undefined
     });
 
     return res.status(210).json({
@@ -82,11 +83,11 @@ export async function createAdmin(req: AuthRequest, res: Response) {
 // PUT /api/admin/users/:id
 export async function updateAdmin(req: AuthRequest, res: Response) {
   try {
-    const targetId = parseInt(req.params.id, 10);
+    const targetId = req.params.id;
     const currentAdminId = req.admin?.id;
-    const { name, email, role, is_active } = req.body || {};
+    const { name, email, role, is_active, allowed_pages } = req.body || {};
 
-    if (isNaN(targetId)) {
+    if (!targetId) {
       return res.status(400).json({ success: false, error: 'Invalid admin ID.' });
     }
 
@@ -96,7 +97,7 @@ export async function updateAdmin(req: AuthRequest, res: Response) {
     }
 
     // Self-Protection check: A super admin cannot revoke their own super_admin role
-    if (targetId === currentAdminId && role && role !== 'super_admin' && role !== 'Super Admin') {
+    if (String(targetAdmin.user_id) === String(currentAdminId) && role && role !== 'super_admin' && role !== 'Super Admin') {
       return res.status(400).json({
         success: false,
         error: 'Self Protection: You cannot remove your own Super Admin role.'
@@ -104,7 +105,7 @@ export async function updateAdmin(req: AuthRequest, res: Response) {
     }
 
     // Self-Protection check: A super admin cannot deactivate themselves
-    if (targetId === currentAdminId && is_active === false) {
+    if (String(targetAdmin.user_id) === String(currentAdminId) && is_active === false) {
       return res.status(400).json({
         success: false,
         error: 'Self Protection: You cannot deactivate your own account.'
@@ -136,7 +137,13 @@ export async function updateAdmin(req: AuthRequest, res: Response) {
       }
     }
 
-    const updated = await updateAdminRecord(targetId, { name, email, role, is_active });
+    const updated = await updateAdminRecord(targetId, {
+      name,
+      email,
+      role,
+      is_active,
+      allowed_pages: Array.isArray(allowed_pages) ? allowed_pages : undefined
+    });
     return res.json({
       success: true,
       message: 'Admin account updated successfully.',
@@ -154,24 +161,24 @@ export async function updateAdmin(req: AuthRequest, res: Response) {
 // PATCH /api/admin/users/:id/status
 export async function updateAdminStatus(req: AuthRequest, res: Response) {
   try {
-    const targetId = parseInt(req.params.id, 10);
+    const targetId = req.params.id;
     const currentAdminId = req.admin?.id;
     const { is_active } = req.body || {};
 
-    if (isNaN(targetId) || typeof is_active !== 'boolean') {
+    if (!targetId || typeof is_active !== 'boolean') {
       return res.status(400).json({ success: false, error: 'Invalid parameters. is_active boolean required.' });
-    }
-
-    if (targetId === currentAdminId && !is_active) {
-      return res.status(400).json({
-        success: false,
-        error: 'Self Protection: You cannot deactivate your own account.'
-      });
     }
 
     const targetAdmin = await findAdminById(targetId);
     if (!targetAdmin) {
       return res.status(404).json({ success: false, error: 'Admin account not found.' });
+    }
+
+    if (String(targetAdmin.user_id) === String(currentAdminId) && !is_active) {
+      return res.status(400).json({
+        success: false,
+        error: 'Self Protection: You cannot deactivate your own account.'
+      });
     }
 
     if (!is_active && (targetAdmin.role === 'super_admin' || targetAdmin.role === 'Super Admin')) {
@@ -197,10 +204,10 @@ export async function updateAdminStatus(req: AuthRequest, res: Response) {
 // PATCH /api/admin/users/:id/password
 export async function resetAdminPassword(req: AuthRequest, res: Response) {
   try {
-    const targetId = parseInt(req.params.id, 10);
+    const targetId = req.params.id;
     const { password } = req.body || {};
 
-    if (isNaN(targetId) || !password || typeof password !== 'string' || password.length < 6) {
+    if (!targetId || !password || typeof password !== 'string' || password.length < 6) {
       return res.status(400).json({
         success: false,
         error: 'New password must be at least 6 characters long.'
@@ -227,18 +234,11 @@ export async function resetAdminPassword(req: AuthRequest, res: Response) {
 // DELETE /api/admin/users/:id
 export async function deleteAdmin(req: AuthRequest, res: Response) {
   try {
-    const targetId = parseInt(req.params.id, 10);
+    const targetId = req.params.id;
     const currentAdminId = req.admin?.id;
 
-    if (isNaN(targetId)) {
+    if (!targetId) {
       return res.status(400).json({ success: false, error: 'Invalid admin ID.' });
-    }
-
-    if (targetId === currentAdminId) {
-      return res.status(400).json({
-        success: false,
-        error: 'Self Protection: You cannot delete your own account.'
-      });
     }
 
     const targetAdmin = await findAdminById(targetId);
@@ -246,12 +246,19 @@ export async function deleteAdmin(req: AuthRequest, res: Response) {
       return res.status(404).json({ success: false, error: 'Admin account not found.' });
     }
 
+    if (String(targetAdmin.user_id) === String(currentAdminId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Self Protection: You cannot delete your own account.'
+      });
+    }
+
     if (targetAdmin.role === 'super_admin' || targetAdmin.role === 'Super Admin') {
       const activeSuperAdmins = await countSuperAdmins();
       if (activeSuperAdmins <= 1) {
         return res.status(400).json({
           success: false,
-          error: 'Protection Rule: Cannot delete the last Super Admin account.'
+          error: 'Protection Rule: Cannot delete the last Super Admin.'
         });
       }
     }
@@ -259,10 +266,9 @@ export async function deleteAdmin(req: AuthRequest, res: Response) {
     await deleteAdminRecord(targetId);
     return res.json({
       success: true,
-      message: 'Admin user deleted successfully.'
+      message: 'Admin account deleted successfully.'
     });
-  } catch (err: any) {
-    console.error('❌ deleteAdmin Error:', err);
-    return res.status(500).json({ success: false, error: err?.message || 'Failed to delete admin user.' });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: 'Failed to delete admin account.' });
   }
 }

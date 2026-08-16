@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { Search, Eye, Filter, CheckCircle2, XCircle, Clock, Building2, Calendar, UserCheck, Plus, ChevronDown, X } from 'lucide-react';
+import { Search, Eye, Filter, CheckCircle2, XCircle, Clock, Building2, Calendar, UserCheck, Plus, ChevronDown, X, Mail, User, RefreshCw, Download, FileSpreadsheet } from 'lucide-react';
 import ManageReviewersModal from './ManageReviewersModal';
 import { MANTRA_CONFIG } from '../../mantra';
 import { useAuth } from '../../auth/AuthContext';
+import { fetchAdminReviewers } from '../../mantra/api';
 
 const API_BASE = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null ? MANTRA_CONFIG.apiBaseUrl : (import.meta.env.PROD ? '' : 'http://localhost:5000');
 
@@ -137,6 +138,8 @@ function SubmissionDetailsModal({ app, isOpen, onClose }) {
 }
 
 export default function CorporateAdminDashboard() {
+  const { admin: currentAdmin, user } = useAuth();
+  const activeUser = currentAdmin || user;
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'submitted' | 'approved' | 'rejected'
   const [dateFilter, setDateFilter] = useState('all');
   const [reviewerFilter, setReviewerFilter] = useState('all');
@@ -185,6 +188,29 @@ export default function CorporateAdminDashboard() {
     fetchApplications();
   }, [activeTab, searchQuery]);
 
+  const loadDbReviewers = async (appsList = []) => {
+    try {
+      const res = await fetchAdminReviewers();
+      let dbNames = [];
+      if (res && res.success) {
+        if (Array.isArray(res.reviewers)) {
+          dbNames = res.reviewers.map(r => r.name || r.email || r.user_id).filter(Boolean);
+        } else if (Array.isArray(res.data)) {
+          dbNames = res.data.map(r => (typeof r === 'string' ? r : r.name || r.email)).filter(Boolean);
+        }
+      }
+      const currentApps = appsList.length > 0 ? appsList : (applicationsData?.applications || []);
+      const existingReviewers = currentApps
+        .map(a => a.reviewed_by)
+        .filter(r => r && r.trim() && r !== 'Unassigned');
+
+      const allActiveReviewers = Array.from(new Set([...dbNames, ...existingReviewers]));
+      setReviewerOptions(allActiveReviewers);
+    } catch (err) {
+      console.error('[CorporateAdminDashboard] Error loading DB reviewers:', err);
+    }
+  };
+
   const fetchApplications = async () => {
     try {
       setLoading(true);
@@ -193,10 +219,7 @@ export default function CorporateAdminDashboard() {
       if (json.success) {
         setApplicationsData(json.data);
         const apps = json.data?.applications || [];
-        const existingReviewers = apps
-          .map(a => a.reviewed_by)
-          .filter(r => r && r.trim() && r !== 'Unassigned');
-        setReviewerOptions(prev => Array.from(new Set([...prev, ...existingReviewers])));
+        loadDbReviewers(apps);
       }
     } catch (err) {
       console.error('[CorporateAdminDashboard] Error fetching applications:', err);
@@ -218,28 +241,74 @@ export default function CorporateAdminDashboard() {
     }
   };
 
-  const handleReviewerChange = async (app, newReviewer) => {
-    if (newReviewer === '__MANAGE__' || newReviewer === '__ADD_CUSTOM__') {
-      setIsManagingReviewers(true);
-      return;
-    }
+  const STATUS_CONFIG = {
+    pending: { label: 'Pending', bg: '#fef3c7', border: '#fde68a', color: '#b45309' },
+    under_review: { label: 'Under Review', bg: '#ffedd5', border: '#fed7aa', color: '#c2410c' },
+    reviewed: { label: 'Reviewed', bg: '#dcfce7', border: '#bbf7d0', color: '#15803d' },
+    mail_sent: { label: 'Mail Sent', bg: '#ffffff', border: '#cbd5e1', color: '#334155' },
+  };
 
+  const handleStatusChange = async (app, newStatus) => {
     const appId = app.id || app.user_id;
-    const isUnassigned = !newReviewer || newReviewer === 'Unassigned';
-    const targetStatus = isUnassigned 
-      ? 'submitted' 
-      : (app.application_status === 'approved' || app.application_status === 'rejected' ? app.application_status : 'under_review');
+    const activeAdminName = activeUser?.name || activeUser?.email || (app.reviewed_by && app.reviewed_by !== 'Unassigned' ? app.reviewed_by : 'Unassigned');
+    const isUnassigned = newStatus === 'pending' || newStatus === 'submitted';
+
+    const targetReviewer = isUnassigned
+      ? 'Unassigned'
+      : (!app.reviewed_by || app.reviewed_by === 'Unassigned' ? activeAdminName : app.reviewed_by);
 
     // 1. Instant Optimistic State Update: 0ms UI update, zero flicker/reload
     setApplicationsData(prev => {
-      if (!prev || !prev.applications) return prev;
+      if (!prev) return prev;
+      const appsList = prev.applications || (Array.isArray(prev) ? prev : []);
+
+      const updatedApps = appsList.map(item => {
+        const matchesId = (item.id !== undefined && app.id !== undefined && String(item.id) === String(app.id));
+        const matchesUser = (item.user_id !== undefined && app.user_id !== undefined && String(item.user_id) === String(app.user_id));
+        if (matchesId || matchesUser) {
+          return {
+            ...item,
+            reviewed_by: targetReviewer,
+            application_status: newStatus,
+            review_status: newStatus
+          };
+        }
+        return item;
+      });
+
+      // Recalculate status counts dynamically across all applications
+      let pendingCount = 0;
+      let underReviewCount = 0;
+      let reviewedCount = 0;
+      let mailSentCount = 0;
+
+      updatedApps.forEach((a) => {
+        const st = (a.review_status || a.application_status || 'pending').toLowerCase();
+        if (st === 'submitted' || st === 'pending' || st === '') {
+          pendingCount++;
+        } else if (st === 'under_review') {
+          underReviewCount++;
+        } else if (st === 'reviewed' || st === 'approved') {
+          reviewedCount++;
+        } else if (st === 'mail_sent') {
+          mailSentCount++;
+        }
+      });
+
+      const updatedCounts = {
+        pending: pendingCount,
+        underReview: underReviewCount,
+        reviewed: reviewedCount,
+        mailSent: mailSentCount,
+        all: updatedApps.length
+      };
+
+      if (Array.isArray(prev)) return updatedApps;
+
       return {
         ...prev,
-        applications: prev.applications.map(item =>
-          (item.id === app.id || item.user_id === app.user_id)
-            ? { ...item, reviewed_by: newReviewer, application_status: targetStatus }
-            : item
-        )
+        statusCounts: updatedCounts,
+        applications: updatedApps
       };
     });
 
@@ -248,10 +317,10 @@ export default function CorporateAdminDashboard() {
       await fetch(`${API_BASE}/api/corporate-program/admin/applications/${appId}/reviewer`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reviewer: newReviewer, status: targetStatus })
+        body: JSON.stringify({ reviewer: targetReviewer, status: newStatus })
       });
     } catch (err) {
-      console.error('[CorporateAdminDashboard] Error updating reviewer:', err);
+      console.error('[CorporateAdminDashboard] Error updating status:', err);
     }
   };
 
@@ -380,75 +449,183 @@ export default function CorporateAdminDashboard() {
     setCustomEndDate('');
   };
 
-  const [adminViewMode, setAdminViewMode] = useState('applications'); // 'applications' | 'missions'
+  const statusCounts = applicationsData?.statusCounts || {
+    pending: rawApplications.filter(a => (!a.application_status || a.application_status === 'submitted' || a.application_status === 'pending')).length,
+    underReview: rawApplications.filter(a => a.application_status === 'under_review').length,
+    reviewed: rawApplications.filter(a => (a.application_status === 'reviewed' || a.application_status === 'approved')).length,
+    mailSent: rawApplications.filter(a => a.application_status === 'mail_sent').length,
+  };
+
+  const handleExportCSV = () => {
+    if (!filteredApps || filteredApps.length === 0) return;
+    const headers = ['Applicant Name', 'Email', 'Location / City', 'Target Industry', 'Date Applied', 'Current Status', 'Reviewer'];
+    const rows = [headers.join(',')];
+
+    for (const app of filteredApps) {
+      const rawDate = app.submitted_at || app.updated_at || app.created_at || app.submittedAt;
+      const d = rawDate ? new Date(rawDate) : null;
+      const dateStr = d && !isNaN(d.getTime()) ? d.toISOString() : 'N/A';
+
+      const row = [
+        `"${(app.full_name || 'Applicant Candidate').replace(/"/g, '""')}"`,
+        `"${(app.email || '').replace(/"/g, '""')}"`,
+        `"${(app.city || 'N/A').replace(/"/g, '""')}"`,
+        `"${(app.industries || 'N/A').replace(/"/g, '""')}"`,
+        `"${dateStr}"`,
+        `"${app.review_status || app.application_status || 'submitted'}"`,
+        `"${app.reviewed_by || 'Unassigned'}"`
+      ];
+      rows.push(row.join(','));
+    }
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + encodeURIComponent(rows.join('\n'));
+    const link = document.createElement('a');
+    link.setAttribute('href', csvContent);
+    link.setAttribute('download', `corporate_eap_submissions_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
-      {/* Top Header Banner matching Campus Program */}
+      {/* Top Header Control Bar matching Form Submissions */}
       <div style={{
-        background: '#ffffff',
-        borderRadius: '12px',
-        border: '1px solid #e2e8f0',
-        padding: '16px 20px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '14px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
+        gap: '12px',
+        background: '#ffffff',
+        padding: '12px 18px',
+        borderRadius: '12px',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff' }}>
-            <Building2 size={20} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '8px',
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+            color: '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 6px rgba(15, 23, 42, 0.15)'
+          }}>
+            <Building2 size={16} />
           </div>
           <div>
-            <h2 style={{ margin: '0 0 2px', fontSize: '1.15rem', fontWeight: 900, color: '#0f172a' }}>
+            <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.01em' }}>
               Corporate Growth Partner Program - EAP Submissions
             </h2>
-            <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b' }}>
-              Manage corporate EAP partner applications, reviewer assignments, and submission data.
+            <p style={{ margin: 0, fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>
+              Manage corporate EAP partner applications, reviewer assignments, and submission data
             </p>
           </div>
         </div>
       </div>
 
-      {/* Controls Bar: Single Dropdowns matching Campus Program */}
+      {/* Top Status Metrics Cards (Ultra-Compact) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
+
+        {/* Metric 1: Pending */}
+        <div style={{ background: '#fffbeb', borderRadius: '8px', border: '1px solid #fde68a', padding: '6px 10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: '26px', height: '26px', borderRadius: '6px', background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Clock size={13} color="#b45309" />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Pending</div>
+            <div style={{ fontSize: '0.98rem', fontWeight: 900, color: '#92400e', lineHeight: 1, marginTop: '1px' }}>{statusCounts.pending}</div>
+          </div>
+        </div>
+
+        {/* Metric 2: Under Review */}
+        <div style={{ background: '#fff7ed', borderRadius: '8px', border: '1px solid #fed7aa', padding: '6px 10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: '26px', height: '26px', borderRadius: '6px', background: '#ffedd5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Eye size={13} color="#c2410c" />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#c2410c', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Under Review</div>
+            <div style={{ fontSize: '0.98rem', fontWeight: 900, color: '#9a3412', lineHeight: 1, marginTop: '1px' }}>{statusCounts.underReview}</div>
+          </div>
+        </div>
+
+        {/* Metric 3: Reviewed */}
+        <div style={{ background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0', padding: '6px 10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: '26px', height: '26px', borderRadius: '6px', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <CheckCircle2 size={13} color="#15803d" />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#15803d', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Reviewed</div>
+            <div style={{ fontSize: '0.98rem', fontWeight: 900, color: '#166534', lineHeight: 1, marginTop: '1px' }}>{statusCounts.reviewed}</div>
+          </div>
+        </div>
+
+        {/* Metric 4: Mail Sent */}
+        <div style={{ background: '#ffffff', borderRadius: '8px', border: '1px solid #cbd5e1', padding: '6px 10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: '26px', height: '26px', borderRadius: '6px', background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Mail size={13} color="#334155" />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Mail Sent</div>
+            <div style={{ fontSize: '0.98rem', fontWeight: 900, color: '#0f172a', lineHeight: 1, marginTop: '1px' }}>{statusCounts.mailSent}</div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Sleek Action & Filter Bar (Matching Form Submissions) */}
       <div style={{
-        background: '#ffffff',
-        borderRadius: '10px',
-        border: '1px solid #e2e8f0',
-        padding: '10px 14px',
         display: 'flex',
-        alignItems: 'center',
+        flexWrap: 'wrap',
         justifyContent: 'space-between',
+        alignItems: 'center',
         gap: '10px',
-        flexWrap: 'wrap'
+        background: '#ffffff',
+        padding: '10px 16px',
+        borderRadius: '12px',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
       }}>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{
+            width: '30px',
+            height: '30px',
+            borderRadius: '8px',
+            background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+            color: '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            boxShadow: '0 2px 6px rgba(37, 99, 235, 0.2)'
+          }}>
+            <Building2 size={15} style={{ display: 'block', margin: 'auto' }} />
+          </div>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em' }}>
+              EAP Submissions Portal
+            </h3>
+            <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0px' }}>
+              Showing <strong style={{ color: '#2563eb' }}>{filteredApps.length}</strong> records
+            </div>
+          </div>
+        </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Filter size={13} color="#2563eb" /> Filter:
-          </span>
 
           {/* 1. Date Applied Dropdown */}
           {filterVisibility.date && (
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', maxWidth: '160px' }}>
+              <Calendar size={12} color="#64748b" style={{ flexShrink: 0 }} />
               <select
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
-                style={{
-                  padding: '4px 22px 4px 8px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  color: '#1e293b',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  appearance: 'none',
-                  height: '28px'
-                }}
+                style={{ border: 'none', background: 'transparent', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, outline: 'none', cursor: 'pointer', maxWidth: '130px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}
               >
                 <option value="all">All Time</option>
                 <option value="today">Today</option>
@@ -461,7 +638,6 @@ export default function CorporateAdminDashboard() {
                 <option value="last_12_months">Last 12 Months</option>
                 <option value="custom">Custom Range...</option>
               </select>
-              <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
 
               {/* Custom Date Inputs */}
               {dateFilter === 'custom' && (
@@ -486,36 +662,25 @@ export default function CorporateAdminDashboard() {
 
           {/* 2. Status Filter Dropdown */}
           {filterVisibility.status && (
-            <div style={{ position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', maxWidth: '140px' }}>
+              <Filter size={12} color="#64748b" style={{ flexShrink: 0 }} />
               <select
                 value={activeTab}
                 onChange={(e) => setActiveTab(e.target.value)}
-                style={{
-                  padding: '4px 22px 4px 8px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  color: '#1e293b',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  appearance: 'none',
-                  height: '28px'
-                }}
+                style={{ border: 'none', background: 'transparent', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, outline: 'none', cursor: 'pointer', maxWidth: '110px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}
               >
                 <option value="all">All Statuses</option>
                 <option value="submitted">Submitted</option>
                 <option value="approved">Approved</option>
                 <option value="rejected">Rejected</option>
               </select>
-              <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
             </div>
           )}
 
           {/* 3. Reviewer Filter Dropdown */}
           {filterVisibility.reviewer && (
-            <div style={{ position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', maxWidth: '150px' }}>
+              <User size={12} color="#64748b" style={{ flexShrink: 0 }} />
               <select
                 value={reviewerFilter}
                 onChange={(e) => {
@@ -525,19 +690,7 @@ export default function CorporateAdminDashboard() {
                     setReviewerFilter(e.target.value);
                   }
                 }}
-                style={{
-                  padding: '4px 22px 4px 8px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  color: '#1e293b',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  appearance: 'none',
-                  height: '28px'
-                }}
+                style={{ border: 'none', background: 'transparent', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, outline: 'none', cursor: 'pointer', maxWidth: '120px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}
               >
                 <option value="all">All Reviewers</option>
                 {reviewerOptions.map(rev => (
@@ -545,67 +698,40 @@ export default function CorporateAdminDashboard() {
                 ))}
                 <option value="__MANAGE__">⚙️ Manage Reviewers...</option>
               </select>
-              <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
             </div>
           )}
 
           {/* 4. Location / City Filter Dropdown */}
           {filterVisibility.location && (
-            <div style={{ position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', maxWidth: '160px' }}>
+              <Building2 size={12} color="#64748b" style={{ flexShrink: 0 }} />
               <select
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
-                style={{
-                  padding: '4px 22px 4px 8px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  color: '#1e293b',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  appearance: 'none',
-                  height: '28px',
-                  maxWidth: '150px'
-                }}
+                style={{ border: 'none', background: 'transparent', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, outline: 'none', cursor: 'pointer', maxWidth: '130px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}
               >
                 <option value="all">All Locations</option>
                 {uniqueLocations.map(loc => (
                   <option key={loc} value={loc}>{loc}</option>
                 ))}
               </select>
-              <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
             </div>
           )}
 
           {/* 5. Target Industry Filter Dropdown */}
           {filterVisibility.industry && (
-            <div style={{ position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', maxWidth: '170px' }}>
+              <Filter size={12} color="#64748b" style={{ flexShrink: 0 }} />
               <select
                 value={selectedIndustry}
                 onChange={(e) => setSelectedIndustry(e.target.value)}
-                style={{
-                  padding: '4px 22px 4px 8px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  color: '#1e293b',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  appearance: 'none',
-                  height: '28px',
-                  maxWidth: '170px'
-                }}
+                style={{ border: 'none', background: 'transparent', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, outline: 'none', cursor: 'pointer', maxWidth: '140px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}
               >
                 <option value="all">All Target Industries</option>
                 {uniqueIndustries.map(ind => (
                   <option key={ind} value={ind}>{ind}</option>
                 ))}
               </select>
-              <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
             </div>
           )}
 
@@ -638,7 +764,7 @@ export default function CorporateAdminDashboard() {
               <div style={{
                 position: 'absolute',
                 top: '34px',
-                left: 0,
+                right: 0,
                 zIndex: 99,
                 background: '#ffffff',
                 border: '1px solid #cbd5e1',
@@ -689,31 +815,79 @@ export default function CorporateAdminDashboard() {
               <X size={12} /> Clear Filters
             </button>
           )}
-        </div>
 
-        {/* Search Input */}
-        {filterVisibility.search && (
-          <div style={{ position: 'relative', width: '200px' }}>
-            <Search size={12} color="#94a3b8" style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)' }} />
-            <input
-              type="text"
-              placeholder="Search name, city, industry..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: '100%',
-                height: '28px',
-                padding: '0 8px 0 26px',
-                borderRadius: '8px',
-                border: '1px solid #cbd5e1',
-                fontSize: '0.72rem',
-                color: '#0f172a',
-                outline: 'none',
-                boxSizing: 'border-box'
-              }}
-            />
-          </div>
-        )}
+          {/* Search Input */}
+          {filterVisibility.search && (
+            <div style={{ position: 'relative', width: '180px' }}>
+              <Search size={12} color="#94a3b8" style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)' }} />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: '100%',
+                  height: '28px',
+                  padding: '0 8px 0 26px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.72rem',
+                  color: '#0f172a',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+          )}
+
+          {/* Refresh Button */}
+          <button
+            onClick={() => fetchApplications()}
+            title="Refresh Submissions"
+            style={{
+              padding: '5px 8px',
+              borderRadius: '8px',
+              border: '1px solid #cbd5e1',
+              background: '#ffffff',
+              color: '#475569',
+              fontSize: '0.74rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              height: '28px'
+            }}
+          >
+            <RefreshCw size={12} className={loading ? 'spin-icon' : ''} />
+            <span>Refresh</span>
+          </button>
+
+          {/* Export CSV Button */}
+          <button
+            onClick={handleExportCSV}
+            title="Export CSV"
+            style={{
+              padding: '5px 10px',
+              borderRadius: '8px',
+              border: 'none',
+              background: '#2563eb',
+              color: '#ffffff',
+              fontSize: '0.74rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              height: '28px',
+              boxShadow: '0 2px 6px rgba(37, 99, 235, 0.25)'
+            }}
+          >
+            <Download size={12} />
+            <span>Export CSV</span>
+          </button>
+
+        </div>
       </div>
 
       {/* Main Table — 7-column layout (Submissions column removed) */}
@@ -785,35 +959,57 @@ export default function CorporateAdminDashboard() {
                     })()}
                   </td>
 
-                  {/* Current Status Badge */}
+                  {/* Current Status Select Dropdown */}
                   <td style={{ padding: '6px 10px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {getStatusBadge(app.application_status)}
+                    {(() => {
+                      const currentSt = (app.review_status || app.application_status || 'submitted').toLowerCase();
+                      const mappedSt = (currentSt === 'submitted' || currentSt === 'pending') ? 'pending' : currentSt;
+                      const conf = STATUS_CONFIG[mappedSt] || STATUS_CONFIG.pending;
+                      return (
+                        <select
+                          value={mappedSt}
+                          onChange={(e) => handleStatusChange(app, e.target.value)}
+                          style={{
+                            padding: '2px 6px',
+                            borderRadius: '6px',
+                            border: `1px solid ${conf.border}`,
+                            background: conf.bg,
+                            fontSize: '0.72rem',
+                            fontWeight: 800,
+                            color: conf.color,
+                            outline: 'none',
+                            cursor: 'pointer',
+                            maxWidth: '100%',
+                            textOverflow: 'ellipsis'
+                          }}
+                        >
+                          <option value="pending" style={{ background: '#ffffff', color: '#0f172a' }}>Pending</option>
+                          <option value="under_review" style={{ background: '#ffffff', color: '#0f172a' }}>Under Review</option>
+                          <option value="reviewed" style={{ background: '#ffffff', color: '#0f172a' }}>Reviewed</option>
+                          <option value="mail_sent" style={{ background: '#ffffff', color: '#0f172a' }}>Mail Sent</option>
+                        </select>
+                      );
+                    })()}
                   </td>
 
-                  {/* Reviewer Dropdown */}
+                  {/* Reviewer Display Badge (Display-only, auto-synced with status changes) */}
                   <td style={{ padding: '6px 10px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    <select
-                      value={app.reviewed_by || 'Unassigned'}
-                      onChange={(e) => handleReviewerChange(app, e.target.value)}
-                      style={{
-                        padding: '2px 6px',
-                        borderRadius: '6px',
-                        border: '1px solid #cbd5e1',
-                        background: '#ffffff',
-                        fontSize: '0.72rem',
-                        fontWeight: 700,
-                        color: app.reviewed_by ? '#0f172a' : '#64748b',
-                        outline: 'none',
-                        cursor: 'pointer',
-                        maxWidth: '100%',
-                        textOverflow: 'ellipsis'
-                      }}
-                    >
-                      {reviewerOptions.map(rev => (
-                        <option key={rev} value={rev}>{rev}</option>
-                      ))}
-                      <option value="__MANAGE__">⚙️ Manage Reviewers...</option>
-                    </select>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span
+                        style={{
+                          fontSize: '0.72rem',
+                          fontWeight: app.reviewed_by && app.reviewed_by !== 'Unassigned' ? 800 : 600,
+                          color: app.reviewed_by && app.reviewed_by !== 'Unassigned' ? '#1e293b' : '#94a3b8',
+                          background: app.reviewed_by && app.reviewed_by !== 'Unassigned' ? '#f1f5f9' : 'transparent',
+                          padding: app.reviewed_by && app.reviewed_by !== 'Unassigned' ? '2px 8px' : '0',
+                          borderRadius: '6px',
+                          border: app.reviewed_by && app.reviewed_by !== 'Unassigned' ? '1px solid #cbd5e1' : 'none'
+                        }}
+                        title={app.reviewed_by || 'Unassigned'}
+                      >
+                        {app.reviewed_by && app.reviewed_by !== 'Unassigned' ? app.reviewed_by : 'Unassigned'}
+                      </span>
+                    </div>
                   </td>
 
                   {/* Actions */}
@@ -917,10 +1113,11 @@ export default function CorporateAdminDashboard() {
       {/* Manage Reviewers Modal */}
       <ManageReviewersModal
         isOpen={isManagingReviewers}
-        onClose={() => setIsManagingReviewers(false)}
-        reviewers={reviewerOptions}
-        onAddReviewer={handleAddReviewer}
-        onDeleteReviewer={handleDeleteReviewer}
+        onClose={() => {
+          setIsManagingReviewers(false);
+          loadDbReviewers();
+        }}
+        onReviewersChange={(newReviewers) => setReviewerOptions(newReviewers)}
       />
 
     </div>

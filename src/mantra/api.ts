@@ -265,6 +265,7 @@ export const reviewSubmissionStatus = async (id: string, status?: string, review
     const res = await fetch(`${backendUrl}/api/activity-submissions/${id}/review`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ 
         ...(status ? { status } : {}), 
         ...(reviewedBy !== undefined ? { reviewedBy } : {}),

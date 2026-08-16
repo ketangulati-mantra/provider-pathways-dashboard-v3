@@ -46,7 +46,7 @@ export default function CampusAdminDashboard() {
     status: true,
     activity: true,
     search: true,
-    reviewer: false,
+    reviewer: true,
     college: false,
     course: false
   });

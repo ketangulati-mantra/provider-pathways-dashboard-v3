@@ -11,6 +11,7 @@ import uploadRoutes from './routes/uploadRoutes.js';
 import certificateRoutes from './routes/certificateRoutes.js';
 import adminAuthRoutes from './routes/adminAuthRoutes.js';
 import adminUserRoutes from './routes/adminUserRoutes.js';
+import reviewerRoutes from './routes/reviewerRoutes.js';
 import campusRoutes from './campus-program/routes/campusRoutes.js';
 import corporateRoutes from './corporate-program/routes/corporateRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -24,8 +25,10 @@ app.use(cors({
   origin: true,
   credentials: true
 }));
+
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
-app.use(express.json());
 
 // API Routes & Health Checks (mounted for root and subpath proxies)
 const apiPrefixes = [
@@ -47,6 +50,7 @@ apiPrefixes.forEach((prefix) => {
   app.use(prefix, certificateRoutes);
   app.use(`${prefix}/admin/auth`, adminAuthRoutes);
   app.use(`${prefix}/admin/users`, adminUserRoutes);
+  app.use(`${prefix}/admin/reviewers`, reviewerRoutes);
   app.use(`${prefix}/users`, userRoutes);
   app.use(`${prefix}/activities`, activityRoutes);
   app.use(`${prefix}/campus-program`, campusRoutes);

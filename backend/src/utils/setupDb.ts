@@ -28,7 +28,8 @@ export async function setupDb() {
 
     await sql`
       ALTER TABLE users 
-      ADD COLUMN IF NOT EXISTS promotion_toolkit_data JSONB DEFAULT '{}'::jsonb;
+      ADD COLUMN IF NOT EXISTS promotion_toolkit_data JSONB DEFAULT '{}'::jsonb,
+      ADD COLUMN IF NOT EXISTS allowed_pages JSONB DEFAULT '["submissions", "corporate_admin", "campus_admin", "lessons"]'::jsonb;
     `;
 
     await sql`

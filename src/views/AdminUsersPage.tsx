@@ -12,10 +12,18 @@ export interface AdminUserItem {
   email: string;
   role: 'super_admin' | 'admin' | string;
   is_active: boolean;
+  allowed_pages?: string[];
   last_login_at: string | null;
   created_at: string;
   updated_at: string;
 }
+
+const AVAILABLE_PAGES = [
+  { id: 'submissions', label: 'Form Submissions' },
+  { id: 'corporate_admin', label: 'EAP Submissions' },
+  { id: 'campus_admin', label: 'Campus Program' },
+  { id: 'lessons', label: 'Pathways' }
+];
 
 function getApiBase(): string {
   if (typeof window === 'undefined') return '/api';
@@ -176,6 +184,12 @@ export default function AdminUsersPage() {
   const [formConfirmPassword, setFormConfirmPassword] = useState('');
   const [formRole, setFormRole] = useState<'super_admin' | 'admin'>('admin');
   const [formIsActive, setFormIsActive] = useState(true);
+  const [formAllowedPages, setFormAllowedPages] = useState<string[]>([
+    'submissions',
+    'corporate_admin',
+    'campus_admin',
+    'lessons'
+  ]);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -239,6 +253,11 @@ export default function AdminUsersPage() {
       return;
     }
 
+    if (formRole === 'admin' && formAllowedPages.length === 0) {
+      setFormError('Please select at least one page for this admin to access.');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       const apiBase = getApiBase();
@@ -250,7 +269,8 @@ export default function AdminUsersPage() {
           name: formName,
           email: formEmail,
           password: formPassword,
-          role: formRole
+          role: formRole,
+          allowed_pages: formRole === 'admin' ? formAllowedPages : ['submissions', 'corporate_admin', 'campus_admin', 'lessons']
         })
       });
 
@@ -278,6 +298,11 @@ export default function AdminUsersPage() {
     if (!editingAdmin) return;
     setFormError(null);
 
+    if (formRole === 'admin' && formAllowedPages.length === 0) {
+      setFormError('Please select at least one page for this admin to access.');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       const apiBase = getApiBase();
@@ -289,7 +314,8 @@ export default function AdminUsersPage() {
           name: formName,
           email: formEmail,
           role: formRole,
-          is_active: formIsActive
+          is_active: formIsActive,
+          allowed_pages: formRole === 'admin' ? formAllowedPages : ['submissions', 'corporate_admin', 'campus_admin', 'lessons']
         })
       });
 
@@ -836,11 +862,15 @@ export default function AdminUsersPage() {
                                   {/* EDIT BUTTON */}
                                   <button
                                     onClick={() => {
+                                      const pages = Array.isArray(item.allowed_pages) && item.allowed_pages.length > 0
+                                        ? item.allowed_pages
+                                        : ['submissions', 'corporate_admin', 'campus_admin', 'lessons'];
                                       setEditingAdmin(item);
                                       setFormName(item.name);
                                       setFormEmail(item.email);
                                       setFormRole((item.role === 'super_admin' || item.role === 'Super Admin') ? 'super_admin' : 'admin');
                                       setFormIsActive(item.is_active);
+                                      setFormAllowedPages(pages);
                                       setFormError(null);
                                     }}
                                     title="Edit Admin"
@@ -932,7 +962,7 @@ export default function AdminUsersPage() {
       {/* CREATE ADMIN MODAL */}
       {showCreateModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#ffffff', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '460px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)' }}>
+          <div style={{ background: '#ffffff', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '480px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
               <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>Create New Admin</h3>
               <button onClick={() => setShowCreateModal(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#64748b' }}><X size={20} /></button>
@@ -944,15 +974,19 @@ export default function AdminUsersPage() {
               </div>
             )}
 
-            <form onSubmit={handleCreateSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <form onSubmit={handleCreateSubmit} autoComplete="off" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {/* Dummy hidden fields to prevent browser auto-filling admin credentials */}
+              <input type="text" name="fakeusernameremembered" style={{ display: 'none' }} tabIndex={-1} />
+              <input type="password" name="fakepasswordremembered" style={{ display: 'none' }} tabIndex={-1} />
+
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, color: '#334155', marginBottom: '4px' }}>Full Name</label>
-                <input type="text" required value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="John Doe" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                <input type="text" required autoComplete="off" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="John Doe" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }} />
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, color: '#334155', marginBottom: '4px' }}>Email Address</label>
-                <input type="email" required value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="admin@example.com" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                <input type="email" required autoComplete="new-password" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="admin@example.com" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }} />
               </div>
 
               <div>
@@ -963,14 +997,45 @@ export default function AdminUsersPage() {
                 </select>
               </div>
 
+              {/* Page Access Selection (only for Admin role) */}
+              {formRole === 'admin' && (
+                <div style={{ background: '#f8fafc', padding: '14px 16px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#0f172a', marginBottom: '10px' }}>
+                    What pages do you want to give access to?
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    {AVAILABLE_PAGES.map(page => {
+                      const isChecked = formAllowedPages.includes(page.id);
+                      return (
+                        <label key={page.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', fontWeight: 700, color: '#1e293b', cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormAllowedPages(prev => [...prev, page.id]);
+                              } else {
+                                setFormAllowedPages(prev => prev.filter(id => id !== page.id));
+                              }
+                            }}
+                            style={{ width: '16px', height: '16px', borderRadius: '4px', cursor: 'pointer' }}
+                          />
+                          <span>{page.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, color: '#334155', marginBottom: '4px' }}>Password</label>
-                <input type="password" required value={formPassword} onChange={(e) => setFormPassword(e.target.value)} placeholder="••••••••" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                <input type="password" required autoComplete="new-password" value={formPassword} onChange={(e) => setFormPassword(e.target.value)} placeholder="••••••••" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }} />
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, color: '#334155', marginBottom: '4px' }}>Confirm Password</label>
-                <input type="password" required value={formConfirmPassword} onChange={(e) => setFormConfirmPassword(e.target.value)} placeholder="••••••••" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                <input type="password" required autoComplete="new-password" value={formConfirmPassword} onChange={(e) => setFormConfirmPassword(e.target.value)} placeholder="••••••••" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }} />
               </div>
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
@@ -985,7 +1050,7 @@ export default function AdminUsersPage() {
       {/* EDIT ADMIN MODAL */}
       {editingAdmin && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#ffffff', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '460px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)' }}>
+          <div style={{ background: '#ffffff', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '480px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
               <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>Edit Admin Account</h3>
               <button onClick={() => setEditingAdmin(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#64748b' }}><X size={20} /></button>
@@ -997,7 +1062,7 @@ export default function AdminUsersPage() {
               </div>
             )}
 
-            <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <form onSubmit={handleEditSubmit} autoComplete="off" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, color: '#334155', marginBottom: '4px' }}>Full Name</label>
                 <input type="text" required value={formName} onChange={(e) => setFormName(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }} />
@@ -1015,6 +1080,37 @@ export default function AdminUsersPage() {
                   <option value="super_admin">Super Admin</option>
                 </select>
               </div>
+
+              {/* Page Access Selection (only for Admin role) */}
+              {formRole === 'admin' && (
+                <div style={{ background: '#f8fafc', padding: '14px 16px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#0f172a', marginBottom: '10px' }}>
+                    What pages do you want to give access to?
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    {AVAILABLE_PAGES.map(page => {
+                      const isChecked = formAllowedPages.includes(page.id);
+                      return (
+                        <label key={page.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', fontWeight: 700, color: '#1e293b', cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormAllowedPages(prev => [...prev, page.id]);
+                              } else {
+                                setFormAllowedPages(prev => prev.filter(id => id !== page.id));
+                              }
+                            }}
+                            style={{ width: '16px', height: '16px', borderRadius: '4px', cursor: 'pointer' }}
+                          />
+                          <span>{page.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
                 <input type="checkbox" id="edit-active" checked={formIsActive} onChange={(e) => setFormIsActive(e.target.checked)} />

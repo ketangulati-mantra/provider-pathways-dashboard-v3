@@ -99,6 +99,7 @@ export const submissionController = {
       return res.status(200).json({
         success: true,
         data: result.submissions,
+        statusCounts: result.statusCounts,
         pagination: result.pagination,
       });
     } catch (error) {
@@ -200,7 +201,7 @@ export const submissionController = {
   async reviewSubmission(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const { status, reviewedBy, reviewed_by, reviewNotes, review_notes } = req.body;
+      const { status, reviewNotes, review_notes } = req.body;
 
       if (!id) {
         return res.status(400).json({
@@ -209,12 +210,17 @@ export const submissionController = {
         });
       }
 
+      // Extract authenticated user payload from JWT session
+      const authUser = (req as any).admin || (req as any).user;
+      const reviewerUserId = authUser ? String(authUser.id || authUser.user_id || '') : undefined;
+      const reviewerName = authUser ? String(authUser.name || authUser.email || '') : undefined;
+
       const finalNotes = reviewNotes !== undefined ? reviewNotes : review_notes;
-      const finalReviewer = reviewedBy !== undefined ? reviewedBy : reviewed_by;
 
       const updatedSubmission = await submissionService.reviewSubmission(id, {
         ...(status ? { status } : {}),
-        ...(finalReviewer !== undefined ? { reviewedBy: finalReviewer } : {}),
+        ...(reviewerUserId ? { reviewerUserId } : {}),
+        ...(reviewerName ? { reviewerName } : {}),
         ...(finalNotes !== undefined ? { reviewNotes: finalNotes } : {})
       });
 
@@ -232,9 +238,46 @@ export const submissionController = {
       });
     } catch (error: any) {
       console.error('❌ Error reviewing submission:', error);
-      return res.status(500).json({
+      return res.status(400).json({
         success: false,
-        error: error?.message || 'Internal Server Error while reviewing submission',
+        error: error?.message || 'Error while reviewing submission',
+      });
+    }
+  },
+
+  async claimSubmission(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          error: 'Submission id parameter is required',
+        });
+      }
+
+      const authUser = (req as any).admin || (req as any).user;
+      if (!authUser) {
+        return res.status(401).json({
+          success: false,
+          error: 'Authentication required to claim submission.',
+        });
+      }
+
+      const reviewerUserId = String(authUser.id || authUser.user_id || '');
+      const reviewerName = String(authUser.name || authUser.email || reviewerUserId);
+
+      const claimedSubmission = await submissionService.claimSubmission(id, reviewerUserId, reviewerName);
+
+      return res.status(200).json({
+        success: true,
+        message: `Submission claimed successfully by ${reviewerName}`,
+        data: claimedSubmission,
+      });
+    } catch (error: any) {
+      console.error('❌ Error claiming submission:', error);
+      return res.status(400).json({
+        success: false,
+        error: error?.message || 'Error claiming submission',
       });
     }
   },
@@ -261,10 +304,25 @@ export const submissionController = {
 
   async getReviewers(req: Request, res: Response, next: NextFunction) {
     try {
+      const { sql } = await import('../db/client.js');
       const reviewers = await submissionService.getReviewers();
+      const userReviewers = await sql`
+        SELECT user_id, name, email, role, is_reviewer, is_active
+        FROM users
+        WHERE is_reviewer IS TRUE
+        ORDER BY name ASC;
+      `;
       return res.status(200).json({
         success: true,
         data: reviewers,
+        reviewers: (userReviewers as any[]).map((u: any) => ({
+          user_id: String(u.user_id),
+          name: u.name || u.email || String(u.user_id),
+          email: u.email || '',
+          role: u.role || 'user',
+          is_reviewer: true,
+          is_active: Boolean(u.is_active)
+        }))
       });
     } catch (error) {
       console.error('❌ Error fetching reviewers:', error);
@@ -274,15 +332,16 @@ export const submissionController = {
 
   async addReviewer(req: Request, res: Response, next: NextFunction) {
     try {
-      const { name } = req.body;
-      if (!name || !String(name).trim()) {
-        return res.status(400).json({ success: false, error: 'Reviewer name is required' });
+      const targetIdentifier = req.body.userId || req.body.user_id || req.body.name || req.body.email;
+      if (!targetIdentifier || !String(targetIdentifier).trim()) {
+        return res.status(400).json({ success: false, error: 'Reviewer identifier is required' });
       }
-      const reviewers = await submissionService.addReviewer(String(name));
+      const reviewers = await submissionService.addReviewer(String(targetIdentifier).trim());
       return res.status(201).json({
         success: true,
-        message: `Reviewer '${name}' added successfully`,
+        message: `Reviewer added successfully`,
         data: reviewers,
+        reviewers,
       });
     } catch (error: any) {
       console.error('❌ Error adding reviewer:', error);

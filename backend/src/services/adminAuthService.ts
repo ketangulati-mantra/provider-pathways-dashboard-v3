@@ -10,6 +10,7 @@ export interface AdminRecord {
   role: string;
   is_reviewer?: boolean;
   is_active: boolean;
+  allowed_pages?: string[];
   last_login_at: string | null;
   created_at: string;
   updated_at: string;
@@ -19,28 +20,36 @@ export async function findAdminByEmail(email: string): Promise<AdminRecord | nul
   const normalizedEmail = email.trim().toLowerCase();
 
   const rows = await sql`
-    SELECT user_id as id, user_id, name, email, password_hash, role, is_reviewer, is_active, last_login_at, created_at, updated_at
+    SELECT user_id as id, user_id, name, email, password_hash, role, is_reviewer, is_active, allowed_pages, last_login_at, created_at, updated_at
     FROM users
     WHERE LOWER(email) = ${normalizedEmail}
     LIMIT 1
   `;
 
   if (rows.length === 0) return null;
-  return rows[0] as AdminRecord;
+  const admin = rows[0] as AdminRecord;
+  if (!Array.isArray(admin.allowed_pages)) {
+    admin.allowed_pages = ['submissions', 'corporate_admin', 'campus_admin', 'lessons'];
+  }
+  return admin;
 }
 
 export async function findAdminById(id: string | number): Promise<AdminRecord | null> {
   const strId = String(id);
 
   const rows = await sql`
-    SELECT user_id as id, user_id, name, email, password_hash, role, is_reviewer, is_active, last_login_at, created_at, updated_at
+    SELECT user_id as id, user_id, name, email, password_hash, role, is_reviewer, is_active, allowed_pages, last_login_at, created_at, updated_at
     FROM users
     WHERE user_id::text = ${strId} OR LOWER(email) = ${strId.toLowerCase()}
     LIMIT 1
   `;
 
   if (rows.length === 0) return null;
-  return rows[0] as AdminRecord;
+  const admin = rows[0] as AdminRecord;
+  if (!Array.isArray(admin.allowed_pages)) {
+    admin.allowed_pages = ['submissions', 'corporate_admin', 'campus_admin', 'lessons'];
+  }
+  return admin;
 }
 
 export async function updateAdminLastLogin(id: string | number): Promise<void> {
@@ -63,11 +72,14 @@ export async function hashPassword(plainText: string): Promise<string> {
 
 export async function getAllAdmins(): Promise<Omit<AdminRecord, 'password_hash'>[]> {
   const rows = await sql`
-    SELECT user_id as id, user_id, name, email, role, is_reviewer, is_active, last_login_at, created_at, updated_at
+    SELECT user_id as id, user_id, name, email, role, is_reviewer, is_active, allowed_pages, last_login_at, created_at, updated_at
     FROM users
     ORDER BY created_at DESC
   `;
-  return rows as Omit<AdminRecord, 'password_hash'>[];
+  return rows.map(r => ({
+    ...r,
+    allowed_pages: Array.isArray(r.allowed_pages) ? r.allowed_pages : ['submissions', 'corporate_admin', 'campus_admin', 'lessons']
+  })) as Omit<AdminRecord, 'password_hash'>[];
 }
 
 export async function countSuperAdmins(): Promise<number> {
@@ -88,15 +100,17 @@ export async function createAdminRecord(data: {
   email: string;
   password_hash: string;
   role?: string;
+  allowed_pages?: string[];
 }): Promise<Omit<AdminRecord, 'password_hash'>> {
   const normalizedEmail = data.email.trim().toLowerCase();
   const normalizedRole = data.role === 'super_admin' || data.role === 'Super Admin' || data.role === 'superadmin' ? 'super_admin' : 'admin';
   const newUserId = `admin_${Date.now()}`;
+  const pagesJson = JSON.stringify(data.allowed_pages && data.allowed_pages.length > 0 ? data.allowed_pages : ['submissions', 'corporate_admin', 'campus_admin', 'lessons']);
 
   const rows = await sql`
-    INSERT INTO users (user_id, name, email, password_hash, role, is_active, is_reviewer)
-    VALUES (${newUserId}, ${data.name.trim()}, ${normalizedEmail}, ${data.password_hash}, ${normalizedRole}, TRUE, FALSE)
-    RETURNING user_id as id, user_id, name, email, role, is_reviewer, is_active, last_login_at, created_at, updated_at
+    INSERT INTO users (user_id, name, email, password_hash, role, is_active, is_reviewer, allowed_pages)
+    VALUES (${newUserId}, ${data.name.trim()}, ${normalizedEmail}, ${data.password_hash}, ${normalizedRole}, TRUE, FALSE, ${pagesJson}::jsonb)
+    RETURNING user_id as id, user_id, name, email, role, is_reviewer, is_active, allowed_pages, last_login_at, created_at, updated_at
   `;
 
   return rows[0] as Omit<AdminRecord, 'password_hash'>;
@@ -104,7 +118,7 @@ export async function createAdminRecord(data: {
 
 export async function updateAdminRecord(
   id: string | number,
-  data: { name?: string; email?: string; role?: string; is_active?: boolean; is_reviewer?: boolean }
+  data: { name?: string; email?: string; role?: string; is_active?: boolean; is_reviewer?: boolean; allowed_pages?: string[] }
 ): Promise<Omit<AdminRecord, 'password_hash'> | null> {
   const strId = String(id);
   const existing = await findAdminById(strId);
@@ -115,16 +129,21 @@ export async function updateAdminRecord(
   const newRole = data.role !== undefined ? (data.role === 'super_admin' || data.role === 'Super Admin' || data.role === 'superadmin' ? 'super_admin' : 'admin') : existing.role;
   const newActive = data.is_active !== undefined ? Boolean(data.is_active) : existing.is_active;
   const newReviewer = data.is_reviewer !== undefined ? Boolean(data.is_reviewer) : Boolean(existing.is_reviewer);
+  const newPagesJson = data.allowed_pages ? JSON.stringify(data.allowed_pages) : (existing.allowed_pages ? JSON.stringify(existing.allowed_pages) : '["submissions", "corporate_admin", "campus_admin", "lessons"]');
 
   const rows = await sql`
     UPDATE users
-    SET name = ${newName}, email = ${newEmail}, role = ${newRole}, is_active = ${newActive}, is_reviewer = ${newReviewer}, updated_at = CURRENT_TIMESTAMP
+    SET name = ${newName}, email = ${newEmail}, role = ${newRole}, is_active = ${newActive}, is_reviewer = ${newReviewer}, allowed_pages = ${newPagesJson}::jsonb, updated_at = CURRENT_TIMESTAMP
     WHERE user_id = ${existing.user_id}
-    RETURNING user_id as id, user_id, name, email, role, is_reviewer, is_active, last_login_at, created_at, updated_at
+    RETURNING user_id as id, user_id, name, email, role, is_reviewer, is_active, allowed_pages, last_login_at, created_at, updated_at
   `;
 
   if (!rows || rows.length === 0) return existing;
-  return rows[0] as Omit<AdminRecord, 'password_hash'>;
+  const resRecord = rows[0] as Omit<AdminRecord, 'password_hash'>;
+  if (!Array.isArray(resRecord.allowed_pages)) {
+    resRecord.allowed_pages = data.allowed_pages || ['submissions', 'corporate_admin', 'campus_admin', 'lessons'];
+  }
+  return resRecord;
 }
 
 export async function updateAdminStatusRecord(id: string | number, is_active: boolean): Promise<boolean> {

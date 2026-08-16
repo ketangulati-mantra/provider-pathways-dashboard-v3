@@ -200,13 +200,25 @@ export class CorporateRepository {
   }
   async updateReviewer(id: string, reviewer: string, status?: string): Promise<boolean> {
     try {
-      const isUnassigned = !reviewer || reviewer === 'Unassigned';
+      const isUnassigned = !reviewer || reviewer === 'Unassigned' || status === 'pending' || status === 'submitted';
+      const targetReviewer = isUnassigned ? 'Unassigned' : reviewer;
       const targetStatus = status || (isUnassigned ? 'submitted' : 'under_review');
       await sql`
         UPDATE corporate_partner_applications
-        SET reviewed_by = ${reviewer}, application_status = ${targetStatus}, updated_at = CURRENT_TIMESTAMP
+        SET reviewed_by = ${targetReviewer},
+            application_status = ${targetStatus},
+            review_status = ${targetStatus},
+            updated_at = CURRENT_TIMESTAMP
         WHERE id::text = ${id} OR user_id = ${id};
       `;
+
+      if (!isUnassigned && targetReviewer && targetReviewer !== 'Unassigned') {
+        await sql`
+          UPDATE users
+          SET is_reviewer = TRUE, updated_at = CURRENT_TIMESTAMP
+          WHERE LOWER(name) = ${targetReviewer.toLowerCase()} OR LOWER(email) = ${targetReviewer.toLowerCase()};
+        `;
+      }
       return true;
     } catch (err) {
       console.error('[corporateRepository.updateReviewer] Error:', err);
