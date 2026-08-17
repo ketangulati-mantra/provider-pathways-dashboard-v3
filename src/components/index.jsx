@@ -757,12 +757,14 @@ export const QuizCard = ({
    12. ACHIEVEMENT / COMPLETION SCREEN
    ========================================================================== */
 export const CompletionScreen = ({
-  points = 50,
+  points,
+  rewardPoints,
   title,
   subtitle,
   onClose
 }) => {
   const { t } = useTranslation('shared');
+  const actualPoints = rewardPoints !== undefined ? rewardPoints : (points !== undefined ? points : 10);
 
   const displayTitle = title || t('completion.title') || 'Task Complete!';
   const displaySubtitle = subtitle || t('completion.subtitle') || 'You have successfully finished this task.';
@@ -816,7 +818,7 @@ export const CompletionScreen = ({
 
         <div className="completion-points-badge animate-scale-in">
           <Sparkles size={16} fill="currentColor" />
-          <span>+{points} POINTS</span>
+          <span>+{actualPoints} POINTS</span>
         </div>
 
 
