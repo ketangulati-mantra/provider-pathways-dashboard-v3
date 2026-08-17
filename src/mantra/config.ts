@@ -13,7 +13,11 @@ const getDynamicApiBase = () => {
     return metaEnv.VITE_BACKEND_URL.replace(/\/api\/?$/, '');
   }
 
-  if (!metaEnv?.PROD) {
+  const hostname = window.location.hostname;
+  const port = window.location.port;
+  const isLocalDev = (hostname === 'localhost' || hostname === '127.0.0.1') && (port === '5173' || port === '3000');
+
+  if (isLocalDev) {
     return 'http://localhost:5000';
   }
 
@@ -30,12 +34,23 @@ const getDynamicApiBase = () => {
   } catch (e) {}
 
   const p = window.location.pathname;
-  const segments = p.split('/').filter(Boolean);
-  const firstSegment = segments[0] ? `/${segments[0]}` : '';
+  const knownPrefixes = [
+    '/provider_pathways_dashboard_v3',
+    '/provider_pathways_dashboard_v2',
+    '/provider_dashboard_v1',
+    '/provider_pathways_dashboard_v1',
+    '/provider_pathways_v2_testing',
+    '/provider_pathways',
+    '/provider_pathway',
+    '/provider_activity'
+  ];
 
-  let prefix = '/provider_pathways_dashboard_v2'; // Default fallback production subpath
-  if (firstSegment && firstSegment !== '/api' && firstSegment !== '/task') {
-    prefix = firstSegment;
+  let prefix = '';
+  for (const known of knownPrefixes) {
+    if (p.startsWith(known)) {
+      prefix = known;
+      break;
+    }
   }
 
   try {

@@ -191,7 +191,7 @@ export const submitActivitySubmission = async (payload: {
     return { 
       success: false, 
       error: isFetchError 
-        ? 'Backend server (http://localhost:5000) is offline or unreachable. Please start the backend server.' 
+        ? 'Backend server is offline or unreachable. Please check connection.' 
         : (error instanceof Error ? error.message : 'Network error') 
     };
   }
