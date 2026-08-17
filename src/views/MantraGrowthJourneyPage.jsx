@@ -23,12 +23,9 @@ import { completeLesson } from '../mantra/api';
 import { handleExit, goBack, goToDashboard } from '../mantra/navigation';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import { CompletionScreen } from '../components';
-
 gsap.registerPlugin(ScrollTrigger);
-
 const LESSON_ID = 'growth-journey';
 const MANTRA_LOGO_URL = 'https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg';
-
 // ------------------------------------------------------------------------------
 // DESIGN TOKENS
 // ------------------------------------------------------------------------------
@@ -44,7 +41,6 @@ const TOKENS = {
   violet: '#7C5CFF',
   sky: '#0284C7'
 };
-
 // The five stages of the journey — this array is the single source of truth.
 // It drives the hero flow chips, the 3D lattice nodes, and the live accent
 // color of the whole page as the reader scrolls through each section.
@@ -55,7 +51,6 @@ const STAGES = [
   { key: 'rank', title: 'Rank', icon: Award, color: TOKENS.violet, rgb: '124,92,255' },
   { key: 'growth', title: 'Growth', icon: TrendingUp, color: TOKENS.sky, rgb: '2,132,199' }
 ];
-
 // ------------------------------------------------------------------------------
 // SIGNATURE VISUAL — "ASCENSION LATTICE"
 // A vertical spine of five glowing nodes, one per stage of the journey.
@@ -68,43 +63,35 @@ const STAGES = [
 function GrowthLatticeScene({ containerRef, isMobile, onStageChange }) {
   const canvasRef = useRef(null);
   const wrapRef = useRef(null);
-
   useEffect(() => {
     const canvas = canvasRef.current;
     const wrap = wrapRef.current;
     if (!canvas || !wrap || !containerRef.current) return;
-
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let destroyed = false;
     let width = wrap.clientWidth;
     let height = wrap.clientHeight;
-
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(width, height, false);
-
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
     camera.position.set(0, 0, 9);
-
     scene.add(new THREE.AmbientLight(0xffffff, 0.55));
     const keyLight = new THREE.PointLight(0xffffff, 1.1, 40);
     keyLight.position.set(4, 4, 6);
     scene.add(keyLight);
-
     // Spine — a thin, faint tube running the length of the journey
     const spineCurve = new THREE.LineCurve3(new THREE.Vector3(0, -6, 0), new THREE.Vector3(0, 6, 0));
     const spineGeo = new THREE.TubeGeometry(spineCurve, 20, 0.012, 6, false);
     const spineMat = new THREE.MeshBasicMaterial({ color: 0x2f5fff, transparent: true, opacity: 0.16 });
     scene.add(new THREE.Mesh(spineGeo, spineMat));
-
     // Nodes — one icosahedron per stage, evenly spaced along the spine
     const nodeSpan = 4.6;
     const nodes = STAGES.map((stage, i) => {
       const t = STAGES.length === 1 ? 0 : i / (STAGES.length - 1);
       const y = -nodeSpan + t * nodeSpan * 2;
       const color = new THREE.Color(stage.color);
-
       const geo = new THREE.IcosahedronGeometry(0.34, 1);
       const mat = new THREE.MeshStandardMaterial({
         color,
@@ -118,7 +105,6 @@ function GrowthLatticeScene({ containerRef, isMobile, onStageChange }) {
       const mesh = new THREE.Mesh(geo, mat);
       mesh.position.set(0, y, 0);
       scene.add(mesh);
-
       // Wireframe halo for a bit of premium "engineered" texture
       const halo = new THREE.Mesh(
         new THREE.IcosahedronGeometry(0.5, 1),
@@ -126,10 +112,8 @@ function GrowthLatticeScene({ containerRef, isMobile, onStageChange }) {
       );
       halo.position.copy(mesh.position);
       scene.add(halo);
-
       return { mesh, mat, halo, y, color };
     });
-
     // Ambient particle field around the spine
     const particleCount = isMobile ? 180 : 340;
     const positions = new Float32Array(particleCount * 3);
@@ -152,9 +136,7 @@ function GrowthLatticeScene({ containerRef, isMobile, onStageChange }) {
     });
     const particles = new THREE.Points(particleGeo, particleMat);
     scene.add(particles);
-
     const state = { progress: 0, rotation: 0 };
-
     const resize = () => {
       if (destroyed) return;
       width = wrap.clientWidth;
@@ -164,7 +146,6 @@ function GrowthLatticeScene({ containerRef, isMobile, onStageChange }) {
       camera.updateProjectionMatrix();
     };
     window.addEventListener('resize', resize);
-
     // GSAP owns the scroll-to-3D mapping: as the reader moves through the
     // page, `progress` sweeps 0→1 and drives camera position + node ignition.
     const trigger = ScrollTrigger.create({
@@ -178,13 +159,11 @@ function GrowthLatticeScene({ containerRef, isMobile, onStageChange }) {
         onStageChange(stageIndex);
       }
     });
-
     let raf;
     const clock = new THREE.Clock();
     const animate = () => {
       if (destroyed) return;
       const dt = clock.getDelta();
-
       // Camera travels up the spine and orbits gently for parallax depth
       const targetY = -nodeSpan + state.progress * nodeSpan * 2;
       camera.position.y += (targetY - camera.position.y) * 0.06;
@@ -192,7 +171,6 @@ function GrowthLatticeScene({ containerRef, isMobile, onStageChange }) {
       camera.position.x = Math.sin(state.rotation) * 6.6;
       camera.position.z = Math.cos(state.rotation) * 6.6;
       camera.lookAt(0, camera.position.y, 0);
-
       // Ignite nodes as the camera passes them
       const activeFloat = state.progress * (STAGES.length - 1);
       nodes.forEach((node, i) => {
@@ -208,14 +186,11 @@ function GrowthLatticeScene({ containerRef, isMobile, onStageChange }) {
           node.halo.rotation.y -= dt * 0.15;
         }
       });
-
       if (!prefersReducedMotion) particles.rotation.y += dt * 0.012;
-
       renderer.render(scene, camera);
       raf = requestAnimationFrame(animate);
     };
     animate();
-
     return () => {
       destroyed = true;
       cancelAnimationFrame(raf);
@@ -234,7 +209,6 @@ function GrowthLatticeScene({ containerRef, isMobile, onStageChange }) {
       renderer.dispose();
     };
   }, [containerRef, isMobile, onStageChange]);
-
   return (
     <div
       ref={wrapRef}
@@ -250,7 +224,6 @@ function GrowthLatticeScene({ containerRef, isMobile, onStageChange }) {
     </div>
   );
 }
-
 // ------------------------------------------------------------------------------
 // SMALL UI PRIMITIVES
 // ------------------------------------------------------------------------------
@@ -266,7 +239,6 @@ function Reveal({ children, delay = 0 }) {
     </motion.div>
   );
 }
-
 function SectionCard({ children, style, ...rest }) {
   return (
     <motion.section
@@ -286,7 +258,6 @@ function SectionCard({ children, style, ...rest }) {
     </motion.section>
   );
 }
-
 function Eyebrow({ children, color = TOKENS.indigo, bg = 'rgba(47,95,255,0.08)' }) {
   return (
     <div
@@ -309,7 +280,6 @@ function Eyebrow({ children, color = TOKENS.indigo, bg = 'rgba(47,95,255,0.08)' 
     </div>
   );
 }
-
 function ScoreRing({ progress, size = 128, stroke = 8, color = TOKENS.emerald, track = 'rgba(14,167,114,0.12)' }) {
   const r = (size - stroke) / 2;
   const circumference = 2 * Math.PI * r;
@@ -331,13 +301,11 @@ function ScoreRing({ progress, size = 128, stroke = 8, color = TOKENS.emerald, t
     </svg>
   );
 }
-
 // Magnetic CTA — the button leans toward the cursor within a small radius.
 // One deliberate flourish, kept to the single button on the page.
 function MagneticButton({ children, style, ...rest }) {
   const ref = useRef(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
-
   const handleMove = (e) => {
     const el = ref.current;
     if (!el) return;
@@ -347,7 +315,6 @@ function MagneticButton({ children, style, ...rest }) {
     setOffset({ x: relX * 0.14, y: relY * 0.22 });
   };
   const handleLeave = () => setOffset({ x: 0, y: 0 });
-
   return (
     <motion.button
       ref={ref}
@@ -364,7 +331,6 @@ function MagneticButton({ children, style, ...rest }) {
     </motion.button>
   );
 }
-
 // ------------------------------------------------------------------------------
 // MAIN PAGE
 // ------------------------------------------------------------------------------
@@ -373,17 +339,13 @@ export default function MantraGrowthJourneyPage({ onBack }) {
   const [completionError, setCompletionError] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [activeStage, setActiveStage] = useState(0);
-
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
   const smoothProgress = useSpring(scrollYProgress, { stiffness: 90, damping: 25, restDelta: 0.001 });
-
   const scoreProgress = useTransform(smoothProgress, [0.32, 0.6], [0, 1]);
   const scoreValue = useTransform(scoreProgress, [0, 1], [0, 750]);
   const [displayScore, setDisplayScore] = useState(0);
-
   const accent = STAGES[activeStage];
-
   const {
     lessonProgress,
     showCelebrate,
@@ -394,19 +356,16 @@ export default function MantraGrowthJourneyPage({ onBack }) {
     hasQuiz: false,
     hasAction: true
   });
-
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
   useEffect(() => {
     const unsubscribe = scoreValue.on('change', (val) => setDisplayScore(Math.round(val)));
     return () => unsubscribe();
   }, [scoreValue]);
-
   // Page-load choreography
   const heroRef = useRef(null);
   useEffect(() => {
@@ -420,10 +379,8 @@ export default function MantraGrowthJourneyPage({ onBack }) {
     }, heroRef);
     return () => ctx.revert();
   }, []);
-
   const heroOpacity = useTransform(smoothProgress, [0, 0.1, 0.22], [1, 1, 0]);
   const heroY = useTransform(smoothProgress, [0, 0.22], [0, -40]);
-
   const handleProceedToActivities = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
@@ -437,7 +394,6 @@ export default function MantraGrowthJourneyPage({ onBack }) {
       setIsSubmitting(false);
     }
   };
-
   return (
     <div
       ref={containerRef}
@@ -469,7 +425,6 @@ export default function MantraGrowthJourneyPage({ onBack }) {
         .mgj-progress { transition: background 0.6s ease; }
         @media (prefers-reduced-motion: reduce) { .mgj-anim { animation: none !important; transition: none !important; } }
       `}</style>
-
       {/* Ultra-subtle film grain for depth */}
       <div
         aria-hidden
@@ -484,10 +439,8 @@ export default function MantraGrowthJourneyPage({ onBack }) {
             "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>\")"
         }}
       />
-
       {/* LAYER 1 — SIGNATURE VISUAL: the ascension lattice, live for the whole scroll */}
       <GrowthLatticeScene containerRef={containerRef} isMobile={isMobile} onStageChange={setActiveStage} />
-
       {/* LAYER 2 — STICKY NAV */}
       <header
         style={{
@@ -533,7 +486,6 @@ export default function MantraGrowthJourneyPage({ onBack }) {
           >
             <ArrowLeft size={16} /> Back
           </motion.button>
-
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, maxWidth: '420px', margin: '0 16px' }}>
             <img src={MANTRA_LOGO_URL} alt="Mantra Logo" style={{ height: '22px', display: 'block' }} />
             <div style={{ flex: 1 }}>
@@ -554,7 +506,6 @@ export default function MantraGrowthJourneyPage({ onBack }) {
               </div>
             </div>
           </div>
-
           <button
             onClick={() => handleExit()}
             style={{ background: 'none', border: 'none', color: TOKENS.sub, fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}
@@ -563,7 +514,6 @@ export default function MantraGrowthJourneyPage({ onBack }) {
           </button>
         </div>
       </header>
-
       {/* LAYER 3 — HERO */}
       <motion.section
         ref={heroRef}
@@ -581,10 +531,9 @@ export default function MantraGrowthJourneyPage({ onBack }) {
       >
         <div className="mgj-hero-el">
           <Eyebrow>
-            <Sparkles size={11} style={{ marginRight: '2px' }} /> Provider Activation
+            <Sparkles size={11} style={{ marginRight: '2px' }} /> Growth Journey
           </Eyebrow>
         </div>
-
         <h1
           className="mgj-hero-el"
           style={{
@@ -598,12 +547,11 @@ export default function MantraGrowthJourneyPage({ onBack }) {
             maxWidth: '620px'
           }}
         >
-          Build your presence on{' '}
+          Grow Your Practice with{' '}
           <span style={{ background: `linear-gradient(100deg, ${TOKENS.indigo}, ${TOKENS.violet})`, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
             Mantra.
           </span>
         </h1>
-
         <p
           className="mgj-hero-el"
           style={{
@@ -615,10 +563,11 @@ export default function MantraGrowthJourneyPage({ onBack }) {
             lineHeight: 1.55
           }}
         >
-          Every activity you complete strengthens your score, your rank, and how visible you
-          are to the clients comparing providers right now.
+          Complete Pathways. Build Your Score. Get More Clients. Your Growth
+          Pathways are short, practical activities that help you improve your
+          Provider Score, increase your visibility, and work toward Preferred
+          Provider status.
         </p>
-
         <div
           className="mgj-hero-el"
           style={{
@@ -658,7 +607,6 @@ export default function MantraGrowthJourneyPage({ onBack }) {
           })}
         </div>
       </motion.section>
-
       {/* LAYER 4 — CONTENT SECTIONS */}
       <main
         style={{
@@ -677,18 +625,17 @@ export default function MantraGrowthJourneyPage({ onBack }) {
             <SectionCard style={{ padding: isMobile ? '28px 20px' : '44px 48px' }}>
               <div style={{ marginBottom: '28px', maxWidth: '520px' }}>
                 <h2 style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: isMobile ? '1.5rem' : '1.9rem', fontWeight: 700, color: TOKENS.ink, margin: '0 0 10px 0', letterSpacing: '-0.02em' }}>
-                  What are activities?
+                  Every Activity Moves You Forward
                 </h2>
                 <p style={{ fontSize: '0.96rem', color: TOKENS.sub, fontWeight: 500, lineHeight: 1.5, margin: 0 }}>
-                  Simple, concrete actions — the building blocks of a stronger profile.
+                  The activities on Mantra are simple, practical actions that help you build a stronger presence on the platform.
                 </p>
               </div>
-
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '14px' }}>
                 {[
-                  { title: 'Complete', desc: 'Earn points by completing activities.', icon: CheckCircle2, color: TOKENS.indigo },
-                  { title: 'Improve', desc: 'Strengthen your profile and presence.', icon: Share2, color: TOKENS.amber },
-                  { title: 'Grow', desc: 'Build a stronger profile over time.', icon: TrendingUp, color: TOKENS.emerald }
+                  { title: 'Build Your Profile', desc: 'Complete important profile and practice details so clients can better understand who you are and what you offer.', icon: CheckCircle2, color: TOKENS.indigo },
+                  { title: 'Strengthen Your Presence', desc: 'Take actions that help improve your visibility and create a stronger presence on Mantra.', icon: Share2, color: TOKENS.amber },
+                  { title: 'Grow Your Score', desc: 'Meaningful activities contribute to your Provider Score and help you work toward higher standing on the platform.', icon: TrendingUp, color: TOKENS.emerald }
                 ].map((ex) => {
                   const Icon = ex.icon;
                   return (
@@ -718,21 +665,19 @@ export default function MantraGrowthJourneyPage({ onBack }) {
               </div>
             </SectionCard>
           </Reveal>
-
           {/* WHY SCORE MATTERS */}
           <Reveal delay={0.05}>
             <SectionCard style={{ padding: isMobile ? '28px 20px' : '44px 48px' }}>
               <div style={{ marginBottom: '26px', maxWidth: '560px' }}>
                 <h2 style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: isMobile ? '1.5rem' : '1.9rem', fontWeight: 700, color: TOKENS.ink, margin: '0 0 10px 0', letterSpacing: '-0.02em' }}>
-                  Why your score matters
+                  Why Your Provider Score Matters
                 </h2>
                 <p style={{ fontSize: '0.94rem', color: TOKENS.sub, fontWeight: 500, lineHeight: 1.55, margin: 0 }}>
-                  Your score reflects the activity you complete on Mantra. Completing more
-                  meaningful activities can increase your score and show clients that your
-                  profile is active and complete.
+                  Your Provider Score reflects the meaningful activities you complete
+                  on Mantra. A stronger score can help you build a stronger presence
+                  on the platform and work toward additional opportunities.
                 </p>
               </div>
-
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.1fr 1fr', gap: '18px' }}>
                 <div
                   style={{
@@ -748,17 +693,16 @@ export default function MantraGrowthJourneyPage({ onBack }) {
                 >
                   <ScoreRing progress={scoreProgress} size={isMobile ? 96 : 116} />
                   <div>
-                    <Eyebrow color={TOKENS.emerald} bg="rgba(14,167,114,0.08)">Building Score</Eyebrow>
+                    <Eyebrow color={TOKENS.emerald} bg="rgba(14,167,114,0.08)">Provider Score</Eyebrow>
                     <div style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: isMobile ? '2.2rem' : '2.7rem', fontWeight: 700, color: TOKENS.ink, lineHeight: 1, marginTop: '14px' }}>
                       {displayScore}
                       <span style={{ fontSize: '0.95rem', color: TOKENS.sub, fontWeight: 600, marginLeft: '6px' }}>pts</span>
                     </div>
                     <div style={{ fontSize: '0.82rem', color: TOKENS.sub, marginTop: '8px', fontWeight: 500 }}>
-                      Points contribute to your overall score
+                      250+ points makes you eligible for Preferred Provider status
                     </div>
                   </div>
                 </div>
-
                 <div
                   style={{
                     background: TOKENS.indigoDeep,
@@ -769,25 +713,25 @@ export default function MantraGrowthJourneyPage({ onBack }) {
                   }}
                 >
                   <div style={{ fontSize: '0.92rem', color: '#DCE4FF', fontWeight: 500, lineHeight: 1.55 }}>
-                    A stronger, more complete profile helps you stand out when clients compare
-                    providers side by side.
+                    Providers who consistently engage with Mantra and maintain a
+                    strong profile may be recognized through Mantra Provider Awards
+                    and Certificates.
                   </div>
                 </div>
               </div>
             </SectionCard>
           </Reveal>
-
           {/* RANK */}
           <Reveal delay={0.05}>
             <SectionCard style={{ padding: isMobile ? '28px 20px' : '40px 48px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr auto', gap: '20px', alignItems: 'center' }}>
                 <div>
                   <h2 style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: isMobile ? '1.4rem' : '1.7rem', fontWeight: 700, color: TOKENS.ink, margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>
-                    Your rank
+                    Reach Preferred Provider Status
                   </h2>
                   <p style={{ fontSize: '0.92rem', color: TOKENS.sub, fontWeight: 500, lineHeight: 1.5, margin: 0, maxWidth: '460px' }}>
-                    Your rank shows how your progress compares with other providers on Mantra.
-                    Building your score can help improve your standing over time.
+                    Preferred Provider status can open the door to more ways to grow
+                    your practice through Mantra.
                   </p>
                 </div>
                 <div
@@ -803,12 +747,67 @@ export default function MantraGrowthJourneyPage({ onBack }) {
                   }}
                 >
                   <Award size={18} color={TOKENS.violet} />
-                  <span style={{ fontSize: '0.86rem', fontWeight: 700, color: TOKENS.violet }}>Peer-relative standing</span>
+                  <span style={{ fontSize: '0.86rem', fontWeight: 700, color: TOKENS.violet }}>Preferred Provider Status</span>
                 </div>
               </div>
             </SectionCard>
           </Reveal>
-
+          {/* MORE OPPORTUNITIES */}
+          {/* MORE WAYS TO GROW YOUR PRACTICE */}
+          <Reveal delay={0.05}>
+            <SectionCard
+              style={{
+                background: 'linear-gradient(150deg, rgba(124,92,255,0.06) 0%, rgba(47,95,255,0.05) 100%)',
+                border: '1px solid rgba(124,92,255,0.22)',
+                padding: isMobile ? '26px 20px' : '32px 44px'
+              }}
+            >
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '24px', alignItems: 'center' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <Award size={18} color={TOKENS.violet} />
+                    <h2 style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: isMobile ? '1.25rem' : '1.4rem', fontWeight: 700, color: TOKENS.indigoDeep, margin: 0 }}>
+                      More ways to grow your practice
+                    </h2>
+                  </div>
+                  <p style={{ fontSize: '0.88rem', color: TOKENS.sub, lineHeight: 1.5, margin: '0 0 14px 0', fontWeight: 500 }}>
+                    Preferred Providers get access to client referrals, insurance-covered
+                    clients, EAP & corporate programs, a referral network of wellness
+                    professionals, and greater online visibility.
+                  </p>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(124,92,255,0.1)', border: '1px solid rgba(124,92,255,0.25)', padding: '6px 12px', borderRadius: '999px', color: TOKENS.violet, fontSize: '0.76rem', fontWeight: 700 }}>
+                    <Info size={13} /> Available once you reach Preferred Provider status
+                  </div>
+                </div>
+                <div
+                  style={{
+                    background: '#FFFFFF',
+                    border: '1px solid rgba(124,92,255,0.2)',
+                    borderRadius: '18px',
+                    padding: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '8px'
+                  }}
+                >
+                  {[
+                    { title: '250+ Points', desc: 'Provider Score', color: TOKENS.ink },
+                    { title: 'Preferred Provider', desc: 'Status Unlocked', color: TOKENS.violet },
+                    { title: 'New Opportunities', desc: 'Referrals & more', color: TOKENS.indigo }
+                  ].map((s, idx) => (
+                    <React.Fragment key={s.title}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 700, color: s.color }}>{s.title}</div>
+                        <div style={{ fontSize: '0.68rem', color: '#94A3B8', fontWeight: 500 }}>{s.desc}</div>
+                      </div>
+                      {idx < 2 && <span style={{ color: TOKENS.violet, fontSize: '0.8rem' }}>→</span>}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            </SectionCard>
+          </Reveal>
           {/* SKIP */}
           <Reveal delay={0.05}>
             <SectionCard
@@ -834,7 +833,6 @@ export default function MantraGrowthJourneyPage({ onBack }) {
                     <Info size={13} /> Skipped activities do not earn points
                   </div>
                 </div>
-
                 <div
                   style={{
                     background: '#FFFFFF',
@@ -864,7 +862,6 @@ export default function MantraGrowthJourneyPage({ onBack }) {
               </div>
             </SectionCard>
           </Reveal>
-
           {/* CTA — the only button on the page */}
           <Reveal delay={0.08}>
             <SectionCard
@@ -877,12 +874,12 @@ export default function MantraGrowthJourneyPage({ onBack }) {
               }}
             >
               <h2 style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: isMobile ? '1.7rem' : '2.4rem', fontWeight: 700, color: '#FFFFFF', margin: '0 0 10px 0', letterSpacing: '-0.02em' }}>
-                Ready to build your presence?
+                Start Your Growth Journey
               </h2>
               <p style={{ fontSize: '0.98rem', color: '#C7D4FF', margin: '0 0 32px 0', fontWeight: 500 }}>
-                Complete activities, earn points, and keep building your profile on Mantra.
+                The activities are short and easy to complete. Complete your Pathways
+                today and start working toward Preferred Provider status.
               </p>
-
               {completionError && (
                 <div
                   style={{
@@ -902,7 +899,6 @@ export default function MantraGrowthJourneyPage({ onBack }) {
                   {completionError}
                 </div>
               )}
-
               <MagneticButton
                 onClick={handleProceedToActivities}
                 disabled={isSubmitting}
@@ -930,7 +926,7 @@ export default function MantraGrowthJourneyPage({ onBack }) {
                   </>
                 ) : (
                   <>
-                    Proceed to activities <ArrowRight size={18} />
+                    Continue Your Growth Journey <ArrowRight size={18} />
                   </>
                 )}
               </MagneticButton>
@@ -938,7 +934,6 @@ export default function MantraGrowthJourneyPage({ onBack }) {
           </Reveal>
         </div>
       </main>
-
       {/* Completion Celebration Overlay Screen */}
       {showCelebrate && (
         <CompletionScreen
