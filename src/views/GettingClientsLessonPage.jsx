@@ -20,7 +20,7 @@ const VIDEO = {
   title:    'Getting Clients from Mantra - Provider Visibility & Profile Optimisation',
   duration: '4 min',
   posterUrl: 'https://res.cloudinary.com/hxbamdqf/image/upload/v1784699055/Using_mantra_for_your_clients_mgsnll.avif',
-  videoUrl:  'https://vimeo.com/placeholder'     // replace with actual Vimeo URL
+  videoUrl:  'https://res.cloudinary.com/hxbamdqf/video/upload/v1785829768/vidssave.com_Getting_Clients_from_Mantra_Business_Growth_through_Platform_Visibility_1080P_o0lhmj.mp4'
 };
 
 const ACCORDIONS = [
