@@ -120,6 +120,117 @@ function SubmissionDetailsModal({ app, isOpen, onClose }) {
             <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#581c87', marginTop: '2px' }}>{app.motivation || 'N/A'}</div>
           </div>
 
+          {/* Separate Section: Status Change Logs */}
+          {(() => {
+            const rawLogs = app.status_history || app.statusHistory || [];
+            let logs = Array.isArray(rawLogs) && rawLogs.length > 0 ? [...rawLogs] : [];
+
+            const currentStatus = (app.review_status || app.application_status || app.status || 'pending').toLowerCase();
+
+            if (logs.length === 0) {
+              const createdTime = app.submitted_at || app.created_at;
+              logs.push({
+                status: 'pending',
+                changed_at: createdTime || new Date().toISOString(),
+                changed_by: 'System / User'
+              });
+
+              if (currentStatus !== 'pending' && currentStatus !== 'submitted') {
+                logs.push({
+                  status: currentStatus,
+                  changed_at: app.reviewed_at || app.updated_at || new Date().toISOString(),
+                  changed_by: app.reviewed_by || app.reviewer_name || 'Reviewer'
+                });
+              }
+            } else {
+              const lastLogSt = String(logs[logs.length - 1]?.status || '').toLowerCase();
+              if (currentStatus && lastLogSt !== currentStatus && currentStatus !== 'submitted') {
+                logs.push({
+                  status: currentStatus,
+                  changed_at: app.reviewed_at || app.updated_at || new Date().toISOString(),
+                  changed_by: app.reviewed_by || app.reviewer_name || 'Reviewer'
+                });
+              }
+            }
+
+            const STATUS_BADGES = {
+              pending: { label: 'Pending', bg: '#fef3c7', color: '#b45309', border: '#fde68a' },
+              'under review': { label: 'Under Review', bg: '#ffedd5', color: '#c2410c', border: '#fed7aa' },
+              under_review: { label: 'Under Review', bg: '#ffedd5', color: '#c2410c', border: '#fed7aa' },
+              'mail sent': { label: 'Mail Sent', bg: '#f0f9ff', color: '#0369a1', border: '#bae6fd' },
+              mail_sent: { label: 'Mail Sent', bg: '#f0f9ff', color: '#0369a1', border: '#bae6fd' },
+              approved: { label: 'Approved', bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
+              rejected: { label: 'Rejected', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' }
+            };
+
+            const formatDateStr = (dStr) => {
+              if (!dStr) return 'N/A';
+              const d = new Date(dStr);
+              return isNaN(d.getTime()) ? 'N/A' : d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            };
+
+            return (
+              <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Clock size={13} color="#2563eb" /> Status Change Logs
+                  </div>
+                  <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#94a3b8' }}>
+                    {logs.length} Event{logs.length !== 1 ? 's' : ''}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {logs.map((logItem, idx) => {
+                    const stKey = String(logItem.status || 'pending').toLowerCase().trim();
+                    const badge = STATUS_BADGES[stKey] || STATUS_BADGES.pending;
+                    const logTime = formatDateStr(logItem.changed_at || logItem.created_at || logItem.timestamp);
+                    const actor = logItem.changed_by || logItem.changedBy || logItem.user || 'Reviewer';
+
+                    return (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justify: 'space-between',
+                          background: '#f8fafc',
+                          padding: '8px 10px',
+                          borderRadius: '8px',
+                          border: '1px solid #f1f5f9',
+                          fontSize: '0.76rem'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                              border: `1px solid ${badge.border}`,
+                              background: badge.bg,
+                              color: badge.color,
+                              fontWeight: 800,
+                              fontSize: '0.70rem'
+                            }}
+                          >
+                            {badge.label}
+                          </span>
+                          <span style={{ color: '#475569', fontWeight: 700 }}>
+                            by <strong style={{ color: '#0f172a' }}>{actor}</strong>
+                          </span>
+                        </div>
+
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Clock size={11} color="#94a3b8" /> {logTime}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
         </div>
 
         {/* Modal Footer */}
@@ -266,11 +377,30 @@ export default function CorporateAdminDashboard() {
         const matchesId = (item.id !== undefined && app.id !== undefined && String(item.id) === String(app.id));
         const matchesUser = (item.user_id !== undefined && app.user_id !== undefined && String(item.user_id) === String(app.user_id));
         if (matchesId || matchesUser) {
+          const prevHistory = Array.isArray(item.status_history) ? item.status_history : [];
+          const newHistory = [...prevHistory];
+          if (newHistory.length === 0) {
+            newHistory.push({
+              status: 'pending',
+              changed_at: item.submitted_at || item.created_at || new Date().toISOString(),
+              changed_by: 'System / User'
+            });
+          }
+          const lastSt = newHistory[newHistory.length - 1]?.status;
+          if (String(lastSt).toLowerCase() !== String(newStatus).toLowerCase()) {
+            newHistory.push({
+              status: newStatus,
+              changed_at: new Date().toISOString(),
+              changed_by: targetReviewer || activeAdminName || 'Reviewer'
+            });
+          }
+
           return {
             ...item,
             reviewed_by: targetReviewer,
             application_status: newStatus,
-            review_status: newStatus
+            review_status: newStatus,
+            status_history: newHistory
           };
         }
         return item;

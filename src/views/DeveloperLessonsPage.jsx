@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, BookOpen, Database, Menu, GraduationCap, Building2, Clock, ArrowRight, Filter, X, ChevronRight, LogOut, ShieldCheck } from 'lucide-react';
 import SubmissionsTable from '../components/SubmissionsTable';
 import CampusAdminDashboard from '../components/admin/CampusAdminDashboard';
@@ -25,11 +25,13 @@ export default function DeveloperLessonsPage({ onNavigate }) {
   };
 
   const isSuperAdmin = displayAdmin?.role === 'super_admin' || displayAdmin?.role === 'Super Admin' || displayAdmin?.role === 'superadmin';
-  const allowedPages = isSuperAdmin 
-    ? ['submissions', 'corporate_admin', 'campus_admin', 'lessons']
-    : (Array.isArray(displayAdmin?.allowed_pages) && displayAdmin.allowed_pages.length > 0 
-        ? displayAdmin.allowed_pages 
-        : ['submissions', 'corporate_admin', 'campus_admin', 'lessons']);
+  const allowedPages = useMemo(() => {
+    return isSuperAdmin 
+      ? ['submissions', 'corporate_admin', 'campus_admin', 'lessons']
+      : (Array.isArray(displayAdmin?.allowed_pages) && displayAdmin.allowed_pages.length > 0 
+          ? displayAdmin.allowed_pages 
+          : ['submissions', 'corporate_admin', 'campus_admin', 'lessons']);
+  }, [isSuperAdmin, displayAdmin?.allowed_pages]);
 
   const [selectedService, setSelectedService] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');

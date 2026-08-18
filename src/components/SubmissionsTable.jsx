@@ -468,7 +468,7 @@ export default function SubmissionsTable() {
       window.removeEventListener('resize', checkScrollState);
       stopHoverScroll();
     };
-  }, [submissions]);
+  }, []);
 
   const loadSubmissions = async (page = 1, currentLimit = limit) => {
     setLoading(true);
@@ -788,6 +788,48 @@ export default function SubmissionsTable() {
       if (matchedByDial) return matchedByDial.name;
     }
     return '';
+  };
+
+  const isHashOrId = (str) => {
+    if (!str) return true;
+    const s = String(str).trim().toLowerCase();
+    if (s === 'provider' || s === 'guest' || s === 'anonymous_user' || s === 'user' || s === 'anonymous provider') return true;
+    if (s.includes(':') || s.startsWith('guest_')) return true;
+    if (/^[a-f0-9]{16,}$/.test(s) || /^[a-f0-9]{8}-[a-f0-9]{4}/.test(s)) return true;
+    if (!s.includes(' ') && !s.includes('@') && s.length > 15) return true;
+    return false;
+  };
+
+  const extractUserFullName = (item) => {
+    if (!item) return 'Provider User';
+    const data = item.form_data || item.submission_data || item.formData || item.submissionData || {};
+    
+    const rawName = data.fullName || data.full_name || data.name || data.user_name || data.userName || data.providerName || data.provider_name;
+    if (rawName && String(rawName).trim() && !isHashOrId(rawName)) {
+      return String(rawName).trim();
+    }
+
+    const rawEmail = data.email || data.userEmail || data.user_email || (String(item.user_id || '').includes('@') ? item.user_id : '');
+    if (rawEmail && String(rawEmail).trim() && String(rawEmail).includes('@')) {
+      return String(rawEmail).trim();
+    }
+
+    const rawPhone = data.phone || data.phoneNumber || data.phone_number || data.mobile || data.contact;
+    if (rawPhone && String(rawPhone).trim() && !isHashOrId(rawPhone)) {
+      return `Provider (${String(rawPhone).trim()})`;
+    }
+
+    const rawUserId = String(item.user_id || '').trim();
+    if (rawUserId && !isHashOrId(rawUserId)) {
+      return rawUserId;
+    }
+
+    if (rawUserId && rawUserId.length >= 6) {
+      const cleanId = rawUserId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8);
+      return `Provider (#${cleanId})`;
+    }
+
+    return 'Provider User';
   };
 
   const isVideoSkipped = (item) => {
@@ -1194,7 +1236,7 @@ export default function SubmissionsTable() {
 
     filteredSubmissions.forEach(item => {
       const data = item.form_data || item.submission_data || {};
-      const fullName = data.fullName || data.name || item.user_id || '';
+      const fullName = extractUserFullName(item);
       const email = data.email || '';
       const phone = data.phone || data.phoneNumber || data.phone_number || data.mobile || '';
       const service = item.service || data.service || '';
@@ -1383,105 +1425,149 @@ export default function SubmissionsTable() {
               <span>Unable to load analytics. Please try again.</span>
               <button onClick={() => loadAnalytics()} style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: '#dc2626', color: '#ffffff', fontSize: '0.74rem', fontWeight: 800, cursor: 'pointer' }}>Retry</button>
             </div>
-          ) : (
-            <>
-              {/* Overview Cards (4 Compact Metrics) */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <CheckCircle2 size={18} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Activity Completions</div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', marginTop: '2px' }}>{analyticsData?.overview?.totalCompletions || 0}</div>
-                  </div>
-                </div>
+          ) : (() => {
+                const isStrictVideoTask = (activityId = '', activityName = '') => {
+                  const lId = String(activityId || '').toLowerCase().trim();
+                  const title = String(activityName || '').toLowerCase().trim();
 
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: '#f0fdf4', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Users size={18} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Unique Providers</div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', marginTop: '2px' }}>{analyticsData?.overview?.uniqueProviders || 0}</div>
-                  </div>
-                </div>
+                  if (
+                    lId.includes('profile-verification') || title.includes('verify your profile') ||
+                    lId.includes('share-linkedin') || title.includes('share on linkedin') ||
+                    lId.includes('support-hotline') || title.includes('support hotline') ||
+                    lId.includes('fund-raising') || title.includes('fund raising') ||
+                    lId.includes('recruit') || title.includes('recruit new') ||
+                    lId.includes('session') || title.includes('every session') ||
+                    lId.includes('community') || title.includes('community management') ||
+                    lId.includes('sales-partner') || title.includes('sales partner') ||
+                    lId.includes('achievements') || title.includes('achievements') ||
+                    lId.includes('ehr') || title.includes('ehr') ||
+                    lId.includes('assessment') || title.includes('assessment')
+                  ) {
+                    return false;
+                  }
 
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: '#fae8ff', color: '#c026d3', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Layers size={18} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Activities Completed</div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', marginTop: '2px' }}>{analyticsData?.overview?.activitiesCompleted || 0}</div>
-                  </div>
-                </div>
+                  return (
+                    lId.includes('market-yourself') ||
+                    lId.includes('intro-video') ||
+                    lId.includes('intro_video') ||
+                    lId.includes('video-intro') ||
+                    lId.includes('video_intro') ||
+                    lId.includes('client-video') ||
+                    lId.includes('video-submission') ||
+                    lId.includes('video') ||
+                    title.includes('market yourself') ||
+                    title.includes('intro video') ||
+                    title.includes('video intro') ||
+                    title.includes('client video') ||
+                    title.includes('video submission') ||
+                    title.includes('video')
+                  );
+                };
 
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: '#fff7ed', color: '#ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Video size={18} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Video Submissions</div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', marginTop: '2px' }}>{analyticsData?.overview?.videoSubmissions || 0}</div>
-                  </div>
-                </div>
-              </div>
+                const filteredVideoList = (analyticsData?.videoSubmissions || []).filter(vItem =>
+                  isStrictVideoTask(vItem.activityId, vItem.activityName)
+                );
+                const totalVideoSubmissionsCount = filteredVideoList.reduce((acc, curr) => acc + curr.total, 0);
 
-              {/* Detailed Analytics Grid: Completions + Video Breakdown */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+                return (
+                  <>
+                    {/* Overview Cards (4 Compact Metrics) */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <CheckCircle2 size={18} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Activity Completions</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', marginTop: '2px' }}>{analyticsData?.overview?.totalCompletions || 0}</div>
+                        </div>
+                      </div>
 
-                {/* Card 1: Activity Completion Breakdown */}
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div style={{ fontSize: '0.76rem', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span>ACTIVITY COMPLETIONS</span>
-                    <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>Sorted by Highest</span>
-                  </div>
+                      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: '#f0fdf4', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <Users size={18} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Unique Providers</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', marginTop: '2px' }}>{analyticsData?.overview?.uniqueProviders || 0}</div>
+                        </div>
+                      </div>
 
-                  {!analyticsData?.activityCompletions || analyticsData.activityCompletions.length === 0 ? (
-                    <div style={{ padding: '24px 12px', textAlign: 'center', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 700 }}>
-                      No activity data for this period.
+                      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: '#fae8ff', color: '#c026d3', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <Layers size={18} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Activities Completed</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', marginTop: '2px' }}>{analyticsData?.overview?.activitiesCompleted || 0}</div>
+                        </div>
+                      </div>
+
+                      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: '#fff7ed', color: '#ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <Video size={18} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Video Submissions</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', marginTop: '2px' }}>{totalVideoSubmissionsCount}</div>
+                        </div>
+                      </div>
                     </div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      {analyticsData.activityCompletions.map((item, idx) => {
-                        const maxCount = analyticsData.activityCompletions[0]?.count || 1;
-                        const percent = Math.round((item.count / maxCount) * 100);
-                        return (
-                          <div key={idx} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                              <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0f172a' }}>{formatActivityTitle(item.activityName, item.activityId)}</span>
-                              <span style={{ fontSize: '0.84rem', fontWeight: 900, color: '#2563eb', background: '#eff6ff', padding: '2px 8px', borderRadius: '6px' }}>{item.count}</span>
-                            </div>
-                            <div style={{ width: '100%', height: '5px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
-                              <div style={{ width: `${percent}%`, height: '100%', background: 'linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)', borderRadius: '3px' }} />
-                            </div>
+
+                    {/* Detailed Analytics Grid: Completions + Video Breakdown */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+
+                      {/* Card 1: Activity Completion Breakdown */}
+                      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ fontSize: '0.76rem', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span>ACTIVITY COMPLETIONS</span>
+                          <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>Sorted by Highest</span>
+                        </div>
+
+                        {!analyticsData?.activityCompletions || analyticsData.activityCompletions.length === 0 ? (
+                          <div style={{ padding: '24px 12px', textAlign: 'center', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 700 }}>
+                            No activity data for this period.
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {analyticsData.activityCompletions.map((item, idx) => {
+                              const maxCount = analyticsData.activityCompletions[0]?.count || 1;
+                              const percent = Math.round((item.count / maxCount) * 100);
+                              return (
+                                <div key={idx} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0f172a' }}>{formatActivityTitle(item.activityName, item.activityId)}</span>
+                                    <span style={{ fontSize: '0.84rem', fontWeight: 900, color: '#2563eb', background: '#eff6ff', padding: '2px 8px', borderRadius: '6px' }}>{item.count}</span>
+                                  </div>
+                                  <div style={{ width: '100%', height: '5px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+                                    <div style={{ width: `${percent}%`, height: '100%', background: 'linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)', borderRadius: '3px' }} />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
 
-                {/* Card 2: Video Submission Breakdown */}
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div style={{ fontSize: '0.76rem', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span>VIDEO SUBMISSION BREAKDOWN</span>
-                    <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>Uploaded vs Skipped</span>
-                  </div>
+                      {/* Card 2: Video Submission Breakdown */}
+                      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ fontSize: '0.76rem', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span>VIDEO SUBMISSION BREAKDOWN</span>
+                          <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>Uploaded vs Skipped</span>
+                        </div>
 
-                  {!analyticsData?.videoSubmissions || analyticsData.videoSubmissions.length === 0 ? (
-                    <div style={{ padding: '24px 12px', textAlign: 'center', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 700 }}>
-                      No video submission data for this period.
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      {analyticsData.videoSubmissions.map((vItem, idx) => {
-                        const uploadPct = vItem.total > 0 ? Math.round((vItem.uploaded / vItem.total) * 100) : 0;
-                        const skipPct = vItem.total > 0 ? Math.round((vItem.skipped / vItem.total) * 100) : 0;
-                        return (
-                          <div key={idx} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            <div style={{ fontSize: '0.84rem', fontWeight: 900, color: '#0f172a' }}>{formatActivityTitle(vItem.activityName, vItem.activityId)}</div>
+                        {filteredVideoList.length === 0 ? (
+                          <div style={{ padding: '24px 12px', textAlign: 'center', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 700 }}>
+                            No video submission data for this period.
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {filteredVideoList.map((vItem, idx) => {
+                              const uploadPct = vItem.total > 0 ? Math.round((vItem.uploaded / vItem.total) * 100) : 0;
+                              const skipPct = vItem.total > 0 ? Math.round((vItem.skipped / vItem.total) * 100) : 0;
+                              return (
+                                <div key={idx} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                  <div style={{ fontSize: '0.84rem', fontWeight: 900, color: '#0f172a' }}>{formatActivityTitle(vItem.activityName, vItem.activityId)}</div>
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', textAlign: 'center', background: '#f8fafc', padding: '6px', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
                               <div>
@@ -1524,7 +1610,8 @@ export default function SubmissionsTable() {
 
               </div>
             </>
-          )}
+          );
+        })()}
         </div>
       )}
 
@@ -2331,7 +2418,7 @@ export default function SubmissionsTable() {
               ) : (
                 filteredSubmissions.map((item) => {
                   const data = item.form_data || item.submission_data || {};
-                  const fullName = data.fullName || data.name || item.user_id;
+                  const fullName = extractUserFullName(item);
                   const email = data.email;
                   const country = extractSubmissionCountry(item) || data.country || data.countryName || 'United States';
                   const currentStatus = (item.status || 'pending').toLowerCase();
@@ -2777,7 +2864,7 @@ export default function SubmissionsTable() {
               {/* Card 1: User Profile Header Card */}
               {(() => {
                 const data = selectedSubmission.form_data || selectedSubmission.submission_data || {};
-                const fullName = data.fullName || data.name || selectedSubmission.user_id || 'User';
+                const fullName = extractUserFullName(selectedSubmission);
                 const email = data.email || '';
                 const phone = data.phone || data.phoneNumber || data.phone_number || data.mobile || data.contact || '';
                 const submittedDate = formatDate(selectedSubmission.created_at || data.submittedAt || data.uploadedAt);
@@ -2890,6 +2977,101 @@ export default function SubmissionsTable() {
 
                     </div>
                   </>
+                );
+              })()}
+
+              {/* Card 2.5: Status Change Logs & Audit History */}
+              {(() => {
+                const rawLogs = selectedSubmission.status_history || selectedSubmission.statusHistory || [];
+                let logs = Array.isArray(rawLogs) && rawLogs.length > 0 ? [...rawLogs] : [];
+
+                const currentStatus = (selectedSubmission.review_status || selectedSubmission.application_status || selectedSubmission.status || 'pending').toLowerCase();
+
+                if (logs.length === 0) {
+                  const createdTime = selectedSubmission.created_at || (selectedSubmission.form_data && selectedSubmission.form_data.submittedAt);
+                  logs.push({
+                    status: 'pending',
+                    changed_at: createdTime || new Date().toISOString(),
+                    changed_by: 'System / User'
+                  });
+
+                  if (currentStatus !== 'pending' && currentStatus !== 'submitted') {
+                    logs.push({
+                      status: currentStatus,
+                      changed_at: selectedSubmission.reviewed_at || selectedSubmission.updated_at || new Date().toISOString(),
+                      changed_by: selectedSubmission.reviewer_name || selectedSubmission.reviewed_by || 'Reviewer'
+                    });
+                  }
+                } else {
+                  const lastLogSt = String(logs[logs.length - 1]?.status || '').toLowerCase();
+                  if (currentStatus && lastLogSt !== currentStatus && currentStatus !== 'submitted') {
+                    logs.push({
+                      status: currentStatus,
+                      changed_at: selectedSubmission.reviewed_at || selectedSubmission.updated_at || new Date().toISOString(),
+                      changed_by: selectedSubmission.reviewer_name || selectedSubmission.reviewed_by || 'Reviewer'
+                    });
+                  }
+                }
+
+                return (
+                  <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '14px 16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                      <h4 style={{ margin: 0, fontSize: '0.76rem', color: '#0f172a', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Clock size={13} color="#2563eb" /> Status Change Logs
+                      </h4>
+                      <span style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 700 }}>
+                        {logs.length} Event{logs.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {logs.map((logItem, idx) => {
+                        const logStatus = (logItem.status || 'pending').toLowerCase();
+                        const logStyle = STATUS_CONFIG[logStatus] || STATUS_CONFIG.pending;
+                        const logTime = formatDate(logItem.changed_at || logItem.timestamp || logItem.created_at);
+                        const actor = logItem.changed_by || logItem.changedBy || logItem.user || 'Reviewer';
+
+                        return (
+                          <div
+                            key={idx}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justify: 'space-between',
+                              background: '#f8fafc',
+                              padding: '8px 12px',
+                              borderRadius: '8px',
+                              border: '1px solid #f1f5f9',
+                              fontSize: '0.76rem'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span
+                                style={{
+                                  padding: '2px 8px',
+                                  borderRadius: '6px',
+                                  border: `1px solid ${logStyle.border}`,
+                                  background: logStyle.bg,
+                                  color: logStyle.color,
+                                  fontWeight: 800,
+                                  fontSize: '0.70rem'
+                                }}
+                              >
+                                {logStyle.label}
+                              </span>
+                              <span style={{ color: '#475569', fontWeight: 700 }}>
+                                by <strong style={{ color: '#0f172a' }}>{actor}</strong>
+                              </span>
+                            </div>
+
+                            <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Clock size={11} color="#94a3b8" /> {logTime}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 );
               })()}
 

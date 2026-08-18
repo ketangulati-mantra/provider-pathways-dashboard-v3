@@ -249,10 +249,13 @@ export const fetchAllSubmissions = async ({ page = 1, limit = 20, status = '', s
   
   try {
     const res = await fetch(`${backendUrl}/api/activity-submissions?${params}`);
+    if (!res.ok) {
+      return { success: false, data: [], statusCounts: null, pagination: null, error: `HTTP ${res.status}` };
+    }
     return await res.json();
   } catch (error) {
     console.error('[Mantra API] Error fetching submissions:', error);
-    return { success: false, error: 'Failed to connect to backend server' };
+    return { success: false, data: [], statusCounts: null, pagination: null, error: 'Failed to connect to backend server' };
   }
 };
 
@@ -272,6 +275,9 @@ export const reviewSubmissionStatus = async (id: string, status?: string, review
         reviewNotes 
       })
     });
+    if (!res.ok) {
+      return { success: false, error: `HTTP ${res.status}` };
+    }
     return await res.json();
   } catch (error) {
     console.error('[Mantra API] Error reviewing submission:', error);
@@ -292,6 +298,9 @@ export const fetchSubmissionAnalytics = async ({ range = 'this_month', startDate
 
   try {
     const res = await fetch(`${backendUrl}/api/activity-submissions/analytics?${params}`);
+    if (!res.ok) {
+      return { success: false, error: `HTTP ${res.status}` };
+    }
     return await res.json();
   } catch (error) {
     console.error('[Mantra API] Error fetching submission analytics:', error);
@@ -306,10 +315,13 @@ export const fetchAdminReviewers = async () => {
   const backendUrl = MANTRA_CONFIG.apiBaseUrl;
   try {
     const res = await fetch(`${backendUrl}/api/admin/reviewers`);
+    if (!res.ok) {
+      return { success: false, data: ['Unassigned'], reviewers: [], error: `HTTP ${res.status}` };
+    }
     return await res.json();
   } catch (error) {
     console.error('[Mantra API] Error fetching reviewers:', error);
-    return { success: false, error: 'Failed to fetch reviewers' };
+    return { success: false, data: ['Unassigned'], reviewers: [], error: 'Failed to fetch reviewers' };
   }
 };
 
@@ -321,6 +333,9 @@ export const addAdminReviewer = async (name: string) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name })
     });
+    if (!res.ok) {
+      return { success: false, error: `HTTP ${res.status}` };
+    }
     return await res.json();
   } catch (error) {
     console.error('[Mantra API] Error adding reviewer:', error);
@@ -334,6 +349,9 @@ export const deleteAdminReviewer = async (name: string) => {
     const res = await fetch(`${backendUrl}/api/admin/reviewers/${encodeURIComponent(name)}`, {
       method: 'DELETE'
     });
+    if (!res.ok) {
+      return { success: false, error: `HTTP ${res.status}` };
+    }
     return await res.json();
   } catch (error) {
     console.error('[Mantra API] Error deleting reviewer:', error);
@@ -348,10 +366,13 @@ export const fetchSubmissionActivities = async () => {
   const backendUrl = MANTRA_CONFIG.apiBaseUrl;
   try {
     const res = await fetch(`${backendUrl}/api/activity-submissions/activities`);
+    if (!res.ok) {
+      return { success: false, data: [], error: `HTTP ${res.status}` };
+    }
     return await res.json();
   } catch (error) {
     console.error('[Mantra API] Error fetching submission activities:', error);
-    return { success: false, error: 'Failed to fetch submission activities' };
+    return { success: false, data: [], error: 'Failed to fetch submission activities' };
   }
 };
 

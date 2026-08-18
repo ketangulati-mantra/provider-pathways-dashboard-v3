@@ -44,6 +44,24 @@ export default function SubmissionForm({
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
+  // Auto-populate user's full name and email if logged in, in session, or passed in URL query params
+  React.useEffect(() => {
+    try {
+      const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+      const urlName = searchParams.get('name') || searchParams.get('fullName') || searchParams.get('full_name');
+      const urlEmail = searchParams.get('email') || searchParams.get('user_email');
+      
+      const storedAdminJson = sessionStorage.getItem('admin_user');
+      const storedAdmin = storedAdminJson ? JSON.parse(storedAdminJson) : null;
+      
+      const initialName = urlName || storedAdmin?.name || localStorage.getItem('mantra_user_name') || '';
+      const initialEmail = urlEmail || storedAdmin?.email || (sessionStorage.getItem('user_id')?.includes('@') ? sessionStorage.getItem('user_id') : '') || localStorage.getItem('mantra_user_email') || '';
+
+      if (initialName && !fullName) setFullName(initialName);
+      if (initialEmail && !email) setEmail(initialEmail);
+    } catch (e) {}
+  }, []);
+
   const { submit, isSubmitting, isSuccess, reset } = useActivitySubmission({
     lessonId,
     activityTitle,
@@ -68,8 +86,8 @@ export default function SubmissionForm({
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      validateAndSetFile(e.dataTransfer.files[0]);
+    if (e.target.files && e.target.files[0]) {
+      validateAndSetFile(e.target.files[0]);
     }
   };
 
@@ -104,7 +122,12 @@ export default function SubmissionForm({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (email && !isValidEmail(email)) {
+    if (!fullName.trim()) {
+      showToast('Please enter your full name.', 'warning');
+      return;
+    }
+
+    if (!email.trim() || !isValidEmail(email)) {
       setEmailError('Please enter a valid, active email address.');
       showToast('Please enter a valid email address.', 'warning');
       return;
@@ -126,7 +149,7 @@ export default function SubmissionForm({
     await submit({
       file,
       formData: {
-        fullName: fullName.trim() || 'Provider',
+        fullName: fullName.trim(),
         email: email.trim(),
         phone: fullPhone,
         countryCode: countryCode,
@@ -156,10 +179,11 @@ export default function SubmissionForm({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div>
               <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left' }}>
-                <User size={14} color="#0284c7" /> Full Name
+                <User size={14} color="#0284c7" /> Full Name <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input
                 type="text"
+                required
                 placeholder="Enter your full name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
@@ -169,10 +193,11 @@ export default function SubmissionForm({
 
             <div>
               <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left' }}>
-                <Mail size={14} color="#0284c7" /> Email Address
+                <Mail size={14} color="#0284c7" /> Email Address <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input
                 type="email"
+                required
                 placeholder="Enter your active email address"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(''); }}

@@ -211,6 +211,7 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
   });
 
   const [isStudioOpen, setIsStudioOpen] = useState(false);
+  const [showGuidelinesModal, setShowGuidelinesModal] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -502,7 +503,22 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
     try {
       setIsSubmitting(true);
 
-      // 1. Trigger /api/activities/complete endpoint
+      // Record skipped video state in activity_submissions table
+      await submitActivitySubmission({
+        userId,
+        lessonId: brand.lessonId || 'grow-your-practice',
+        activityTitle: brand.name || 'Grow Your Practice Video Submission',
+        submissionType: 'skipped_video',
+        formData: {
+          skippedVideo: true,
+          videoSkipped: true,
+          profileUrl: activeProfileUrl,
+          service: brand.submissionService || 'therapy',
+          submittedAt: new Date().toISOString()
+        }
+      });
+
+      // Trigger /api/activities/complete endpoint
       await fetch(`${API_BASE}/api/activities/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1049,12 +1065,70 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
               <>
                 <div>
                   <div style={{ fontSize: '0.64rem', fontWeight: 900, color: brand.primaryColor, textTransform: 'uppercase', letterSpacing: '0.08em', background: '#eff6ff', padding: '4px 10px', borderRadius: '6px', display: 'inline-block' }}>
-                    FINAL STEP • VIDEO SUBMISSION
+                    FINAL STEP • OPTIONAL VIDEO
                   </div>
-                  <h2 style={{ margin: '8px 0 4px', fontSize: '1.4rem', fontWeight: 900, color: '#0f172a' }}>Submit Your Introduction Video</h2>
-                  <p style={{ margin: 0, fontSize: '0.84rem', color: '#64748b' }}>
-                    Submit a 30-60 second video introducing yourself. Selected videos may be featured on official {brand.name} platforms.
+                  <h2 style={{ margin: '8px 0 4px', fontSize: '1.4rem', fontWeight: 900, color: '#0f172a' }}>Create Your Client Introduction Video</h2>
+                  <p style={{ margin: 0, fontSize: '0.84rem', color: '#64748b', lineHeight: 1.5 }}>
+                    A short professional video can help potential clients get to know you before booking a session.
                   </p>
+
+                  {/* Small Subtle Info Card & View Guidelines Action */}
+                  <div style={{
+                    marginTop: '14px',
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '12px',
+                    padding: '12px 16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                    flexWrap: 'wrap'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', flex: '1 1 240px' }}>
+                      <UserCheck size={18} color={brand.primaryColor} style={{ marginTop: '2px', flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 900, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>
+                          CLIENT-FACING VIDEO
+                        </div>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#334155', fontWeight: 600, lineHeight: 1.4 }}>
+                          Your video may appear on your TherapyMantra provider profile and be viewed by potential clients.
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowGuidelinesModal(true)}
+                      style={{
+                        padding: '7px 14px',
+                        borderRadius: '8px',
+                        border: '1px solid #cbd5e1',
+                        background: '#ffffff',
+                        color: brand.primaryColor,
+                        fontWeight: 800,
+                        fontSize: '0.78rem',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        whiteSpace: 'nowrap',
+                        transition: 'all 0.15s ease',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#eff6ff';
+                        e.currentTarget.style.borderColor = '#93c5fd';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#ffffff';
+                        e.currentTarget.style.borderColor = '#cbd5e1';
+                      }}
+                    >
+                      <span>View Video Guidelines</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
                 </div>
 
                 <form onSubmit={handleVideoSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1312,6 +1386,148 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
             }
           }}
         />
+      )}
+
+      {/* VIDEO GUIDELINES MODAL */}
+      {showGuidelinesModal && ReactDOM.createPortal(
+        <div
+          onClick={() => setShowGuidelinesModal(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 999999,
+            background: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+            boxSizing: 'border-box'
+          }}
+          className="animate-fade-in"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#ffffff',
+              borderRadius: '20px',
+              maxWidth: '560px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              border: '1px solid #e2e8f0',
+              display: 'flex',
+              flexDirection: 'column',
+              position: 'relative',
+              boxSizing: 'border-box'
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{ padding: '24px 24px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+              <div>
+                <div style={{ fontSize: '0.64rem', fontWeight: 900, color: brand.primaryColor, textTransform: 'uppercase', letterSpacing: '0.08em', background: '#eff6ff', padding: '4px 10px', borderRadius: '6px', display: 'inline-block', marginBottom: '6px' }}>
+                  PROVIDER PROFILE VIDEO
+                </div>
+                <h3 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 900, color: '#0f172a' }}>
+                  Video Guidelines
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowGuidelinesModal(false)}
+                style={{
+                  background: '#f1f5f9',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#64748b',
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#e2e8f0'; e.currentTarget.style.color = '#0f172a'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#64748b'; }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '20px', fontSize: '0.84rem', color: '#334155', lineHeight: 1.5 }}>
+              {/* Intro */}
+              <p style={{ margin: 0, color: '#475569', fontSize: '0.86rem', lineHeight: 1.5 }}>
+                This video is for potential clients viewing your provider profile. Keep it warm, professional, and focused on helping a client understand who you are.
+              </p>
+
+              {/* Section 1: What to share */}
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
+                <h4 style={{ margin: '0 0 10px', fontSize: '0.9rem', fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Sparkles size={16} color={brand.primaryColor} />
+                  What to share
+                </h4>
+                <ul style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '6px', color: '#334155', fontWeight: 600 }}>
+                  <li>Who you are and your area of expertise</li>
+                  <li>Who you typically work with</li>
+                  <li>What clients can expect when working with you</li>
+                  <li>A warm message for someone considering booking</li>
+                </ul>
+              </div>
+
+              {/* Section 2: Recording tips */}
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
+                <h4 style={{ margin: '0 0 10px', fontSize: '0.9rem', fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Camera size={16} color={brand.primaryColor} />
+                  Recording tips
+                </h4>
+                <ul style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '6px', color: '#334155', fontWeight: 600 }}>
+                  <li>30–60 seconds</li>
+                  <li>Use a plain, clean background</li>
+                  <li>Record in good lighting</li>
+                  <li>Keep the camera at eye level</li>
+                  <li>Use clear audio</li>
+                  <li>Maintain a professional appearance</li>
+                  <li>Speak naturally and look at the camera</li>
+                </ul>
+              </div>
+
+              {/* Highlighted Note */}
+              <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Info size={18} color="#1d4ed8" style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: 700, margin: 0 }}>
+                  This video is created for clients — not for introducing yourself to Mantra.
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{ padding: '16px 24px', borderTop: '1px solid #f1f5f9', background: '#f8fafc', display: 'flex', justifyContent: 'flex-end', borderRadius: '0 0 20px 20px' }}>
+              <button
+                type="button"
+                onClick={() => setShowGuidelinesModal(false)}
+                style={{
+                  padding: '9px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  fontWeight: 800,
+                  fontSize: '0.82rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
     </div>

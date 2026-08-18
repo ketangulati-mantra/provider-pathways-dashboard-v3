@@ -15,7 +15,7 @@ const getDynamicApiBase = () => {
 
   const hostname = window.location.hostname;
   const port = window.location.port;
-  const isLocalDev = (hostname === 'localhost' || hostname === '127.0.0.1') && (port === '5173' || port === '3000');
+  const isLocalDev = (hostname === 'localhost' || hostname === '127.0.0.1') && port !== '5000';
 
   if (isLocalDev) {
     return 'http://localhost:5000';

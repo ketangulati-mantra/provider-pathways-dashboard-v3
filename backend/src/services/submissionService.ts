@@ -44,6 +44,10 @@ async function ensureSubmissionsSchema() {
       ALTER TABLE activity_submissions 
       ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMP WITH TIME ZONE;
     `;
+    await sql`
+      ALTER TABLE activity_submissions 
+      ADD COLUMN IF NOT EXISTS status_history JSONB DEFAULT '[]'::jsonb;
+    `;
     isSchemaEnsured = true;
   } catch (err) {
     console.error('[submissionService] Schema migration check warning:', err);
@@ -245,21 +249,52 @@ export const submissionService = {
       ORDER BY created_at DESC;
     `;
 
+    let allCompletions: any[] = [];
+    try {
+      allCompletions = await sql`
+        SELECT * FROM user_activity_completions
+        ORDER BY completed_at DESC;
+      `;
+    } catch (err) {}
+
     if (filterDate) {
       const minTime = filterDate.getTime();
       allSubmissions = allSubmissions.filter((s: any) => new Date(s.created_at).getTime() >= minTime);
+      allCompletions = allCompletions.filter((c: any) => new Date(c.completed_at || c.created_at).getTime() >= minTime);
     }
 
     if (options.endDate) {
       const maxTime = new Date(options.endDate).getTime();
       allSubmissions = allSubmissions.filter((s: any) => new Date(s.created_at).getTime() <= maxTime);
+      allCompletions = allCompletions.filter((c: any) => new Date(c.completed_at || c.created_at).getTime() <= maxTime);
     }
 
     const activityCountMap = new Map<string, { activityId: string; activityName: string; count: number }>();
     const videoSubmissionMap = new Map<string, { activityId: string; activityName: string; total: number; uploaded: number; skipped: number }>();
     const providerIds = new Set<string>();
 
-    allSubmissions.forEach((s: any) => {
+    // Merge activity_submissions and user_activity_completions for comprehensive analytics
+    const combinedRecords: any[] = [...allSubmissions];
+
+    (allCompletions || []).forEach((c: any) => {
+      const meta = c.metadata || {};
+      const lessonIdLower = (c.lesson_id || '').toLowerCase();
+      // If completed via /api/activities/complete (especially skipped videos), add to combined analytics pool
+      const isAlreadyInSubmissions = allSubmissions.some((s: any) => s.user_id === c.user_id && s.lesson_id === c.lesson_id);
+      if (!isAlreadyInSubmissions && (lessonIdLower.includes('market-yourself') || lessonIdLower.includes('video') || meta.skippedVideo === true || meta.videoUrl)) {
+        combinedRecords.push({
+          user_id: c.user_id,
+          lesson_id: c.lesson_id,
+          activity_title: c.lesson_id,
+          submission_type: meta.skippedVideo ? 'skipped_video' : 'video_upload',
+          form_data: meta,
+          submission_data: meta,
+          created_at: c.completed_at || c.created_at
+        });
+      }
+    });
+
+    combinedRecords.forEach((s: any) => {
       if (s.user_id) providerIds.add(s.user_id);
 
       const actKey = s.lesson_id || s.activity_title || 'unknown-activity';
@@ -269,14 +304,46 @@ export const submissionService = {
       }
       activityCountMap.get(actKey)!.count += 1;
 
-      const subDataStr = JSON.stringify(s.submission_data || {}).toLowerCase();
-      const formDataStr = JSON.stringify(s.form_data || {}).toLowerCase();
-      const subType = (s.submission_type || '').toLowerCase();
+      const lessonIdLower = (s.lesson_id || '').toLowerCase();
+      const activityTitleLower = (s.activity_title || '').toLowerCase();
+      const subTypeLower = (s.submission_type || '').toLowerCase();
 
-      const hasVideo = subDataStr.includes('video') || formDataStr.includes('video') || subDataStr.includes('cloudinary');
-      const isSkipped = subDataStr.includes('skipped') || formDataStr.includes('skipped');
+      const formDataObj = s.form_data || s.submission_data || {};
+      const formStr = JSON.stringify(formDataObj).toLowerCase();
 
-      if (hasVideo || isSkipped || subType.includes('video') || (s.lesson_id || '').includes('market-yourself') || (s.lesson_id || '').includes('growth')) {
+      // Strictly check if submission is for a Video Task (excluding regular screenshot proof tasks)
+      const isNonVideo = 
+        lessonIdLower.includes('profile-verification') || activityTitleLower.includes('verify your profile') ||
+        lessonIdLower.includes('share-linkedin') || activityTitleLower.includes('share on linkedin') ||
+        lessonIdLower.includes('support-hotline') || activityTitleLower.includes('support hotline') ||
+        lessonIdLower.includes('fund-raising') || activityTitleLower.includes('fund raising') ||
+        lessonIdLower.includes('recruit') || activityTitleLower.includes('recruit new') ||
+        lessonIdLower.includes('session') || activityTitleLower.includes('every session') ||
+        lessonIdLower.includes('community') || activityTitleLower.includes('community management') ||
+        lessonIdLower.includes('sales-partner') || activityTitleLower.includes('sales partner') ||
+        lessonIdLower.includes('achievements') || activityTitleLower.includes('achievements') ||
+        lessonIdLower.includes('ehr') || activityTitleLower.includes('ehr') ||
+        lessonIdLower.includes('assessment') || activityTitleLower.includes('assessment');
+
+      const isVideoActivity = !isNonVideo && (
+        lessonIdLower.includes('market-yourself') ||
+        lessonIdLower.includes('intro-video') || 
+        lessonIdLower.includes('intro_video') || 
+        lessonIdLower.includes('video-intro') || 
+        lessonIdLower.includes('video_intro') || 
+        lessonIdLower.includes('video-submission') || 
+        lessonIdLower.includes('client-video') ||
+        lessonIdLower.includes('video') ||
+        subTypeLower.includes('video') ||
+        activityTitleLower.includes('market yourself') ||
+        activityTitleLower.includes('intro video') ||
+        activityTitleLower.includes('video intro') ||
+        activityTitleLower.includes('client video') ||
+        activityTitleLower.includes('video submission') ||
+        activityTitleLower.includes('video')
+      );
+
+      if (isVideoActivity) {
         const lessonId = s.lesson_id || 'video-activity';
         const name = s.activity_title || lessonId;
         const key = lessonId;
@@ -287,9 +354,41 @@ export const submissionService = {
 
         const item = videoSubmissionMap.get(key)!;
         item.total += 1;
-        if (hasVideo) {
+
+        const rawVideoUrl = String(
+          formDataObj.videoUrl || 
+          formDataObj.video_url || 
+          formDataObj.video || 
+          s.video_url || 
+          s.videoUrl || 
+          ''
+        ).trim();
+
+        const hasValidVideoUrl = 
+          rawVideoUrl.length > 5 && 
+          !['skipped', 'null', 'undefined', 'none', 'n/a', 'false'].includes(rawVideoUrl.toLowerCase()) &&
+          (rawVideoUrl.includes('http') || rawVideoUrl.includes('cloudinary') || rawVideoUrl.includes('/video/'));
+
+        const hasVideoPublicId = Boolean(formDataObj.videoPublicId || formDataObj.video_public_id || s.video_public_id);
+
+        const hasUploadedVideo = hasValidVideoUrl || hasVideoPublicId;
+
+        const isExplicitlySkipped = 
+          Boolean(s.skipped_video) || 
+          Boolean(s.video_skipped) || 
+          Boolean(formDataObj.skipped) || 
+          Boolean(formDataObj.videoSkipped) || 
+          Boolean(formDataObj.skippedVideo) ||
+          subTypeLower.includes('skipped') || 
+          subTypeLower.includes('no_video') ||
+          formStr.includes('"skipped":true') ||
+          formStr.includes('"videoskipped":true') ||
+          formStr.includes('"skippedvideo":true') ||
+          rawVideoUrl.toLowerCase() === 'skipped';
+
+        if (hasUploadedVideo && !isExplicitlySkipped) {
           item.uploaded += 1;
-        } else if (isSkipped) {
+        } else {
           item.skipped += 1;
         }
       }
@@ -644,6 +743,46 @@ export const submissionService = {
           SET is_reviewer = TRUE, updated_at = CURRENT_TIMESTAMP
           WHERE (user_id::text = ${activeUserId || ''} OR LOWER(name) = ${String(activeName || '').toLowerCase()} OR LOWER(email) = ${String(activeName || '').toLowerCase()});
         `.catch(() => null);
+      }
+    }
+
+    // Append new status change log to status_history array in DB
+    const finalUpdatedRow = rows && rows[0];
+    if (finalUpdatedRow) {
+      let historyLogs: any[] = [];
+      const rawHist = finalUpdatedRow.status_history;
+      if (Array.isArray(rawHist)) {
+        historyLogs = [...rawHist];
+      } else if (typeof rawHist === 'string') {
+        try { historyLogs = JSON.parse(rawHist); } catch (e) {}
+      }
+
+      if (!Array.isArray(historyLogs)) historyLogs = [];
+
+      if (historyLogs.length === 0) {
+        historyLogs.push({
+          status: 'pending',
+          changed_at: finalUpdatedRow.created_at || new Date().toISOString(),
+          changed_by: 'System / User'
+        });
+      }
+
+      const newStatus = (finalUpdatedRow.status || 'pending').toLowerCase();
+      const lastEntry = historyLogs[historyLogs.length - 1];
+      if (!lastEntry || String(lastEntry.status).toLowerCase() !== newStatus) {
+        historyLogs.push({
+          status: newStatus,
+          changed_at: new Date().toISOString(),
+          changed_by: targetName || finalUpdatedRow.reviewed_by || 'Reviewer'
+        });
+
+        await sql`
+          UPDATE activity_submissions
+          SET status_history = ${JSON.stringify(historyLogs)}::jsonb
+          WHERE id::text = ${stringId};
+        `.catch(() => null);
+
+        finalUpdatedRow.status_history = historyLogs;
       }
     }
 

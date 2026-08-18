@@ -203,11 +203,46 @@ export class CorporateRepository {
       const isUnassigned = !reviewer || reviewer === 'Unassigned' || status === 'pending' || status === 'submitted';
       const targetReviewer = isUnassigned ? 'Unassigned' : reviewer;
       const targetStatus = status || (isUnassigned ? 'submitted' : 'under_review');
+
+      // Fetch existing row to update status_history
+      let historyLogs: any[] = [];
+      try {
+        const existing = await sql`
+          SELECT * FROM corporate_partner_applications
+          WHERE id::text = ${id} OR user_id = ${id} LIMIT 1;
+        `;
+        const current = existing && existing[0];
+        if (current) {
+          const rawHist = current.status_history || current.statusHistory;
+          if (Array.isArray(rawHist)) {
+            historyLogs = [...rawHist];
+          } else if (typeof rawHist === 'string') {
+            try { historyLogs = JSON.parse(rawHist); } catch (e) {}
+          }
+          if (historyLogs.length === 0) {
+            historyLogs.push({
+              status: 'pending',
+              changed_at: current.submitted_at || current.created_at || new Date().toISOString(),
+              changed_by: 'System / User'
+            });
+          }
+          const lastSt = historyLogs[historyLogs.length - 1]?.status;
+          if (String(lastSt).toLowerCase() !== String(targetStatus).toLowerCase()) {
+            historyLogs.push({
+              status: targetStatus,
+              changed_at: new Date().toISOString(),
+              changed_by: targetReviewer || 'Reviewer'
+            });
+          }
+        }
+      } catch (e) {}
+
       await sql`
         UPDATE corporate_partner_applications
         SET reviewed_by = ${targetReviewer},
             application_status = ${targetStatus},
             review_status = ${targetStatus},
+            status_history = ${JSON.stringify(historyLogs)}::jsonb,
             updated_at = CURRENT_TIMESTAMP
         WHERE id::text = ${id} OR user_id = ${id};
       `;

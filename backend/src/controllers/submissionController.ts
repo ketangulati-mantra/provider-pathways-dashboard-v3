@@ -25,14 +25,27 @@ export const submissionController = {
 
       const parsedFormData = typeof rawFormData === 'object' && rawFormData !== null ? rawFormData : { data: rawFormData };
 
-      // User ID resolution: explicit userId -> email -> fullName -> 'anonymous_user'
-      const finalUserId = String(
-        userId || 
-        user_id || 
-        parsedFormData.email || 
-        parsedFormData.fullName || 
-        'anonymous_user'
-      ).trim();
+      const isHashId = (id?: string) => {
+        if (!id) return true;
+        const s = String(id).trim().toLowerCase();
+        return s === 'provider' || s === 'anonymous_user' || s === 'guest' || s.includes(':') || s.startsWith('guest_') || /^[a-f0-9]{16,}$/.test(s);
+      };
+
+      const rawUserId = String(userId || user_id || '').trim();
+      const formEmail = String(parsedFormData.email || parsedFormData.userEmail || parsedFormData.user_email || '').trim();
+      const formName = String(parsedFormData.fullName || parsedFormData.full_name || parsedFormData.name || parsedFormData.providerName || '').trim();
+
+      // Prioritize real user email or full name over raw guest session hash
+      let finalUserId = 'anonymous_user';
+      if (formEmail && formEmail.includes('@')) {
+        finalUserId = formEmail;
+      } else if (formName && !isHashId(formName)) {
+        finalUserId = formName;
+      } else if (rawUserId && !isHashId(rawUserId)) {
+        finalUserId = rawUserId;
+      } else if (rawUserId) {
+        finalUserId = rawUserId;
+      }
 
       const finalLessonId = String(lessonId || lesson_id || '').trim();
       const finalActivityTitle = String(activityTitle || activity_title || '').trim();

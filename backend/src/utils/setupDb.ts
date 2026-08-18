@@ -268,10 +268,16 @@ export async function setupDb() {
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         reviewed_at TIMESTAMP WITH TIME ZONE,
         reviewed_by VARCHAR(255) DEFAULT 'Unassigned',
+        status_history JSONB DEFAULT '[]'::jsonb,
         admin_notes TEXT,
         audit_history JSONB DEFAULT '[]'::jsonb,
         CONSTRAINT unique_user_corporate_app UNIQUE (user_id)
       );
+    `;
+
+    await sql`
+      ALTER TABLE corporate_partner_applications 
+      ADD COLUMN IF NOT EXISTS status_history JSONB DEFAULT '[]'::jsonb;
     `;
 
     // 16. Corporate Learning Progress Table
