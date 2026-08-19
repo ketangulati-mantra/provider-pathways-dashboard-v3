@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { completeLesson, getCurrentUserId, goToDashboard, navigateToNativeScreen } from '../mantra';
+import { completeLesson, getCurrentUserId, goToDashboard, navigateToNativeScreen, goBack } from '../mantra';
 import { useToast } from '../components';
 
 /**
@@ -61,7 +61,7 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
   }, [completedSteps, storageKey]);
 
   const [lessonProgress, setLessonProgress] = useState(0);
-  const [showCelebrate, setShowCelebrate] = useState(false);
+  const showCelebrate = false;
 
   useEffect(() => {
     let totalSteps = 0;
@@ -109,7 +109,7 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
       setTimeout(() => { goToDashboard(); }, 1800);
       return;
     }
-    setCompletedSteps((prev) => ({ ...prev, quizDone: true }));
+    setCompletedSteps((prev) => ({ ...prev, quizDone: true, celebrationShown: true })); (async () => { try { await completeLesson(lessonId); } catch(e){} goBack(onBack); })();
   };
 
   const handleChecklistComplete = (isDone) => {
@@ -126,7 +126,7 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
       setTimeout(() => { goToDashboard(); }, 1800);
       return;
     }
-    setCompletedSteps((prev) => ({ ...prev, actionDone: true }));
+    setCompletedSteps((prev) => ({ ...prev, actionDone: true, celebrationShown: true })); (async () => { try { await completeLesson(lessonId); } catch(e){} goBack(onBack); })();
   };
 
   /*  const handleCloseCelebration = async () => {
