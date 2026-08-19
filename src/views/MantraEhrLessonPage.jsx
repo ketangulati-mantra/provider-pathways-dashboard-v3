@@ -61,7 +61,7 @@ export default function MantraEhrLessonPage({ onBack, onNavigateToClients }) {
     hasAction: true
   });
 
-  const handleStartAddingClients = async () => {
+  const handleMarkCompleted = async () => {
     if (isSubmitting) return;
 
     setIsSubmitting(true);
@@ -69,16 +69,19 @@ export default function MantraEhrLessonPage({ onBack, onNavigateToClients }) {
 
     try {
       await handleActionComplete();
-      if (onNavigateToClients) {
-        onNavigateToClients();
-      } else {
-        navigateToClientsPage();
-      }
     } catch (err) {
       console.error('[MantraPractice] Completion error:', err);
       setCompletionError('Connection error. Please try again.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleStartAddingClients = () => {
+    if (onNavigateToClients) {
+      onNavigateToClients();
+    } else {
+      navigateToClientsPage();
     }
   };
 
@@ -968,41 +971,81 @@ export default function MantraEhrLessonPage({ onBack, onNavigateToClients }) {
             </div>
           )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', paddingTop: '8px', width: '100%' }}>
-            {/* Primary CTA Button */}
-            <button
-              onClick={handleStartAddingClients}
-              disabled={isSubmitting}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', paddingTop: '8px', width: '100%' }}>
+            {/* Action Buttons Row */}
+            <div
               style={{
-                padding: '16px 42px',
-                borderRadius: '999px',
-                border: 'none',
-                background: 'linear-gradient(135deg, #006FF5 0%, #0056C6 100%)',
-                color: '#FFFFFF',
-                fontWeight: 800,
-                fontSize: '1.02rem',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                display: 'inline-flex',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
                 alignItems: 'center',
-                gap: '10px',
-                boxShadow: '0 10px 25px -4px rgba(0, 111, 245, 0.4)',
-                opacity: isSubmitting ? 0.85 : 1,
-                transition: 'all 0.2s ease'
+                justifyContent: 'center',
+                gap: '12px',
+                width: isMobile ? '100%' : 'auto'
               }}
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" /> Completing Activity...
-                </>
-              ) : (
-                <>
-                  Start Adding Clients <ArrowRight size={18} />
-                </>
-              )}
-            </button>
+              {/* Primary CTA: Mark Activity as Completed */}
+              <button
+                onClick={handleMarkCompleted}
+                disabled={isSubmitting}
+                style={{
+                  padding: '15px 36px',
+                  borderRadius: '999px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #006FF5 0%, #0056C6 100%)',
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                  fontSize: '0.98rem',
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: '0 10px 25px -4px rgba(0, 111, 245, 0.35)',
+                  opacity: isSubmitting ? 0.85 : 1,
+                  transition: 'all 0.2s ease',
+                  width: isMobile ? '100%' : 'auto'
+                }}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" /> Completing Activity...
+                  </>
+                ) : (
+                  <>
+                    Mark Activity as Completed <ArrowRight size={18} />
+                  </>
+                )}
+              </button>
 
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569' }}>
-              Your next step: add your first client.
+              {/* Secondary CTA: Start Adding Clients */}
+              <button
+                onClick={handleStartAddingClients}
+                disabled={isSubmitting}
+                style={{
+                  padding: '14px 32px',
+                  borderRadius: '999px',
+                  border: '1.5px solid #006FF5',
+                  background: '#FFFFFF',
+                  color: '#006FF5',
+                  fontWeight: 800,
+                  fontSize: '0.98rem',
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: '0 2px 8px rgba(0, 111, 245, 0.08)',
+                  transition: 'all 0.2s ease',
+                  width: isMobile ? '100%' : 'auto'
+                }}
+              >
+                Start Adding Clients <ArrowRight size={18} />
+              </button>
+            </div>
+
+            {/* Small Supporting Text */}
+            <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#64748B' }}>
+              Complete the activity to earn your points, or start adding clients now.
             </span>
           </div>
         </section>
