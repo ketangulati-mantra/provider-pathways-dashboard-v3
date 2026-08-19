@@ -756,7 +756,13 @@ export const QuizCard = ({
 /* ==========================================================================
    12. ACHIEVEMENT / COMPLETION SCREEN
    ========================================================================== */
-export const CompletionScreen = ({
+export const CompletionScreen = ({ onClose }) => {
+  useEffect(() => {
+    if (onClose) onClose();
+  }, []);
+  return null;
+};
+const OldCompletionScreen = ({
   points,
   rewardPoints,
   title,
