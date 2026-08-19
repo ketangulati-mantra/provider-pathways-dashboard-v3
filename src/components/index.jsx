@@ -502,7 +502,7 @@ export const QuizCard = ({
     if (isSubmitted) return;
     if (isMulti) {
       if (Object.keys(selectedIndices).length < questions.length) return;
-      setIsSubmitted(true);
+      setIsSubmitted(true); setTimeout(() => { handleSubmitDone(); }, 0);
     } else {
       if (selectedIdx === null) return;
       setIsSubmitted(true);
