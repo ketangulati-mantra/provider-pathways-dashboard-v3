@@ -28,7 +28,7 @@ function getApiBase(): string {
   const port = window.location.port;
 
   // In local Vite dev environment, fallback to backend port 5000 if not proxied
-  if ((hostname === 'localhost' || hostname === '127.0.0.1') && port !== '5000') {
+  if ((hostname === 'localhost' || hostname === '127.0.0.1') && (port.startsWith('517') || port === '3000' || port === '5174')) {
     return 'http://localhost:5000/api';
   }
 
@@ -165,11 +165,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (typeof sessionStorage !== 'undefined') {
         sessionStorage.removeItem('user_id');
         sessionStorage.removeItem('admin_user');
+        sessionStorage.removeItem('mantra_guest_session_id');
       }
       if (typeof localStorage !== 'undefined') {
         localStorage.removeItem('mantra_admin_token');
         localStorage.removeItem('mantra_user_id');
         localStorage.removeItem('mantra_guest_session_id');
+        localStorage.removeItem('current_user');
       }
     }
   };

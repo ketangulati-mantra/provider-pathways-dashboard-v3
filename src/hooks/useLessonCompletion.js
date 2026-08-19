@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { completeLesson, getCurrentUserId, goToDashboard, navigateToNativeScreen, goBack } from '../mantra';
+import { completeLesson, getCurrentUserId, goToDashboard, navigateToNativeScreen } from '../mantra';
 import { useToast } from '../components';
 
 /**
@@ -24,9 +24,10 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
   const userId = getCurrentUserId();
   const storageKey = `lesson_progress_${userId}_${lessonId}`;
 
-  const [completedSteps, setCompletedSteps] = useState(() => {
+  const loadInitialState = (currentUserId, currentLessonId) => {
+    const key = `lesson_progress_${currentUserId}_${currentLessonId}`;
     try {
-      const saved = localStorage.getItem(storageKey);
+      const saved = localStorage.getItem(key);
       if (saved) {
         return JSON.parse(saved);
       }
@@ -41,7 +42,14 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
       actionDone: false,
       celebrationShown: false
     };
-  });
+  };
+
+  const [completedSteps, setCompletedSteps] = useState(() => loadInitialState(userId, lessonId));
+
+  // Re-sync completion steps state whenever userId or lessonId changes
+  useEffect(() => {
+    setCompletedSteps(loadInitialState(userId, lessonId));
+  }, [userId, lessonId]);
 
   useEffect(() => {
     if (isInitialMount.current) {
@@ -61,7 +69,7 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
   }, [completedSteps, storageKey]);
 
   const [lessonProgress, setLessonProgress] = useState(0);
-  const showCelebrate = false;
+  const [showCelebrate, setShowCelebrate] = useState(false);
 
   useEffect(() => {
     let totalSteps = 0;
@@ -103,15 +111,13 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
     setCompletedSteps((prev) => ({ ...prev, videoWatched: true }));
   };
 
-  const handleQuizComplete = async () => {
+  const handleQuizComplete = () => {
     if (completedSteps.celebrationShown) {
       showToast("You've already completed this activity.", "success", 3000);
-      goBack(onBack);
+      setTimeout(() => { goToDashboard(); }, 1800);
       return;
     }
-    setCompletedSteps((prev) => ({ ...prev, quizDone: true, celebrationShown: true }));
-    try { await completeLesson(lessonId); } catch(e){}
-    goBack(onBack);
+    setCompletedSteps((prev) => ({ ...prev, quizDone: true }));
   };
 
   const handleChecklistComplete = (isDone) => {
@@ -122,15 +128,13 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
     setCompletedSteps((prev) => ({ ...prev, scenarioAttempted: true }));
   };
 
-  const handleActionComplete = async () => {
+  const handleActionComplete = () => {
     if (completedSteps.celebrationShown) {
       showToast("You've already completed this activity.", "success", 3000);
-      goBack(onBack);
+      setTimeout(() => { goToDashboard(); }, 1800);
       return;
     }
-    setCompletedSteps((prev) => ({ ...prev, actionDone: true, celebrationShown: true }));
-    try { await completeLesson(lessonId); } catch(e){}
-    goBack(onBack);
+    setCompletedSteps((prev) => ({ ...prev, actionDone: true }));
   };
 
   /*  const handleCloseCelebration = async () => {

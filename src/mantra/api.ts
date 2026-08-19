@@ -27,8 +27,19 @@ export const getCurrentUserId = (): string => {
   const hashQueryStr = rawHash.includes('?') ? rawHash.substring(rawHash.indexOf('?') + 1) : '';
   const hashParams = new URLSearchParams(hashQueryStr);
 
+  // Check stored authenticated user from sessionStorage
+  let storedAdminEmail = '';
+  try {
+    const adminObj = sessionStorage.getItem('admin_user');
+    if (adminObj) {
+      const parsed = JSON.parse(adminObj);
+      storedAdminEmail = parsed?.email || parsed?.user_id || parsed?.id || '';
+    }
+  } catch (e) {}
+
   const foundId = (
     sessionStorage.getItem('user_id') ||
+    storedAdminEmail ||
     searchParams.get('user_id') ||
     searchParams.get('userId') ||
     searchParams.get('uid') ||
@@ -39,24 +50,22 @@ export const getCurrentUserId = (): string => {
     hashParams.get('userId') ||
     hashParams.get('uid') ||
     hashParams.get('upa_id') ||
-    hashParams.get('email') ||
-    localStorage.getItem('mantra_user_id') ||
-    localStorage.getItem('current_user')
+    hashParams.get('email')
   );
 
-  if (foundId) {
-    return foundId.trim();
+  if (foundId && String(foundId).trim().length > 0) {
+    return String(foundId).trim().toLowerCase();
   }
 
-  // Generate a isolated unique guest session ID so each new account/session starts with fresh uncompleted activities
-  let guestId = localStorage.getItem('mantra_guest_session_id');
-  if (!guestId) {
-    guestId = 'guest_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+  // Generate an isolated per-session guest ID in sessionStorage so different sessions/tabs never share state
+  let sessionGuestId = sessionStorage.getItem('mantra_guest_session_id');
+  if (!sessionGuestId) {
+    sessionGuestId = 'guest_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
     try {
-      localStorage.setItem('mantra_guest_session_id', guestId);
+      sessionStorage.setItem('mantra_guest_session_id', sessionGuestId);
     } catch (e) {}
   }
-  return guestId;
+  return sessionGuestId;
 };
 
 /**
