@@ -103,13 +103,15 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
     setCompletedSteps((prev) => ({ ...prev, videoWatched: true }));
   };
 
-  const handleQuizComplete = () => {
+  const handleQuizComplete = async () => {
     if (completedSteps.celebrationShown) {
       showToast("You've already completed this activity.", "success", 3000);
-      setTimeout(() => { goToDashboard(); }, 1800);
+      goBack(onBack);
       return;
     }
-    setCompletedSteps((prev) => ({ ...prev, quizDone: true, celebrationShown: true })); (async () => { try { await completeLesson(lessonId); } catch(e){} goBack(onBack); })();
+    setCompletedSteps((prev) => ({ ...prev, quizDone: true, celebrationShown: true }));
+    try { await completeLesson(lessonId); } catch(e){}
+    goBack(onBack);
   };
 
   const handleChecklistComplete = (isDone) => {
@@ -120,13 +122,15 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
     setCompletedSteps((prev) => ({ ...prev, scenarioAttempted: true }));
   };
 
-  const handleActionComplete = () => {
+  const handleActionComplete = async () => {
     if (completedSteps.celebrationShown) {
       showToast("You've already completed this activity.", "success", 3000);
-      setTimeout(() => { goToDashboard(); }, 1800);
+      goBack(onBack);
       return;
     }
-    setCompletedSteps((prev) => ({ ...prev, actionDone: true, celebrationShown: true })); (async () => { try { await completeLesson(lessonId); } catch(e){} goBack(onBack); })();
+    setCompletedSteps((prev) => ({ ...prev, actionDone: true, celebrationShown: true }));
+    try { await completeLesson(lessonId); } catch(e){}
+    goBack(onBack);
   };
 
   /*  const handleCloseCelebration = async () => {
