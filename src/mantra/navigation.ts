@@ -108,7 +108,8 @@ export function navigateToClientsPage() {
     window.ReactNativeWebView.postMessage(
       JSON.stringify({
         action: "navigate",
-        params: { page: "/clients" }
+        screen: "EHRClients",
+        params: {}
       })
     );
     return;
@@ -119,7 +120,7 @@ export function navigateToClientsPage() {
     window.parent.postMessage(
       {
         action: "navigate",
-        params: { page: "/clients" }
+        page: "/clients"
       },
       "https://provider.mantracare.com"
     );
