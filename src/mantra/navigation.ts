@@ -51,8 +51,8 @@ export const preserveQueryParams = (targetPath: string): string => {
  * 2. iframe inside provider.mantracare.com -> window.parent.postMessage({ action: "exit" }, "https://provider.mantracare.com")
  * 3. Standalone browser -> window.location.href = "https://provider.mantracare.com"
  */
-/* --- ORIGINAL HANDLEEXIT (COMMENTED OUT FOR EASY ROLLBACK) ---
 export function handleExit() {
+  console.log('Using handleExit function');
   if (typeof window === "undefined") return;
 
   // 1. React Native WebView
@@ -73,47 +73,6 @@ export function handleExit() {
   }
 
   // 3. Standalone browser
-  window.location.href = "https://provider.mantracare.com";
-}
---- END ORIGINAL HANDLEEXIT --- */
-
-// NEW MULTI-ORIGIN & SPA RESILIENT HANDLEEXIT
-export function handleExit() {
-  if (typeof window === "undefined") return;
-
-  // 1. React Native WebView
-  if (window.ReactNativeWebView) {
-    try {
-      window.ReactNativeWebView.postMessage(
-        JSON.stringify({ action: "exit" })
-      );
-    } catch (e) {
-      console.warn("[Navigation] WebView postMessage error:", e);
-    }
-    return;
-  }
-
-  // 2. iframe container (Sends to parent across production, staging, and localhost)
-  if (window.parent !== window) {
-    try {
-      window.parent.postMessage({ action: "exit" }, "*");
-    } catch (e) {
-      console.warn("[Navigation] Parent postMessage error:", e);
-    }
-    return;
-  }
-
-  // 3. Standalone SPA Browser Hash Navigation (Immediate 1st-try back resolution)
-  if (typeof window.location !== "undefined" && window.location.hash) {
-    const currentHash = window.location.hash.toLowerCase();
-    if (currentHash !== "#/" && currentHash !== "#/admin/dashboard" && currentHash !== "#/admin/pathways") {
-      window.location.hash = "#/admin/dashboard";
-      window.dispatchEvent(new Event("hashchange"));
-      return;
-    }
-  }
-
-  // 4. Standalone Browser Redirect
   window.location.href = "https://provider.mantracare.com";
 }
 

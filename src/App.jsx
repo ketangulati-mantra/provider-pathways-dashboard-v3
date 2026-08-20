@@ -161,19 +161,7 @@ function App() {
 
   // Render view based on route path and service context
   const renderView = () => {
-    // ORIGINAL ONBACKCALLBACK (COMMENTED OUT FOR EASY ROLLBACK):
-    // const onBackCallback = () => handleExit();
-
-    // NEW CONTEXT-AWARE ONBACKCALLBACK:
-    const onBackCallback = () => {
-      // In embedded mode (WebView or iframe), delegate directly to handleExit()
-      if ((typeof window !== 'undefined' && window.parent !== window) || (typeof window !== 'undefined' && window.ReactNativeWebView)) {
-        handleExit();
-      } else {
-        // In local/standalone SPA mode, navigate back to dashboard
-        navigate('/');
-      }
-    };
+    const onBackCallback = () => handleExit();
 
     // 1. Home Screen / Admin Dashboard Base Routes
     if (
