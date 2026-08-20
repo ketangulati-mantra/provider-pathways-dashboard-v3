@@ -27,19 +27,8 @@ export const getCurrentUserId = (): string => {
   const hashQueryStr = rawHash.includes('?') ? rawHash.substring(rawHash.indexOf('?') + 1) : '';
   const hashParams = new URLSearchParams(hashQueryStr);
 
-  // Check stored authenticated user from sessionStorage
-  let storedAdminEmail = '';
-  try {
-    const adminObj = sessionStorage.getItem('admin_user');
-    if (adminObj) {
-      const parsed = JSON.parse(adminObj);
-      storedAdminEmail = parsed?.email || parsed?.user_id || parsed?.id || '';
-    }
-  } catch (e) {}
-
-  const foundId = (
-    sessionStorage.getItem('user_id') ||
-    storedAdminEmail ||
+  // Priority 1: Check active URL query/hash parameters passed by parent shell
+  const urlParamId = (
     searchParams.get('user_id') ||
     searchParams.get('userId') ||
     searchParams.get('uid') ||
@@ -51,6 +40,29 @@ export const getCurrentUserId = (): string => {
     hashParams.get('uid') ||
     hashParams.get('upa_id') ||
     hashParams.get('email')
+  );
+
+  if (urlParamId && String(urlParamId).trim().length > 0) {
+    const cleanUrlId = String(urlParamId).trim().toLowerCase();
+    try {
+      sessionStorage.setItem('user_id', cleanUrlId);
+    } catch (e) {}
+    return cleanUrlId;
+  }
+
+  // Priority 2: Check stored authenticated user from sessionStorage
+  let storedAdminEmail = '';
+  try {
+    const adminObj = sessionStorage.getItem('admin_user');
+    if (adminObj) {
+      const parsed = JSON.parse(adminObj);
+      storedAdminEmail = parsed?.email || parsed?.user_id || parsed?.id || '';
+    }
+  } catch (e) {}
+
+  const foundId = (
+    sessionStorage.getItem('user_id') ||
+    storedAdminEmail
   );
 
   if (foundId && String(foundId).trim().length > 0) {

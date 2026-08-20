@@ -55,7 +55,10 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
     async function syncBackendCompletion() {
       if (!userId || userId.startsWith('guest_') || userId === 'anonymous_user') return;
       try {
-        const res = await fetch(`http://localhost:5000/api/activities/completions/${encodeURIComponent(userId)}`);
+        const apiBase = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+          ? 'http://localhost:5000'
+          : '';
+        const res = await fetch(`${apiBase}/api/activities/completions/${encodeURIComponent(userId)}`);
         if (!res.ok) return;
         const data = await res.json();
         if (data.success && Array.isArray(data.completions) && !isCancelled) {
@@ -66,10 +69,22 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
               actionDone: true,
               celebrationShown: true
             }));
+          } else {
+            // Authoritative: DB confirms this user has NOT completed this lesson
+            setCompletedSteps(prev => {
+              if (prev.celebrationShown || prev.actionDone) {
+                return {
+                  ...prev,
+                  actionDone: false,
+                  celebrationShown: false
+                };
+              }
+              return prev;
+            });
           }
         }
       } catch (err) {
-        // Silent fallback to local state if backend sync fails
+        // Silent fallback to local state if backend is unreachable
       }
     }
     syncBackendCompletion();
@@ -84,7 +99,8 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
-      if (completedSteps.celebrationShown) {
+      // Only show toast if DB or user-scoped state confirms completion
+      if (completedSteps.celebrationShown && !userId.startsWith('guest_')) {
         showToast("Welcome back! This activity has already been completed. You can review the lesson whenever you'd like.", "success", 4000);
       }
     }
