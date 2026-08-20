@@ -27,7 +27,22 @@ function App() {
         return '/task/ocd-certificate';
       }
 
-      // Priority 0: Check URL query parameters for task/lesson/activity passed by phone apps
+      // Priority 0: Check window.location.hash for explicit SPA client routes e.g. #/admin/dashboard, #/task/introduction
+      if (window.location.hash) {
+        const rawHash = window.location.hash.replace(/^#\/?/, '');
+        if (rawHash) {
+          const pathOnly = rawHash.split('?')[0];
+          if (pathOnly.startsWith('admin') || pathOnly.startsWith('dev')) {
+            return `/${pathOnly}`;
+          }
+          const cleanPath = pathOnly.startsWith('task/') ? `/${pathOnly}` : (pathOnly.startsWith('/') ? pathOnly : `/task/${pathOnly}`);
+          if (cleanPath.startsWith('/task/') || cleanPath.startsWith('/admin') || cleanPath.length > 1) {
+            return cleanPath;
+          }
+        }
+      }
+
+      // Priority 1: Check URL query parameters for task/lesson/activity passed by phone apps
       const searchParams = new URLSearchParams(window.location.search);
       const paramTask = searchParams.get('task') || 
                         searchParams.get('lesson_id') || 
@@ -45,21 +60,6 @@ function App() {
       if (paramTask) {
         const cleanTask = paramTask.startsWith('/') ? paramTask : `/task/${paramTask}`;
         return cleanTask.split('?')[0];
-      }
-
-      // Priority 1: Check window.location.hash for SPA client routes e.g. #/admin/dashboard, #/admin, #/task/introduction
-      if (window.location.hash) {
-        const rawHash = window.location.hash.replace(/^#\/?/, '');
-        if (rawHash) {
-          const pathOnly = rawHash.split('?')[0];
-          if (pathOnly.startsWith('admin') || pathOnly.startsWith('dev')) {
-            return `/${pathOnly}`;
-          }
-          const cleanPath = pathOnly.startsWith('task/') ? `/${pathOnly}` : (pathOnly.startsWith('/') ? pathOnly : `/task/${pathOnly}`);
-          if (cleanPath.startsWith('/task/') || cleanPath.startsWith('/admin') || cleanPath.length > 1) {
-            return cleanPath;
-          }
-        }
       }
     }
 
