@@ -26,15 +26,7 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
 
   const loadInitialState = (currentUserId, currentLessonId) => {
     const key = `lesson_progress_${currentUserId}_${currentLessonId}`;
-    try {
-      const saved = localStorage.getItem(key);
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (e) {
-      console.warn('Failed to load lesson progress from localStorage', e);
-    }
-    return {
+    let state = {
       videoWatched: false,
       quizDone: false,
       checklistDone: false,
@@ -42,12 +34,60 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
       actionDone: false,
       celebrationShown: false
     };
+
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        state = { ...state, ...JSON.parse(saved) };
+      }
+    } catch (e) {
+      console.warn('[PATHWAY DEBUG] Failed to load lesson progress from localStorage', e);
+    }
+
+    console.log('[PATHWAY DEBUG]', {
+      userId: currentUserId,
+      lessonId: currentLessonId,
+      storageKey: key,
+      loadedState: state,
+      isCompleted: state.celebrationShown || state.actionDone || (state.videoWatched && !hasQuiz && !hasAction)
+    });
+
+    return state;
   };
 
   const [completedSteps, setCompletedSteps] = useState(() => loadInitialState(userId, lessonId));
 
+  // Fetch authoritative user activity completions from backend DB
+  useEffect(() => {
+    let isCancelled = false;
+    async function syncBackendCompletion() {
+      if (!userId || userId.startsWith('guest_') || userId === 'anonymous_user') return;
+      try {
+        const res = await fetch(`http://localhost:5000/api/activities/completions/${encodeURIComponent(userId)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.success && Array.isArray(data.completions) && !isCancelled) {
+          const isDoneInDb = data.completions.some(c => c.lesson_id === lessonId);
+          console.log('[PATHWAY DEBUG API CHECK]', { userId, lessonId, isDoneInDb, completions: data.completions });
+          if (isDoneInDb) {
+            setCompletedSteps(prev => ({
+              ...prev,
+              actionDone: true,
+              celebrationShown: true
+            }));
+          }
+        }
+      } catch (err) {
+        console.warn('[PATHWAY DEBUG] Error checking DB completion:', err);
+      }
+    }
+    syncBackendCompletion();
+    return () => { isCancelled = true; };
+  }, [userId, lessonId]);
+
   // Re-sync completion steps state whenever userId or lessonId changes
   useEffect(() => {
+    console.log('[PATHWAY DEBUG IDENTITY CHANGE]', { newUserId: userId, lessonId });
     setCompletedSteps(loadInitialState(userId, lessonId));
   }, [userId, lessonId]);
 
@@ -55,10 +95,11 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
     if (isInitialMount.current) {
       isInitialMount.current = false;
       if (completedSteps.celebrationShown) {
+        console.log('[PATHWAY DEBUG TOAST TRIGGERED]', { userId, lessonId, completedSteps });
         showToast("Welcome back! This activity has already been completed. You can review the lesson whenever you'd like.", "success", 4000);
       }
     }
-  }, [completedSteps.celebrationShown, showToast]);
+  }, [completedSteps.celebrationShown, showToast, userId, lessonId]);
 
   useEffect(() => {
     try {

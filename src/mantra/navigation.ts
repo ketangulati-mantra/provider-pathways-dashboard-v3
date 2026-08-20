@@ -62,16 +62,25 @@ export function handleExit() {
     return;
   }
 
-  // 2. iframe inside provider.mantracare.com
-  if (window.parent !== window) {
-    window.parent.postMessage(
-      { action: "exit" },
-      "https://provider.mantracare.com"
-    );
-    return;
+  // 2. Standalone SPA Browser Hash Navigation (Immediate 1st-try back resolution)
+  if (typeof window.location !== "undefined" && window.location.hash) {
+    const currentHash = window.location.hash.toLowerCase();
+    if (currentHash !== "#/" && currentHash !== "#/admin/dashboard" && currentHash !== "#/admin/pathways") {
+      window.location.hash = "#/admin/dashboard";
+      window.dispatchEvent(new Event("hashchange"));
+      return;
+    }
   }
 
-  // 3. Standalone browser
+  /*  if (window.parent !== window) {
+     window.parent.postMessage(
+       { action: "exit" },
+       "https://provider.mantracare.com"
+     );
+     return;
+   } */
+
+  // 3. Standalone Browser Redirect
   window.location.href = "https://provider.mantracare.com";
 }
 
