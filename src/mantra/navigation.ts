@@ -51,8 +51,8 @@ export const preserveQueryParams = (targetPath: string): string => {
  * 2. iframe inside provider.mantracare.com -> window.parent.postMessage({ action: "exit" }, "https://provider.mantracare.com")
  * 3. Standalone browser -> window.location.href = "https://provider.mantracare.com"
  */
+/* --- ORIGINAL HANDLEEXIT (COMMENTED OUT FOR EASY ROLLBACK) ---
 export function handleExit() {
-  console.log('Using handleExit function');
   if (typeof window === "undefined") return;
 
   // 1. React Native WebView
@@ -74,6 +74,40 @@ export function handleExit() {
 
   // 3. Standalone browser
   window.location.href = "https://provider.mantracare.com";
+}
+--- END ORIGINAL HANDLEEXIT --- */
+
+// NEW HANDLEEXIT ROUTING TO /tasks
+export function handleExit() {
+  if (typeof window === "undefined") return;
+
+  // 1. React Native WebView
+  if (window.ReactNativeWebView) {
+    window.ReactNativeWebView.postMessage(
+      JSON.stringify({
+        action: "navigate",
+        screen: "Tasks",
+        params: { page: "/tasks" }
+      })
+    );
+    return;
+  }
+
+  // 2. iframe inside provider.mantracare.com
+  if (window.parent !== window) {
+    window.parent.postMessage(
+      {
+        action: "navigate",
+        page: "/tasks",
+        params: { page: "/tasks" }
+      },
+      "https://provider.mantracare.com"
+    );
+    return;
+  }
+
+  // 3. Standalone browser
+  window.location.href = "https://provider.mantracare.com/tasks";
 }
 
 /**
