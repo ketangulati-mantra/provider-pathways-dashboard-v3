@@ -85,9 +85,7 @@ export function handleExit() {
   if (window.ReactNativeWebView) {
     window.ReactNativeWebView.postMessage(
       JSON.stringify({
-        action: "navigate",
-        screen: "Tasks",
-        params: { page: "/tasks" }
+        action: "exit",
       })
     );
     return;
@@ -97,9 +95,7 @@ export function handleExit() {
   if (window.parent !== window) {
     window.parent.postMessage(
       {
-        action: "navigate",
-        page: "/tasks",
-        params: { page: "/tasks" }
+        action: "exit",
       },
       "https://provider.mantracare.com"
     );
@@ -180,7 +176,7 @@ export const goBack = (onBackCallback?: () => void) => {
  * Redirects back to Dashboard / Exit.
  */
 export const goToDashboard = () => {
-  handleExit();
+  return handleExit();
 };
 
 /**
