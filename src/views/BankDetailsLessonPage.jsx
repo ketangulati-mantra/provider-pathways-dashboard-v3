@@ -18,7 +18,7 @@ import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import { navigateToBankDetailsPage } from '../mantra/navigation';
 import './BankDetailsLessonPage.css';
 
-const LESSWN_ID = 'bank-details';
+const LESSON_ID = 'bank-details';
 const REWARD_POINTS = 10;
 
 export default function BankDetailsLessonPage({ onBack }) {
