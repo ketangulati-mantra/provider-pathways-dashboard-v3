@@ -19,6 +19,15 @@ export interface Activity {
 
 export const activities: Activity[] = [
   {
+    lessonId: 'bank-details',
+    activityId: '',
+    services: ['*'],
+    title: 'Complete Your Bank Details',
+    rewardPoints: 10,
+    estimatedDuration: '1 min',
+    route: '/task/bank-details'
+  },
+  {
     lessonId: 'growth-journey',
     activityId: '',
     services: ['*'],

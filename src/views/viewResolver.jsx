@@ -1,3 +1,4 @@
+import BankDetailsLessonPage from './BankDetailsLessonPage';
 import React from 'react';
 import LessonTemplate from './LessonTemplate';
 import DeveloperLessonsPage from './DeveloperLessonsPage';
@@ -83,6 +84,8 @@ import GrowYourPracticeAcademy from '../components/corporate/GrowYourPracticeAca
 const ROUTE_VIEW_REGISTRY = {
   '/': { default: (props) => <ProtectedRoute><DeveloperLessonsPage {...props} /></ProtectedRoute> },
   '/provider_activity': { default: (props) => <ProtectedRoute><DeveloperLessonsPage {...props} /></ProtectedRoute> },
+  '/task/bank': { default: BankDetailsLessonPage },
+  '/task/bank-details': { default: BankDetailsLessonPage },
   '/task/growth-journey': { default: MantraGrowthJourneyPage },
   '/task/ehr-mantra-ai': { default: MantraEhrLessonPage },
   '/admin/login': { default: AdminLoginPage },
