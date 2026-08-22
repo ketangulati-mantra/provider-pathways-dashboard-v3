@@ -207,7 +207,7 @@ export default function BankDetailsLessonPage({ onBack }) {
                     </div>
 
                     <div className="bank-step-guide step-two">
-                      <div className="bank-step-bubble step-two-bubble">3</div>
+                      <div className="bank-step-bubble step-two-bubble">2</div>
                       <div className="bank-step-info">
                         <h4 className="bank-step-title">Mark as finished</h4>
                         <p className="bank-step-desc">
