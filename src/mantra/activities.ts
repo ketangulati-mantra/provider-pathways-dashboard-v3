@@ -23,7 +23,7 @@ export const activities: Activity[] = [
     activityId: '',
     services: ['*'],
     title: 'Complete Your Bank Details',
-    rewardPoints: 10,
+    rewardPoints: 50,
     estimatedDuration: '1 min',
     route: '/task/bank-details'
   },

@@ -19,7 +19,7 @@ import { navigateToBankDetailsPage } from '../mantra/navigation';
 import './BankDetailsLessonPage.css';
 
 const LESSON_ID = 'bank-details';
-const REWARD_POINTS = 10;
+const REWARD_POINTS = 50;
 
 export default function BankDetailsLessonPage({ onBack }) {
   const [hasOpenedBanking, setHasOpenedBanking] = useState(false);
