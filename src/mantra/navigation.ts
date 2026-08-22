@@ -137,7 +137,28 @@ export function navigateToNativeScreen(
  */
 export function navigateToBankDetailsPage() {
   if (typeof window === "undefined") return;
-  window.open("https://provider.mantracare.com/billing?tab=bank-tax", "_blank");
+
+  // 1. React Native WebView -> redirect directly to URL
+  if (window.ReactNativeWebView) {
+    window.location.href = "https://provider.mantracare.com/billing?tab=bank-tax";
+    return;
+  }
+
+  // 2. iframe inside provider.mantracare.com
+  if (window.parent !== window) {
+    window.parent.postMessage(
+      {
+        action: "navigate",
+        page: "/billing?tab=bank-tax",
+        params: { page: "/billing?tab=bank-tax" },
+      },
+      "https://provider.mantracare.com"
+    );
+    return;
+  }
+
+  // 3. Standalone browser
+  window.location.href = "https://provider.mantracare.com/billing?tab=bank-tax";
 }
 
 export function navigateToClientsPage() {
