@@ -137,15 +137,7 @@ export function navigateToNativeScreen(
  */
 export function navigateToBankDetailsPage() {
   if (typeof window === "undefined") return;
-  if (window.ReactNativeWebView) {
-    window.ReactNativeWebView.postMessage(JSON.stringify({ action: "navigate", screen: "BANK_DETAILS", params: { page: "/bank" } }));
-    return;
-  }
-  if (window.parent !== window) {
-    window.parent.postMessage({ action: "navigate", params: { page: "/bank" } }, "https://provider.mantracare.com");
-    return;
-  }
-  window.open("https://provider.mantracare.com/bank", "_blank");
+  window.open("https://provider.mantracare.com/billing?tab=bank-tax", "_blank");
 }
 
 export function navigateToClientsPage() {

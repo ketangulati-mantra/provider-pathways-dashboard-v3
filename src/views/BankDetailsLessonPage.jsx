@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { 
-  Building2, 
-  CreditCard, 
-  Clock, 
-  Lock, 
-  CheckCircle2, 
-  ExternalLink, 
-  ArrowRight, 
-  ShieldCheck, 
+import {
+  Building2,
+  CreditCard,
+  Clock,
+  Lock,
+  CheckCircle2,
+  ExternalLink,
+  ArrowRight,
+  ShieldCheck,
   AlertCircle,
   FileText,
   User,
@@ -66,15 +66,12 @@ export default function BankDetailsLessonPage({ onBack }) {
 
       <main className="bank-details-main">
         <div className="bank-details-container">
-          
+
           <div className="bank-hero-card">
             <div className="bank-hero-badge-row">
               <div className="bank-tag">
                 <Building2 size={13} />
                 <span>Banking & Payouts</span>
-              </div>
-              <div className="bank-points-pill">
-                +{REWARD_POINTS} Provider Points
               </div>
             </div>
 
@@ -94,7 +91,7 @@ export default function BankDetailsLessonPage({ onBack }) {
           <section className="bank-section">
             <h2 className="bank-section-title">Why add your bank details?</h2>
             <div className="bank-benefits-grid">
-              
+
               <div className="bank-benefit-card">
                 <div className="bank-benefit-icon-box blue">
                   <CreditCard size={22} />
@@ -165,7 +162,7 @@ export default function BankDetailsLessonPage({ onBack }) {
 
           <section className="bank-section">
             <div className="bank-action-card">
-              
+
               {isCompleted ? (
                 <div className="bank-completed-state animate-fade-in">
                   <div className="bank-success-icon-wrap">
@@ -175,8 +172,8 @@ export default function BankDetailsLessonPage({ onBack }) {
                   <p className="bank-completed-desc">
                     Your bank details activity is recorded. Your payments can be processed smoothly by Mantra.
                   </p>
-                  <Button 
-                    variant="secondary" 
+                  <Button
+                    variant="secondary"
                     onClick={onBack}
                     style={{ marginTop: '12px' }}
                   >
