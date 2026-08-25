@@ -490,10 +490,24 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
         })
       });
 
+      // Trigger authoritative completion webhook via completeLesson
+      await completeLesson(lessonId || brand.lessonId || 'market-yourself');
+
       setIsCompleted(true);
-      setShowCompletionModal(true);
+      if (onBack) {
+        onBack();
+      } else {
+        goToDashboard();
+      }
     } catch (err) {
       console.error('[GrowYourPracticeAcademy] Video Submission Error:', err);
+      await completeLesson(lessonId || brand.lessonId || 'market-yourself');
+      setIsCompleted(true);
+      if (onBack) {
+        onBack();
+      } else {
+        goToDashboard();
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -547,12 +561,24 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
         })
       });
 
+      // Trigger authoritative completion webhook via completeLesson
+      await completeLesson(lessonId || brand.lessonId || 'market-yourself');
+
       setIsCompleted(true);
-      setShowCompletionModal(true);
+      if (onBack) {
+        onBack();
+      } else {
+        goToDashboard();
+      }
     } catch (err) {
       console.error('[GrowYourPracticeAcademy] Skip Video Error:', err);
+      await completeLesson(lessonId || brand.lessonId || 'market-yourself');
       setIsCompleted(true);
-      setShowCompletionModal(true);
+      if (onBack) {
+        onBack();
+      } else {
+        goToDashboard();
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -576,10 +602,6 @@ export default function GrowYourPracticeAcademy({ onBack, brandKey = 'therapyman
 
           {/* Right: Badge & Action Buttons */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', flexShrink: 0 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: '#fef3c7', color: '#b45309', border: '1px solid #fcd34d', borderRadius: '20px', padding: '3px 8px', fontSize: '0.7rem', fontWeight: 800, whiteSpace: 'nowrap' }}>
-              <span>🏅</span> +50 Pts
-            </div>
-
             <button onClick={() => setIsStudioOpen(true)} style={{ padding: '4px 9px', borderRadius: '7px', border: 'none', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#ffffff', fontWeight: 800, fontSize: '0.72rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', boxShadow: '0 2px 6px rgba(37,99,235,0.2)' }}>
               <Megaphone size={12} /> {t('buttons.promotion_toolkit', 'Promotion Toolkit')}
             </button>
