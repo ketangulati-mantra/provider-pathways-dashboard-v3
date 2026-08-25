@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import {
-  Header,
-  CompletionScreen,
-  Button,
+  Header, Button,
   SubmissionForm,
   useToast
 } from '../components';
@@ -61,10 +59,7 @@ const STEPS = [
 
 export default function ShowAchievementsLessonPage({ onBack }) {
   const { 
-    lessonProgress, 
-    showCelebrate, 
-    handleCloseCelebration, 
-    handleActionComplete 
+    lessonProgress, handleActionComplete 
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
     hasQuiz: false,
@@ -75,7 +70,7 @@ export default function ShowAchievementsLessonPage({ onBack }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f8fafc' }} className="animate-fade-in">
-      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} points={REWARD_POINTS} />
+      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} />
 
       <main className="academy-main-container" style={{
         flex: 1, padding: '28px 24px 60px', maxWidth: '1000px', margin: '0 auto', width: '100%',
@@ -92,7 +87,6 @@ export default function ShowAchievementsLessonPage({ onBack }) {
           </p>
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
             <span className="overview-meta-badge"><Clock size={12} /><span>5 min task</span></span>
-            <span className="overview-meta-badge points"><Award size={12} /><span>+{REWARD_POINTS} Points</span></span>
           </div>
         </div>
 
@@ -210,10 +204,6 @@ export default function ShowAchievementsLessonPage({ onBack }) {
         </div>
 
       </main>
-
-      {showCelebrate && (
-        <CompletionScreen points={REWARD_POINTS} title="Activity Complete!" subtitle="You have successfully finished this task. Points will be awarded upon manual verification." onClose={handleCloseCelebration} />
-      )}
     </div>
   );
 }

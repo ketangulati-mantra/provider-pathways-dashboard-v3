@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import { 
   Header, 
-  Button, 
-  CompletionScreen 
-} from '../components';
+  Button, } from '../components';
 import { navigateToBankDetailsPage } from '../mantra/navigation';
 import { 
   Building2, 
@@ -29,10 +27,7 @@ export default function BankDetailsLessonPage({ onBack }) {
   const [hasOpenedBanking, setHasOpenedBanking] = useState(false);
 
   const {
-    lessonProgress,
-    showCelebrate,
-    handleCloseCelebration,
-    handleActionComplete
+    lessonProgress, handleActionComplete
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
     hasQuiz: false,
@@ -50,7 +45,6 @@ export default function BankDetailsLessonPage({ onBack }) {
         title="Complete Your Bank Details"
         onBack={onBack}
         progress={lessonProgress}
-        points={REWARD_POINTS}
       />
 
       <main className="bank-details-main">
@@ -214,14 +208,6 @@ export default function BankDetailsLessonPage({ onBack }) {
       </main>
 
       {/* Celebration Overlay Screen */}
-      {showCelebrate && (
-        <CompletionScreen
-          points={REWARD_POINTS}
-          title="Lesson Complete"
-          subtitle="Ready for the next lesson"
-          onClose={handleCloseCelebration}
-        />
-      )}
     </div>
   );
 }

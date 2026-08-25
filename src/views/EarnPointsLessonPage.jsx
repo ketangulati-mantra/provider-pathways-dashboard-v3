@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import {
-  Header,
-  CompletionScreen,
-  SubmissionForm
+  Header, SubmissionForm
 } from '../components';
 import { 
   Clock, Award, PlayCircle, Monitor, Upload, Repeat, CheckCircle2, ChevronDown, ChevronUp, Lightbulb, ShieldAlert
@@ -43,10 +41,7 @@ const STEPS = [
 
 export default function EarnPointsLessonPage({ onBack }) {
   const { 
-    lessonProgress, 
-    showCelebrate, 
-    handleCloseCelebration, 
-    handleActionComplete 
+    lessonProgress, handleActionComplete 
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
     hasQuiz: false,
@@ -57,7 +52,7 @@ export default function EarnPointsLessonPage({ onBack }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f8fafc' }} className="animate-fade-in">
-      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} points={REWARD_POINTS} />
+      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} />
 
       <main className="academy-main-container" style={{
         flex: 1, padding: '24px', maxWidth: '1000px', margin: '0 auto', width: '100%',
@@ -77,7 +72,6 @@ export default function EarnPointsLessonPage({ onBack }) {
           </p>
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
             <span className="overview-meta-badge"><Clock size={12} /><span>5 min task</span></span>
-            <span className="overview-meta-badge points"><Award size={12} /><span>+{REWARD_POINTS} Points</span></span>
           </div>
         </div>
 
@@ -161,10 +155,6 @@ export default function EarnPointsLessonPage({ onBack }) {
         </div>
 
       </main>
-
-      {showCelebrate && (
-        <CompletionScreen points={REWARD_POINTS} title="Activity Complete!" subtitle="You have successfully finished this task. Points will be awarded upon manual verification." onClose={handleCloseCelebration} />
-      )}
     </div>
   );
 }

@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import {
-  Header,
-  CompletionScreen,
-  LessonHero,
+  Header, LessonHero,
   FeatureGrid,
   BenefitCard,
   InfoCallout,
@@ -37,10 +35,7 @@ export default function ContentCreationLessonPage({ onBack }) {
 
 
   const { 
-    lessonProgress, 
-    showCelebrate, 
-    handleCloseCelebration, 
-    handleActionComplete 
+    lessonProgress, handleActionComplete 
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
     hasQuiz: false,
@@ -50,7 +45,7 @@ export default function ContentCreationLessonPage({ onBack }) {
   const { showToast } = useToast();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-app)' }} className="animate-fade-in">
-      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} points={REWARD_POINTS} />
+      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} />
 
       <main className="academy-main-container" style={{
         flex: 1, padding: '28px 24px 60px', maxWidth: '860px', margin: '0 auto', width: '100%'
@@ -63,7 +58,6 @@ export default function ContentCreationLessonPage({ onBack }) {
           title={LESSON_TITLE} 
           description="Create meaningful mental health content that educates people, reduces stigma, and helps more individuals discover support through Mantra." 
           duration="8 min"
-          points={REWARD_POINTS}
         />
 
         <InfoCallout 
@@ -96,10 +90,6 @@ export default function ContentCreationLessonPage({ onBack }) {
         </section>
 
       </main>
-
-      {showCelebrate && (
-        <CompletionScreen points={REWARD_POINTS} title="Activity Complete!" subtitle="You have successfully finished this task." onClose={handleCloseCelebration} />
-      )}
     </div>
   );
 }

@@ -3,9 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Header,
   VideoSection,
-  QuizCard,
-  CompletionScreen,
-  useToast
+  QuizCard, useToast
 } from '../components';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 
@@ -50,16 +48,12 @@ export default function IntroductionLessonPage({ onBack }) {
   const {
     videoWatched,
     quizDone,
-    lessonProgress,
-    showCelebrate,
-    handleVideoComplete,
-    handleQuizComplete,
-    handleCloseCelebration
-  } = useLessonCompletion(LESSON_ID, onBack);
+    lessonProgress, handleVideoComplete,
+    handleQuizComplete, } = useLessonCompletion(LESSON_ID, onBack);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-app)' }} className="animate-fade-in">
-      <Header title={lessonTitle} onBack={onBack} progress={lessonProgress} points={REWARD_POINTS} />
+      <Header title={lessonTitle} onBack={onBack} progress={lessonProgress} />
 
       <main className="academy-main-container" style={{
         flex: 1, padding: '40px 24px 80px', maxWidth: '800px', margin: '0 auto', width: '100%',
@@ -101,10 +95,6 @@ export default function IntroductionLessonPage({ onBack }) {
         </section>
 
       </main>
-
-      {showCelebrate && (
-        <CompletionScreen points={REWARD_POINTS} onClose={handleCloseCelebration} />
-      )}
     </div>
   );
 }

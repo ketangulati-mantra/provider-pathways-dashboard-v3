@@ -1,7 +1,6 @@
 import React from 'react';
 import CertificateDownloadPage from './CertificateDownloadPage';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
-import { CompletionScreen } from '../components';
 
 const LESSON_ID = 'physio-certificate';
 const REWARD_POINTS = 0;
@@ -25,10 +24,7 @@ const physioConfig = {
 };
 
 export default function PhysioCertificatePage({ onBack }) {
-  const { 
-    showCelebrate, 
-    handleCloseCelebration, 
-    handleActionComplete 
+  const { handleActionComplete 
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
     hasQuiz: false,
@@ -42,14 +38,6 @@ export default function PhysioCertificatePage({ onBack }) {
         certificateConfig={physioConfig}
         onDownload={handleActionComplete}
       />
-      {showCelebrate && (
-        <CompletionScreen
-          points={REWARD_POINTS}
-          title="Pathway Complete!"
-          subtitle="Congratulations on completing the Physio Provider Pathway."
-          onClose={handleCloseCelebration}
-        />
-      )}
     </>
   );
 }

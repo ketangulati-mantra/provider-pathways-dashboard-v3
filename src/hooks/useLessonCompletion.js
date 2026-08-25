@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { completeLesson, getCurrentUserId, goToDashboard, navigateToNativeScreen } from '../mantra';
+import { completeLesson, getCurrentUserId, goToDashboard, handleExit, navigateToNativeScreen } from '../mantra';
 import { useToast } from '../components';
 
 /**
@@ -144,26 +144,28 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
 
     const percentage = totalSteps > 0 ? (completedCount / totalSteps) * 100 : 100;
     setLessonProgress(percentage);
-
-    if (percentage === 100 && totalSteps > 0 && !completedSteps.celebrationShown) {
-      const timer = setTimeout(() => {
-        setShowCelebrate(true);
-      }, 800);
-      return () => clearTimeout(timer);
-    }
   }, [completedSteps, hasVideo, hasChecklist, hasScenario, hasQuiz, hasAction]);
 
   const handleVideoComplete = () => {
     setCompletedSteps((prev) => ({ ...prev, videoWatched: true }));
   };
 
-  const handleQuizComplete = () => {
-    if (completedSteps.celebrationShown) {
+  const handleQuizComplete = async () => {
+    if (completedSteps.celebrationShown || completedSteps.quizDone) {
       showToast("You've already completed this activity.", "success", 3000);
-      setTimeout(() => { goToDashboard(); }, 1800);
+      handleExit();
       return;
     }
-    setCompletedSteps((prev) => ({ ...prev, quizDone: true }));
+    setCompletedSteps((prev) => ({ 
+      ...prev, 
+      quizDone: true,
+      celebrationShown: true
+    }));
+    await completeLesson(lessonId);
+    showToast("Quiz completed successfully!", "success", 2000);
+    setTimeout(() => {
+      handleExit();
+    }, 1200);
   };
 
   const handleChecklistComplete = (isDone) => {
@@ -174,42 +176,32 @@ export function useLessonCompletion(lessonId, onBack, features = {}) {
     setCompletedSteps((prev) => ({ ...prev, scenarioAttempted: true }));
   };
 
-  const handleActionComplete = () => {
-    if (completedSteps.celebrationShown) {
+  const handleActionComplete = async () => {
+    if (completedSteps.actionDone || completedSteps.celebrationShown) {
       showToast("You've already completed this activity.", "success", 3000);
-      setTimeout(() => { goToDashboard(); }, 1800);
+      handleExit();
       return;
     }
-    setCompletedSteps((prev) => ({ ...prev, actionDone: true }));
-  };
-
-  /*  const handleCloseCelebration = async () => {
-    console.log("HANDLE CLOSE CELEBRATION FIRED");
-  
-    setShowCelebrate(false);
-    setCompletedSteps(prev => ({
+    setCompletedSteps((prev) => ({
       ...prev,
+      actionDone: true,
       celebrationShown: true
     }));
-  
     await completeLesson(lessonId);
-  
-    if (onBack) {
-      goToDashboard();
-    }
-  }; */
+    showToast("Activity marked as complete!", "success", 2000);
+    setTimeout(() => {
+      handleExit();
+    }, 1200);
+  };
 
   const handleCloseCelebration = async () => {
     setShowCelebrate(false);
-
     setCompletedSteps((prev) => ({
       ...prev,
-      celebrationShown: true
+      celebrationShown: true,
+      actionDone: true
     }));
-
     await completeLesson(lessonId);
-
-    navigateToNativeScreen('Home');
     if (onBack) {
       onBack();
     } else {

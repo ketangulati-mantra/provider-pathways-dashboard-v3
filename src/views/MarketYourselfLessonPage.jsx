@@ -1,9 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import {
-  Header,
-  CompletionScreen,
-  Button,
+  Header, Button,
   useToast
 } from '../components';
 import { isValidEmail } from '../mantra/validation';
@@ -40,10 +38,7 @@ const STEPS = [
 
 export default function MarketYourselfLessonPage({ onBack }) {
   const { 
-    lessonProgress, 
-    showCelebrate, 
-    handleCloseCelebration, 
-    handleActionComplete,
+    lessonProgress, handleActionComplete,
     setLessonProgress,
     setShowCelebrate
   } = useLessonCompletion(LESSON_ID, onBack, {
@@ -112,7 +107,7 @@ export default function MarketYourselfLessonPage({ onBack }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f8fafc' }} className="animate-fade-in">
-      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} points={REWARD_POINTS} />
+      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} />
 
       <main className="academy-main-container" style={{
         flex: 1, padding: '24px', maxWidth: '1000px', margin: '0 auto', width: '100%',
@@ -129,7 +124,6 @@ export default function MarketYourselfLessonPage({ onBack }) {
           </p>
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
             <span className="overview-meta-badge"><Clock size={12} /><span>5 min task</span></span>
-            <span className="overview-meta-badge points"><Award size={12} /><span>+{REWARD_POINTS} Points</span></span>
           </div>
         </div>
 
@@ -277,10 +271,6 @@ export default function MarketYourselfLessonPage({ onBack }) {
         </div>
 
       </main>
-
-      {showCelebrate && (
-        <CompletionScreen points={REWARD_POINTS} title="Activity Complete!" subtitle="Your submission has been received. Points have been added to your profile." onClose={handleCloseCelebration} />
-      )}
     </div>
   );
 }

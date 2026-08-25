@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import {
-  Header,
-  CompletionScreen,
-  StepTimeline,
+  Header, StepTimeline,
   InfoCallout,
   VideoSection,
   SalesPartnerApplicationForm,
@@ -54,10 +52,7 @@ export default function SalesPartnerLessonPage({ onBack }) {
 
 
   const { 
-    lessonProgress, 
-    showCelebrate, 
-    handleCloseCelebration, 
-    handleActionComplete 
+    lessonProgress, handleActionComplete 
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
     hasQuiz: false,
@@ -69,7 +64,7 @@ export default function SalesPartnerLessonPage({ onBack }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-app)' }} className="animate-fade-in">
-      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} points={REWARD_POINTS} />
+      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} />
 
       <main className="academy-main-container" style={{
         flex: 1, padding: '40px 24px 80px', maxWidth: '900px', margin: '0 auto', width: '100%',
@@ -256,10 +251,6 @@ export default function SalesPartnerLessonPage({ onBack }) {
         </section>
 
       </main>
-
-      {showCelebrate && (
-        <CompletionScreen points={REWARD_POINTS} title={t('celebration.title')} subtitle={t('celebration.subtitle')} onClose={handleCloseCelebration} />
-      )}
     </div>
   );
 }

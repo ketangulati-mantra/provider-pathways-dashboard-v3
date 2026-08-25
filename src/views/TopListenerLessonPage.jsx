@@ -1,9 +1,7 @@
 import React from 'react';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import {
-  Header,
-  CompletionScreen,
-  Button,
+  Header, Button,
 } from '../components';
 import { completeLesson, goToDashboard } from '../mantra';
 import {
@@ -50,10 +48,7 @@ const HOW_IT_WORKS = [
 
 export default function TopListenerLessonPage({ onBack }) {
   const {
-    lessonProgress,
-    showCelebrate,
-    handleCloseCelebration,
-    handleActionComplete,
+    lessonProgress, handleActionComplete,
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
     hasQuiz: false,
@@ -65,7 +60,7 @@ export default function TopListenerLessonPage({ onBack }) {
       style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-app)' }}
       className="animate-fade-in"
     >
-      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} points={REWARD_POINTS} />
+      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} />
 
       <main
         style={{
@@ -168,15 +163,6 @@ export default function TopListenerLessonPage({ onBack }) {
           </Button>
         </section>
       </main>
-
-      {showCelebrate && (
-        <CompletionScreen
-          points={REWARD_POINTS}
-          title="Activity Complete!"
-          subtitle="Well done! You have learned how the Top Listener Recognition program works. Keep delivering exceptional support to earn your spot."
-          onClose={handleCloseCelebration}
-        />
-      )}
     </div>
   );
 }

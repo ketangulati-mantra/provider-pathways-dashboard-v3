@@ -1,9 +1,7 @@
 import React from 'react';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import {
-  Header,
-  CompletionScreen,
-  Button
+  Header, Button
 } from '../components';
 import SubmissionForm from '../components/forms/SubmissionForm';
 import { ExternalLink, CheckCircle2 } from 'lucide-react';
@@ -21,10 +19,7 @@ const STEPS = [
 
 export default function ProfileVerificationLessonPage({ onBack }) {
   const { 
-    lessonProgress, 
-    showCelebrate, 
-    handleCloseCelebration, 
-    handleActionComplete 
+    lessonProgress, handleActionComplete 
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
     hasQuiz: false,
@@ -36,7 +31,7 @@ export default function ProfileVerificationLessonPage({ onBack }) {
       style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f8fafc' }}
       className="animate-fade-in"
     >
-      <Header title={LESSON_TITLE} progress={lessonProgress} points={REWARD_POINTS} />
+      <Header title={LESSON_TITLE} progress={lessonProgress} />
 
       <main style={{
         flex: 1,
@@ -135,15 +130,6 @@ export default function ProfileVerificationLessonPage({ onBack }) {
 
         </div>
       </main>
-
-      {showCelebrate && (
-        <CompletionScreen
-          points={REWARD_POINTS}
-          title="Verification Submitted!"
-          subtitle="Your profile screenshot has been uploaded successfully."
-          onClose={handleCloseCelebration}
-        />
-      )}
     </div>
   );
 }

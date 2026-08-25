@@ -8,9 +8,7 @@ import {
   Checklist, 
   Timeline, 
   ScenarioCard, 
-  QuizCard, 
-  CompletionScreen,
-  Button
+  QuizCard, Button
 } from '../components';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import { 
@@ -39,14 +37,10 @@ export default function LessonTemplate({
     quizDone,
     checklistDone,
     isCompleted,
-    lessonProgress,
-    showCelebrate,
-    handleVideoComplete,
+    lessonProgress, handleVideoComplete,
     handleQuizComplete,
     handleChecklistComplete,
-    handleScenarioComplete,
-    handleCloseCelebration
-  } = useLessonCompletion(lesson.id, onBack, {
+    handleScenarioComplete, } = useLessonCompletion(lesson.id, onBack, {
     hasVideo,
     hasQuiz,
     hasChecklist,
@@ -65,7 +59,6 @@ export default function LessonTemplate({
         title={lesson.title} 
         onBack={onBack} 
         progress={lessonProgress}
-        points={lesson.points}
         isCompleted={isCompleted}
       />
 
@@ -109,7 +102,6 @@ export default function LessonTemplate({
         <OverviewCard 
           description={lesson.description}
           duration={lesson.duration}
-          points={lesson.points}
         />
 
         {/* Video Section Component */}
@@ -250,14 +242,6 @@ export default function LessonTemplate({
       </main>
 
       {/* Completion Overlay Screen */}
-      {showCelebrate && (
-        <CompletionScreen 
-          points={lesson.points}
-          title="Lesson Completed!"
-          subtitle={`You successfully finished "${lesson.title}" and boosted your ranking score.`}
-          onClose={handleCloseCelebration}
-        />
-      )}
     </div>
   );
 }

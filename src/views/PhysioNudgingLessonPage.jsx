@@ -1,9 +1,7 @@
 import React from 'react';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import {
-  Header,
-  CompletionScreen,
-  Button
+  Header, Button
 } from '../components';
 import { 
   CheckCircle2, Clock, Award, Bell, Video, Search, TrendingUp, Sparkles, Lightbulb
@@ -53,10 +51,7 @@ const STEPS = [
 
 export default function PhysioNudgingLessonPage({ onBack }) {
   const {
-    lessonProgress,
-    showCelebrate,
-    handleCloseCelebration,
-    handleActionComplete,
+    lessonProgress, handleActionComplete,
     actionDone
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
@@ -69,7 +64,7 @@ export default function PhysioNudgingLessonPage({ onBack }) {
       style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f8fafc' }}
       className="animate-fade-in"
     >
-      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} points={REWARD_POINTS} />
+      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} />
 
       <main className="academy-main-container" style={{
         flex: 1,
@@ -118,7 +113,6 @@ export default function PhysioNudgingLessonPage({ onBack }) {
           </p>
           <div style={{ display: 'flex', gap: '8px' }}>
             <span className="overview-meta-badge"><Clock size={12} /><span>3 min read</span></span>
-            <span className="overview-meta-badge points"><Award size={12} /><span>+{REWARD_POINTS} Points</span></span>
           </div>
         </div>
 
@@ -224,15 +218,6 @@ export default function PhysioNudgingLessonPage({ onBack }) {
         </div>
 
       </main>
-
-      {showCelebrate && (
-        <CompletionScreen
-          points={REWARD_POINTS}
-          title="Lesson Complete!"
-          subtitle="You have successfully finished this lesson and earned 5 points."
-          onClose={handleCloseCelebration}
-        />
-      )}
     </div>
   );
 }

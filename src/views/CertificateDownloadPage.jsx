@@ -666,7 +666,7 @@ export default function CertificateDownloadPage({ onBack, certificateConfig, onD
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-app)' }} className="animate-fade-in">
       {step === 'form' ? (
         <>
-          <Header title="Get Your Certificate" onBack={onBack} progress={100} points={0} />
+          <Header title="Get Your Certificate" onBack={onBack} progress={100} />
           <main className="academy-main-container" style={{
             flex: 1,
             padding: '48px 24px',

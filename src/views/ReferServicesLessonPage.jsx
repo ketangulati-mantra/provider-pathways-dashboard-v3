@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import {
-  Header,
-  CompletionScreen,
-  StepTimeline,
+  Header, StepTimeline,
   InfoCallout,
   Button
 } from '../components';
@@ -35,10 +33,7 @@ const TIMELINE = [
 
 export default function ReferServicesLessonPage({ onBack }) {
   const { 
-    lessonProgress, 
-    showCelebrate, 
-    handleCloseCelebration, 
-    handleActionComplete,
+    lessonProgress, handleActionComplete,
     actionDone
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
@@ -50,7 +45,7 @@ export default function ReferServicesLessonPage({ onBack }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f8fafc' }} className="animate-fade-in">
-      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} points={REWARD_POINTS} />
+      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} />
 
       <main className="academy-main-container" style={{
         flex: 1, padding: '24px 24px 80px', maxWidth: '900px', margin: '0 auto', width: '100%',
@@ -241,10 +236,6 @@ export default function ReferServicesLessonPage({ onBack }) {
         </section>
 
       </main>
-
-      {showCelebrate && (
-        <CompletionScreen points={REWARD_POINTS} title="Activity Complete!" subtitle="Thank you for supporting holistic client care." onClose={handleCloseCelebration} />
-      )}
     </div>
   );
 }

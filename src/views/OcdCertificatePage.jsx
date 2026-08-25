@@ -1,7 +1,6 @@
 import React from 'react';
 import CertificateDownloadPage from './CertificateDownloadPage';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
-import { CompletionScreen } from '../components';
 
 const LESSON_ID = 'ocd-certificate';
 const REWARD_POINTS = 0;
@@ -25,10 +24,7 @@ const ocdConfig = {
 };
 
 export default function OcdCertificatePage({ onBack }) {
-  const { 
-    showCelebrate, 
-    handleCloseCelebration, 
-    handleActionComplete 
+  const { handleActionComplete 
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
     hasQuiz: false,
@@ -42,14 +38,6 @@ export default function OcdCertificatePage({ onBack }) {
         certificateConfig={ocdConfig}
         onDownload={handleActionComplete}
       />
-      {showCelebrate && (
-        <CompletionScreen 
-          points={REWARD_POINTS} 
-          title="Certificate Generated!" 
-          subtitle="You have successfully downloaded your OCD Provider Pathway Certificate." 
-          onClose={handleCloseCelebration} 
-        />
-      )}
     </>
   );
 }

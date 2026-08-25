@@ -22,7 +22,6 @@ import {
 import { completeLesson } from '../mantra/api';
 import { handleExit, goBack, goToDashboard } from '../mantra/navigation';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
-import { CompletionScreen } from '../components';
 gsap.registerPlugin(ScrollTrigger);
 const LESSON_ID = 'growth-journey';
 const MANTRA_LOGO_URL = 'https://res.cloudinary.com/hxbamdqf/image/upload/v1784698269/Mantra_logo_yptwwe.svg';
@@ -347,10 +346,7 @@ export default function MantraGrowthJourneyPage({ onBack }) {
   const [displayScore, setDisplayScore] = useState(0);
   const accent = STAGES[activeStage];
   const {
-    lessonProgress,
-    showCelebrate,
-    handleCloseCelebration,
-    handleActionComplete
+    lessonProgress, handleActionComplete
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
     hasQuiz: false,
@@ -935,13 +931,6 @@ export default function MantraGrowthJourneyPage({ onBack }) {
         </div>
       </main>
       {/* Completion Celebration Overlay Screen */}
-      {showCelebrate && (
-        <CompletionScreen
-          lessonId={LESSON_ID}
-          rewardPoints={25}
-          onClose={handleCloseCelebration}
-        />
-      )}
     </div>
   );
 }

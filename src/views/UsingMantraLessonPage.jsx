@@ -4,9 +4,7 @@ import {
   OverviewCard,
   VideoSection,
   ExpandableCard,
-  QuizCard,
-  CompletionScreen,
-  useToast
+  QuizCard, useToast
 } from '../components';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 
@@ -61,12 +59,8 @@ export default function UsingMantraLessonPage({ onBack }) {
   const {
     videoWatched,
     quizDone,
-    lessonProgress,
-    showCelebrate,
-    handleVideoComplete,
-    handleQuizComplete,
-    handleCloseCelebration
-  } = useLessonCompletion(LESSON_ID, onBack);
+    lessonProgress, handleVideoComplete,
+    handleQuizComplete, } = useLessonCompletion(LESSON_ID, onBack);
 
   return (
     <div
@@ -78,7 +72,6 @@ export default function UsingMantraLessonPage({ onBack }) {
         title={LESSON_TITLE}
         onBack={onBack}
         progress={lessonProgress}
-        points={REWARD_POINTS}
       />
 
       <main
@@ -154,14 +147,6 @@ export default function UsingMantraLessonPage({ onBack }) {
       </main>
 
       {/* Completion modal — same as LessonTemplate, triggered after 800ms delay */}
-      {showCelebrate && (
-        <CompletionScreen
-          points={REWARD_POINTS}
-          title="Lesson Complete!"
-          subtitle="You have finished this lesson and boosted your provider score."
-          onClose={handleCloseCelebration}
-        />
-      )}
     </div>
   );
 }

@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import {
-  Header,
-  CompletionScreen,
-  Button,
+  Header, Button,
 } from '../components';
 import { CheckCircle2, Clock, Award, FileText, ClipboardList, Save, Activity, FolderOpen, User, Calendar, Plus, AlignLeft } from 'lucide-react';
 
@@ -35,10 +33,7 @@ const FEATURES = [
 ];
 
 export default function TherapyNotesLessonPage({ onBack }) {
-  const { actionDone, lessonProgress,
-    showCelebrate,
-    handleCloseCelebration,
-    handleActionComplete
+  const { actionDone, lessonProgress, handleActionComplete
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
     hasQuiz: false,
@@ -49,7 +44,7 @@ export default function TherapyNotesLessonPage({ onBack }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f8fafc' }} className="animate-fade-in">
-      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} points={REWARD_POINTS} />
+      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} />
 
       <main className="academy-main-container" style={{
         flex: 1, padding: '24px', maxWidth: '1000px', margin: '0 auto', width: '100%',
@@ -69,7 +64,6 @@ export default function TherapyNotesLessonPage({ onBack }) {
           </p>
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
             <span className="overview-meta-badge"><Clock size={12} /><span>2 min read</span></span>
-            <span className="overview-meta-badge points"><Award size={12} /><span>+{REWARD_POINTS} Points</span></span>
           </div>
         </div>
 
@@ -181,10 +175,6 @@ export default function TherapyNotesLessonPage({ onBack }) {
         </div>
 
       </main>
-
-      {showCelebrate && (
-        <CompletionScreen points={REWARD_POINTS} title="Lesson Complete!" subtitle="You have successfully finished this lesson and boosted your provider score." onClose={handleCloseCelebration} />
-      )}
     </div>
   );
 }

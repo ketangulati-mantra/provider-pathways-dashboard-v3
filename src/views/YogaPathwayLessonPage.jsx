@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import {
-  Header,
-  CompletionScreen,
-  Button,
+  Header, Button,
   useToast
 } from '../components';
 import { completeLesson, goToDashboard } from '../mantra';
@@ -57,10 +55,7 @@ const STEPS = [
 export default function YogaPathwayLessonPage({ onBack }) {
 
   const {
-    lessonProgress,
-    showCelebrate,
-    handleCloseCelebration,
-    handleActionComplete,
+    lessonProgress, handleActionComplete,
     actionDone
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
@@ -73,7 +68,7 @@ export default function YogaPathwayLessonPage({ onBack }) {
       style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f8fafc' }}
       className="animate-fade-in"
     >
-      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} points={REWARD_POINTS} />
+      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} />
 
       <main className="academy-main-container" style={{
         flex: 1,
@@ -122,7 +117,6 @@ export default function YogaPathwayLessonPage({ onBack }) {
           </p>
           <div style={{ display: 'flex', gap: '8px' }}>
             <span className="overview-meta-badge"><Clock size={11} /><span>2-3 min read</span></span>
-            <span className="overview-meta-badge points"><Award size={11} /><span>+{REWARD_POINTS} Points</span></span>
           </div>
         </div>
 
@@ -208,15 +202,6 @@ export default function YogaPathwayLessonPage({ onBack }) {
         </div>
 
       </main>
-
-      {showCelebrate && (
-        <CompletionScreen
-          points={REWARD_POINTS}
-          title="Lesson Complete!"
-          subtitle="You have successfully finished this lesson and boosted your provider score."
-          onClose={handleCloseCelebration}
-        />
-      )}
     </div>
   );
 }

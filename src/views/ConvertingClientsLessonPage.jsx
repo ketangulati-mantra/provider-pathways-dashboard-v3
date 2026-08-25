@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import {
-  Header,
-  CompletionScreen,
-  LessonHero,
+  Header, LessonHero,
   StepTimeline,
   InfoCallout,
   Button,
@@ -39,10 +37,7 @@ export default function ConvertingClientsLessonPage({ onBack }) {
 
 
   const { 
-    lessonProgress, 
-    showCelebrate, 
-    handleCloseCelebration, 
-    handleActionComplete 
+    lessonProgress, handleActionComplete 
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
     hasQuiz: false,
@@ -52,7 +47,7 @@ export default function ConvertingClientsLessonPage({ onBack }) {
   const { showToast } = useToast();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-app)' }} className="animate-fade-in">
-      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} points={REWARD_POINTS} />
+      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} />
 
       <main className="academy-main-container" style={{
         flex: 1, padding: '40px 24px 80px', maxWidth: '900px', margin: '0 auto', width: '100%',
@@ -199,10 +194,6 @@ export default function ConvertingClientsLessonPage({ onBack }) {
         </section>
 
       </main>
-
-      {showCelebrate && (
-        <CompletionScreen points={REWARD_POINTS} title="Activity Complete!" subtitle="You've mastered the principles of converting trial clients." onClose={handleCloseCelebration} />
-      )}
     </div>
   );
 }

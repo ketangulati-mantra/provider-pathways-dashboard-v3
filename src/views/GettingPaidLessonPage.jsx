@@ -4,9 +4,7 @@ import {
   OverviewCard,
   VideoSection,
   ExpandableCard,
-  QuizCard,
-  CompletionScreen,
-  useToast
+  QuizCard, useToast
 } from '../components';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 
@@ -73,12 +71,8 @@ export default function GettingPaidLessonPage({ onBack }) {
   const {
     videoWatched,
     quizDone,
-    lessonProgress,
-    showCelebrate,
-    handleVideoComplete,
-    handleQuizComplete,
-    handleCloseCelebration
-  } = useLessonCompletion(LESSON_ID, onBack);
+    lessonProgress, handleVideoComplete,
+    handleQuizComplete, } = useLessonCompletion(LESSON_ID, onBack);
 
   return (
     <div
@@ -90,7 +84,6 @@ export default function GettingPaidLessonPage({ onBack }) {
         title={LESSON_TITLE}
         onBack={onBack}
         progress={lessonProgress}
-        points={REWARD_POINTS}
       />
 
       <main
@@ -110,7 +103,6 @@ export default function GettingPaidLessonPage({ onBack }) {
         <OverviewCard
           description="Learn how to view your billings, track payments, understand payout timelines and monitor your earnings on MantraCare."
           duration={DURATION}
-          points={`+${REWARD_POINTS}`}
         />
 
         {/* 2. Video — first play sets videoWatched → 50% */}
@@ -166,14 +158,6 @@ export default function GettingPaidLessonPage({ onBack }) {
       </main>
 
       {/* Completion modal — same as LessonTemplate, triggered after 800ms delay */}
-      {showCelebrate && (
-        <CompletionScreen
-          points={REWARD_POINTS}
-          title="Lesson Complete!"
-          subtitle="You have finished this lesson and boosted your provider score."
-          onClose={handleCloseCelebration}
-        />
-      )}
     </div>
   );
 }

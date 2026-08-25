@@ -1,9 +1,7 @@
 import React from 'react';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import {
-  Header,
-  CompletionScreen,
-  Button
+  Header, Button
 } from '../components';
 import {
   CheckCircle2,
@@ -53,10 +51,7 @@ const REGULAR_OUTCOMES = [
 
 export default function PhysioTrialVsRegularLessonPage({ onBack }) {
   const {
-    lessonProgress,
-    showCelebrate,
-    handleCloseCelebration,
-    handleActionComplete,
+    lessonProgress, handleActionComplete,
     actionDone
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
@@ -70,7 +65,6 @@ export default function PhysioTrialVsRegularLessonPage({ onBack }) {
         title={LESSON_TITLE}
         onBack={onBack}
         progress={lessonProgress}
-        points={REWARD_POINTS}
       />
 
       <main className="academy-main-container" style={{
@@ -438,15 +432,6 @@ export default function PhysioTrialVsRegularLessonPage({ onBack }) {
         </div>
 
       </main>
-
-      {showCelebrate && (
-        <CompletionScreen
-          points={REWARD_POINTS}
-          title="Lesson Complete!"
-          subtitle="You have successfully completed this lesson and earned 5 points."
-          onClose={handleCloseCelebration}
-        />
-      )}
     </div>
   );
 }

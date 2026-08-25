@@ -1,7 +1,6 @@
 import React from 'react';
 import CertificateDownloadPage from './CertificateDownloadPage';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
-import { CompletionScreen } from '../components';
 
 const LESSON_ID = 'doctor-certificate';
 const REWARD_POINTS = 0;
@@ -25,10 +24,7 @@ const doctorConfig = {
 };
 
 export default function DoctorCertificatePage({ onBack }) {
-  const { 
-    showCelebrate, 
-    handleCloseCelebration, 
-    handleActionComplete 
+  const { handleActionComplete 
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
     hasQuiz: false,
@@ -42,14 +38,6 @@ export default function DoctorCertificatePage({ onBack }) {
         certificateConfig={doctorConfig}
         onDownload={handleActionComplete}
       />
-      {showCelebrate && (
-        <CompletionScreen
-          points={REWARD_POINTS}
-          title="Pathway Complete!"
-          subtitle="Congratulations on completing the Doctor Provider Pathway."
-          onClose={handleCloseCelebration}
-        />
-      )}
     </>
   );
 }

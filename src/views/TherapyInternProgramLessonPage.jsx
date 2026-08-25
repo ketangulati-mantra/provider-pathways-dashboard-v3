@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import {
-  Header,
-  CompletionScreen,
-  LessonHero,
+  Header, LessonHero,
   FeatureGrid,
   BenefitCard,
   InfoCallout,
@@ -45,10 +43,7 @@ export default function TherapyInternProgramLessonPage({ onBack }) {
 
 
   const { 
-    lessonProgress, 
-    showCelebrate, 
-    handleCloseCelebration, 
-    handleActionComplete 
+    lessonProgress, handleActionComplete 
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
     hasQuiz: false,
@@ -58,7 +53,7 @@ export default function TherapyInternProgramLessonPage({ onBack }) {
   const { showToast } = useToast();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-app)' }} className="animate-fade-in">
-      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} points={REWARD_POINTS} />
+      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} />
 
       <main className="academy-main-container" style={{
         flex: 1, padding: '28px 24px 60px', maxWidth: '860px', margin: '0 auto', width: '100%'
@@ -71,7 +66,6 @@ export default function TherapyInternProgramLessonPage({ onBack }) {
           title="Therapy Intern Program" 
           description="Gain real-world clinical experience and professional supervision through the official Mantra Foundation Therapy Internship." 
           duration="3 min"
-          points={REWARD_POINTS}
         />
 
         <InfoCallout 
@@ -109,10 +103,6 @@ export default function TherapyInternProgramLessonPage({ onBack }) {
         </section>
 
       </main>
-
-      {showCelebrate && (
-        <CompletionScreen points={REWARD_POINTS} title="Activity Complete!" subtitle="You have successfully finished this task." onClose={handleCloseCelebration} />
-      )}
     </div>
   );
 }

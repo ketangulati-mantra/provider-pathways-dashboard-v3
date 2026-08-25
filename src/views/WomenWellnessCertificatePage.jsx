@@ -1,7 +1,6 @@
 import React from 'react';
 import CertificateDownloadPage from './CertificateDownloadPage';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
-import { CompletionScreen } from '../components';
 
 const LESSON_ID = 'women-wellness-certificate';
 const REWARD_POINTS = 0;
@@ -25,10 +24,7 @@ const womenWellnessConfig = {
 };
 
 export default function WomenWellnessCertificatePage({ onBack }) {
-  const { 
-    showCelebrate, 
-    handleCloseCelebration, 
-    handleActionComplete 
+  const { handleActionComplete 
   } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
     hasQuiz: false,
@@ -42,14 +38,6 @@ export default function WomenWellnessCertificatePage({ onBack }) {
         certificateConfig={womenWellnessConfig}
         onDownload={handleActionComplete}
       />
-      {showCelebrate && (
-        <CompletionScreen
-          points={REWARD_POINTS}
-          title="Pathway Complete!"
-          subtitle="Congratulations on completing the Women Wellness Provider Pathway."
-          onClose={handleCloseCelebration}
-        />
-      )}
     </>
   );
 }

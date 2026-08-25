@@ -1,10 +1,10 @@
-import BankDetailsLessonPage from './BankDetailsLessonPage';
 import React from 'react';
 import LessonTemplate from './LessonTemplate';
 import DeveloperLessonsPage from './DeveloperLessonsPage';
 import IntroductionLessonPage from './IntroductionLessonPage';
 import MantraGrowthJourneyPage from './MantraGrowthJourneyPage';
 import MantraEhrLessonPage from './MantraEhrLessonPage';
+import BankDetailsLessonPage from './BankDetailsLessonPage';
 import AdminLoginPage from './AdminLoginPage';
 import AdminUsersPage from './AdminUsersPage';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
@@ -84,10 +84,10 @@ import GrowYourPracticeAcademy from '../components/corporate/GrowYourPracticeAca
 const ROUTE_VIEW_REGISTRY = {
   '/': { default: (props) => <ProtectedRoute><DeveloperLessonsPage {...props} /></ProtectedRoute> },
   '/provider_activity': { default: (props) => <ProtectedRoute><DeveloperLessonsPage {...props} /></ProtectedRoute> },
-  '/task/bank': { default: BankDetailsLessonPage },
-  '/task/bank-details': { default: BankDetailsLessonPage },
   '/task/growth-journey': { default: MantraGrowthJourneyPage },
   '/task/ehr-mantra-ai': { default: MantraEhrLessonPage },
+  '/task/bank-details': { default: BankDetailsLessonPage },
+  '/bank-details': { default: BankDetailsLessonPage },
   '/admin/login': { default: AdminLoginPage },
   '/admin/dashboard': { default: (props) => <ProtectedRoute><DeveloperLessonsPage {...props} /></ProtectedRoute> },
   '/admin/users': { default: (props) => <ProtectedRoute requireSuperAdmin><AdminUsersPage {...props} /></ProtectedRoute> },
@@ -130,6 +130,10 @@ const ROUTE_VIEW_REGISTRY = {
   '/task/market-yourself/diet': { default: (props) => <GrowYourPracticeAcademy {...props} brandKey="mantracare" /> },
   '/task/market-yourself/coach': { default: (props) => <GrowYourPracticeAcademy {...props} brandKey="mantracare" /> },
   '/task/market-yourself/doctor': { default: (props) => <GrowYourPracticeAcademy {...props} brandKey="mantracare" /> },
+  '/task/ocd-market-yourself': { default: (props) => <GrowYourPracticeAcademy {...props} brandKey="ocdmantra" /> },
+  '/task/ocd-market-yourself/therapy': { default: (props) => <GrowYourPracticeAcademy {...props} brandKey="ocdmantra" /> },
+  '/task/physio-market-yourself': { default: (props) => <GrowYourPracticeAcademy {...props} brandKey="physiomantra" /> },
+  '/task/physio-market-yourself/physiotherapy': { default: (props) => <GrowYourPracticeAcademy {...props} brandKey="physiomantra" /> },
   '/task/mantra-market-yourself': { default: (props) => <GrowYourPracticeAcademy {...props} brandKey="mantracare" /> },
   '/task/share-linkedin': { default: ShareLinkedinLessonPage },
   '/task/show-achievements': { default: ShowAchievementsLessonPage },

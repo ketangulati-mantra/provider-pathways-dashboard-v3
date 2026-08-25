@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import {
-  Header,
-  CompletionScreen,
-  Button
+  Header, Button
 } from '../components';
 import { CheckCircle2, Clock, Award, ChevronDown, ChevronUp, Star, ShieldCheck, Globe } from 'lucide-react';
 
@@ -57,7 +55,7 @@ const STAGES = [
 ];
 
 export default function PremiumProviderLessonPage({ onBack }) {
-  const { actionDone, lessonProgress, showCelebrate, handleCloseCelebration, handleActionComplete } = useLessonCompletion(LESSON_ID, onBack, {
+  const { actionDone, lessonProgress, handleActionComplete } = useLessonCompletion(LESSON_ID, onBack, {
     hasVideo: false,
     hasQuiz: false,
     hasAction: true
@@ -67,7 +65,7 @@ export default function PremiumProviderLessonPage({ onBack }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f8fafc' }} className="animate-fade-in">
-      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} points={REWARD_POINTS} />
+      <Header title={LESSON_TITLE} onBack={onBack} progress={lessonProgress} />
 
       <main className="academy-main-container" style={{
         flex: 1, padding: '28px 24px 48px', maxWidth: '800px', margin: '0 auto', width: '100%',
@@ -77,7 +75,6 @@ export default function PremiumProviderLessonPage({ onBack }) {
         <div style={{ marginBottom: '10px' }}>
           <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
             <span className="overview-meta-badge"><Clock size={11} /><span>3 min read</span></span>
-            <span className="overview-meta-badge points"><Award size={11} /><span>+{REWARD_POINTS} Points</span></span>
           </div>
           <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.4rem', color: 'var(--text-main)', margin: '0 0 8px' }}>
             The Provider Journey
@@ -222,15 +219,6 @@ export default function PremiumProviderLessonPage({ onBack }) {
         </div>
 
       </main>
-
-      {showCelebrate && (
-        <CompletionScreen
-          points={REWARD_POINTS}
-          title="Lesson Complete!"
-          subtitle="You have finished this lesson and boosted your provider score."
-          onClose={handleCloseCelebration}
-        />
-      )}
     </div>
   );
 }

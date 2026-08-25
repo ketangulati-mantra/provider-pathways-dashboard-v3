@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { useLessonCompletion } from '../hooks/useLessonCompletion';
 import {
   Header,
-  Button,
-  CompletionScreen,
-  useToast
+  Button, useToast
 } from '../components';
 import { completeLesson, goToDashboard } from '../mantra';
 import {
@@ -15,13 +13,10 @@ import './MobileAppLessonPage.css';
 export default function MobileAppLessonPage({ onBack }) {
   const lessonId = 'mobile-app';
 
-
+  console.log('on back: ', onBack)
 
   const {
-    lessonProgress,
-    showCelebrate,
-    handleCloseCelebration,
-    handleActionComplete
+    lessonProgress, handleActionComplete
   } = useLessonCompletion(lessonId, onBack, {
     hasVideo: false,
     hasQuiz: false,
@@ -56,7 +51,6 @@ export default function MobileAppLessonPage({ onBack }) {
         title="Download & Review MantraPartner App"
         onBack={onBack}
         progress={lessonProgress}
-        points={rewardPoints}
       />
 
       <div className="lesson-wrapper">
@@ -221,14 +215,6 @@ export default function MobileAppLessonPage({ onBack }) {
       </div>
 
       {/* 6. Celebration Overlay Screen */}
-      {showCelebrate && (
-        <CompletionScreen
-          points={rewardPoints}
-          title="Lesson Complete"
-          subtitle="Ready for the next lesson"
-          onClose={handleCloseCelebration}
-        />
-      )}
     </div>
   );
 }

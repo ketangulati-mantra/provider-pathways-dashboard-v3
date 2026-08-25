@@ -92,12 +92,6 @@ export const Header = ({
             </span>
           )}
         </h1>
-        {points !== null && (
-          <span className="overview-meta-badge points" style={{ marginLeft: 'auto', padding: '4px 10px', flexShrink: 0, whiteSpace: 'nowrap' }}>
-            <Award size={14} style={{ color: 'var(--color-accent-orange)', flexShrink: 0 }} />
-            <span>{t('header.points_earned', { points })}</span>
-          </span>
-        )}
       </div>
 
       {progress !== null && (
@@ -111,8 +105,6 @@ export const Header = ({
    3. PROGRESS INDICATOR
    ========================================================================== */
 export const Progress = ({ value = 0 }) => {
-  const { t } = useTranslation('shared');
-
   const roundedValue = Math.min(Math.max(Math.round(value), 0), 100);
 
   return (
@@ -124,18 +116,18 @@ export const Progress = ({ value = 0 }) => {
         />
       </div>
       <div className="academy-progress-meta">
-        <span>{t('progress.lesson_progress')}</span>
-        <span>{t('progress.completed', { percent: roundedValue })}</span>
+        <span>Lesson Progress</span>
+        <span>{roundedValue}% Completed</span>
       </div>
     </div>
   );
 };
 
 /* ==========================================================================
-   4. LESSON OVERVIEW CARD
+   4. OVERVIEW CARD COMPONENT
    ========================================================================== */
 export const OverviewCard = ({
-  title = "About this Lesson",
+  title,
   description,
   duration,
   points,
@@ -153,12 +145,6 @@ export const OverviewCard = ({
           <div className="overview-meta-badge">
             <Clock size={14} />
             <span>{duration}</span>
-          </div>
-        )}
-        {points && (
-          <div className="overview-meta-badge points">
-            <Award size={14} />
-            {t('overview.points', { points })}
           </div>
         )}
       </div>
@@ -754,100 +740,10 @@ export const QuizCard = ({
 };
 
 /* ==========================================================================
-   12. ACHIEVEMENT / COMPLETION SCREEN
+   12. ACHIEVEMENT / COMPLETION SCREEN (DISABLED - Handled via CTA only)
    ========================================================================== */
-export const CompletionScreen = ({ onClose }) => {
-  useEffect(() => {
-    if (onClose) onClose();
-  }, []);
+export const CompletionScreen = () => {
   return null;
-};
-const OldCompletionScreen = ({
-  points,
-  rewardPoints,
-  title,
-  subtitle,
-  onClose
-}) => {
-  const { t } = useTranslation('shared');
-  const actualPoints = rewardPoints !== undefined ? rewardPoints : (points !== undefined ? points : 10);
-
-  const displayTitle = title || t('completion.title') || 'Task Complete!';
-  const displaySubtitle = subtitle || t('completion.subtitle') || 'You have successfully finished this task.';
-
-  // Generate random confetti pieces positions
-  const confettiCount = 30;
-  const confettiArray = Array.from({ length: confettiCount });
-
-  // Freeze scroll on mount, restore on unmount
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, []);
-
-  return createPortal(
-    <div className="academy-completion-overlay">
-      {/* Confetti Animation */}
-      {confettiArray.map((_, idx) => {
-        const left = Math.random() * 100;
-        const delay = Math.random() * 3;
-        const color = ['#ff9e00', '#009fe3', '#7f22d0', '#10b981', '#ef4444'][Math.floor(Math.random() * 5)];
-        const size = Math.random() * 8 + 4;
-
-        return (
-          <div
-            key={idx}
-            className="confetti-piece"
-            style={{
-              left: `${left}%`,
-              animationDelay: `${delay}s`,
-              backgroundColor: color,
-              width: `${size}px`,
-              height: `${size}px`,
-              borderRadius: Math.random() > 0.5 ? '50%' : '0'
-            }}
-          />
-        );
-      })}
-
-      <div className="academy-completion-card">
-        <div className="completion-icon-wrapper">
-          <Trophy size={28} />
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <h2 className="completion-title">{displayTitle}</h2>
-          <p className="completion-desc">{displaySubtitle}</p>
-        </div>
-
-        <div className="completion-points-badge animate-scale-in">
-          <Sparkles size={16} fill="currentColor" />
-          <span>+{actualPoints} POINTS</span>
-        </div>
-
-
-
-        <Button
-          variant="primary"
-          onClick={() => {
-            if (onClose) {
-              onClose();
-            } else {
-              navigateToNativeScreen('Home');
-              handleExit();
-            }
-          }}
-          style={{ width: '100%', marginTop: '8px' }}
-        >
-          Take to portal
-        </Button>
-
-      </div>
-    </div>,
-    document.body
-  );
 };
 
 /* ==========================================================================

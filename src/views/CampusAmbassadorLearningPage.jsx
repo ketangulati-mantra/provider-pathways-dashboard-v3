@@ -17,7 +17,7 @@ export default function CampusAmbassadorLearningPage({ onBack }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-app)' }} className="animate-fade-in">
-      <Header title={LESSON_TITLE} onBack={handleBackToLanding} progress={0} points={50} />
+      <Header title={LESSON_TITLE} onBack={handleBackToLanding} progress={0} />
 
       <main style={{
         flex: 1,
