@@ -3,17 +3,40 @@ import { sql } from '../../db/client.js';
 export interface CorporateApplicationRecord {
   id?: number;
   user_id: string;
+  
+  // Referrer Details
   full_name?: string;
   email?: string;
   country_code?: string;
   phone?: string;
-  city: string;
+  relationship?: string;
+  connection_reach?: string;
+  
+  // Company / Organization Details
+  company_name?: string;
+  company_website?: string;
+  company_country?: string;
+  company_city?: string;
+  company_industry?: string;
+  company_size?: string;
+  
+  // Introduction Details
+  decision_maker?: string;
+  intro_method?: string;
+  direct_contact_person?: string;
+  company_needs?: any;
+  referral_context?: string;
+  
+  // Legacy compatibility fields
+  city?: string;
   company_connections?: string;
   industries?: string;
   linkedin_url?: string;
   previous_experience?: string;
-  motivation: string;
-  availability: string;
+  motivation?: string;
+  availability?: string;
+  
+  // Meta
   terms_accepted?: boolean;
   application_status?: string;
   review_status?: string;
@@ -23,6 +46,7 @@ export interface CorporateApplicationRecord {
   reviewed_at?: string;
   reviewed_by?: string;
   admin_notes?: string;
+  status_history?: any[];
   audit_history?: any[];
 }
 
@@ -44,6 +68,24 @@ export class CorporateRepository {
   async saveApplication(app: CorporateApplicationRecord): Promise<CorporateApplicationRecord> {
     const existing = await this.getByUserId(app.user_id);
 
+    const companyNeedsJson = Array.isArray(app.company_needs)
+      ? JSON.stringify(app.company_needs)
+      : (typeof app.company_needs === 'string' ? app.company_needs : '[]');
+
+    const companyNameVal = app.company_name || existing?.company_name || '';
+    const companyCountryVal = app.company_country || existing?.company_country || 'India';
+    const companyCityVal = app.company_city || existing?.company_city || app.city || existing?.city || '';
+    const companyWebsiteVal = app.company_website || existing?.company_website || '';
+    const companyIndustryVal = app.company_industry || app.industries || existing?.company_industry || existing?.industries || '';
+    const companySizeVal = app.company_size || existing?.company_size || '';
+
+    const relationshipVal = app.relationship || existing?.relationship || '';
+    const connectionReachVal = app.connection_reach || existing?.connection_reach || '';
+    const decisionMakerVal = app.decision_maker || existing?.decision_maker || app.company_connections || existing?.company_connections || '';
+    const introMethodVal = app.intro_method || existing?.intro_method || '';
+    const directContactVal = app.direct_contact_person || existing?.direct_contact_person || '';
+    const referralContextVal = app.referral_context || app.motivation || existing?.referral_context || existing?.motivation || '';
+
     if (existing) {
       const newVersion = (existing.version || 1) + 1;
       const currentAudit = Array.isArray(existing.audit_history) ? existing.audit_history : [];
@@ -59,15 +101,29 @@ export class CorporateRepository {
         SET
           full_name = ${app.full_name || existing.full_name || ''},
           email = ${app.email || existing.email || ''},
-          country_code = ${app.country_code || existing.country_code || '+1'},
+          country_code = ${app.country_code || existing.country_code || '+91'},
           phone = ${app.phone || existing.phone || ''},
-          city = ${app.city || existing.city || ''},
-          company_connections = ${app.company_connections || existing.company_connections || ''},
-          industries = ${app.industries || existing.industries || ''},
-          linkedin_url = ${app.linkedin_url || existing.linkedin_url || ''},
-          previous_experience = ${app.previous_experience || existing.previous_experience || ''},
-          motivation = ${app.motivation || existing.motivation || ''},
-          availability = ${app.availability || existing.availability || ''},
+          relationship = ${relationshipVal},
+          connection_reach = ${connectionReachVal},
+
+          company_name = ${companyNameVal},
+          company_website = ${companyWebsiteVal},
+          company_country = ${companyCountryVal},
+          company_city = ${companyCityVal},
+          company_industry = ${companyIndustryVal},
+          company_size = ${companySizeVal},
+
+          decision_maker = ${decisionMakerVal},
+          intro_method = ${introMethodVal},
+          direct_contact_person = ${directContactVal},
+          company_needs = ${companyNeedsJson}::jsonb,
+          referral_context = ${referralContextVal},
+
+          city = ${companyCityVal || companyCountryVal},
+          company_connections = ${decisionMakerVal},
+          industries = ${companyIndustryVal},
+          motivation = ${referralContextVal || 'Corporate Referral Introduction'},
+          availability = ${app.availability || existing.availability || 'Direct introduction'},
           terms_accepted = ${app.terms_accepted ?? true},
           application_status = 'submitted',
           review_status = 'pending',
@@ -88,14 +144,20 @@ export class CorporateRepository {
 
       const rows = await sql`
         INSERT INTO corporate_partner_applications (
-          user_id, full_name, email, country_code, phone, city,
-          company_connections, industries, linkedin_url, previous_experience,
-          motivation, availability, terms_accepted, application_status, review_status,
+          user_id, full_name, email, country_code, phone,
+          relationship, connection_reach,
+          company_name, company_website, company_country, company_city, company_industry, company_size,
+          decision_maker, intro_method, direct_contact_person, company_needs, referral_context,
+          city, company_connections, industries, motivation, availability,
+          terms_accepted, application_status, review_status,
           version, audit_history
         ) VALUES (
-          ${app.user_id}, ${app.full_name || ''}, ${app.email || ''}, ${app.country_code || '+1'}, ${app.phone || ''}, ${app.city || ''},
-          ${app.company_connections || ''}, ${app.industries || ''}, ${app.linkedin_url || ''}, ${app.previous_experience || ''},
-          ${app.motivation || ''}, ${app.availability || ''}, ${app.terms_accepted ?? true}, 'submitted', 'pending',
+          ${app.user_id}, ${app.full_name || ''}, ${app.email || ''}, ${app.country_code || '+91'}, ${app.phone || ''},
+          ${relationshipVal}, ${connectionReachVal},
+          ${companyNameVal}, ${companyWebsiteVal}, ${companyCountryVal}, ${companyCityVal}, ${companyIndustryVal}, ${companySizeVal},
+          ${decisionMakerVal}, ${introMethodVal}, ${directContactVal}, ${companyNeedsJson}::jsonb, ${referralContextVal},
+          ${companyCityVal || companyCountryVal}, ${decisionMakerVal}, ${companyIndustryVal}, ${referralContextVal || 'Corporate Referral Introduction'}, ${app.availability || 'Direct introduction'},
+          ${app.terms_accepted ?? true}, 'submitted', 'pending',
           1, ${JSON.stringify(initialAudit)}
         )
         RETURNING *;
@@ -112,9 +174,9 @@ export class CorporateRepository {
 
     const rows = await sql`
       INSERT INTO corporate_partner_applications (
-        user_id, city, motivation, availability, application_status, review_status
+        user_id, city, company_country, motivation, availability, application_status, review_status
       ) VALUES (
-        ${userId}, 'Pending', 'Express Interest', 'Flexible', 'interested', 'pending'
+        ${userId}, 'Pending', 'India', 'Express Interest', 'Direct introduction', 'interested', 'pending'
       )
       RETURNING *;
     `;
@@ -131,20 +193,34 @@ export class CorporateRepository {
       let apps = rows as unknown as CorporateApplicationRecord[];
 
       if (statusFilter && statusFilter !== 'all') {
-        if (statusFilter === 'submitted') {
-          apps = apps.filter(a => a.application_status === 'submitted' || a.application_status === 'under_review');
+        if (statusFilter === 'submitted' || statusFilter === 'pending') {
+          apps = apps.filter(a => a.application_status === 'submitted' || a.application_status === 'pending' || a.application_status === 'under_review');
         } else {
           apps = apps.filter(a => a.application_status === statusFilter);
         }
       }
 
-      if (searchQuery && searchQuery.trim()) {
-        const q = searchQuery.trim().toLowerCase();
-        apps = apps.filter(a =>
-          (a.full_name && a.full_name.toLowerCase().includes(q)) ||
-          (a.email && a.email.toLowerCase().includes(q)) ||
-          (a.city && a.city.toLowerCase().includes(q))
-        );
+      if (searchQuery && searchQuery.trim() !== '') {
+        const query = searchQuery.toLowerCase().trim();
+        apps = apps.filter(a => {
+          const name = (a.full_name || '').toLowerCase();
+          const email = (a.email || '').toLowerCase();
+          const comp = (a.company_name || '').toLowerCase();
+          const ind = (a.company_industry || a.industries || '').toLowerCase();
+          const country = (a.company_country || '').toLowerCase();
+          const city = (a.company_city || a.city || '').toLowerCase();
+          const contactRole = (a.decision_maker || a.company_connections || '').toLowerCase();
+
+          return (
+            name.includes(query) ||
+            email.includes(query) ||
+            comp.includes(query) ||
+            ind.includes(query) ||
+            country.includes(query) ||
+            city.includes(query) ||
+            contactRole.includes(query)
+          );
+        });
       }
 
       return apps;
@@ -154,57 +230,12 @@ export class CorporateRepository {
     }
   }
 
-  async getLearningProgress(userId: string): Promise<any | null> {
-    try {
-      const rows = await sql`
-        SELECT * FROM corporate_learning_progress
-        WHERE user_id = ${userId} AND program_id = 'corporate_growth_partner'
-        LIMIT 1;
-      `;
-      return rows.length > 0 ? rows[0] : null;
-    } catch (err) {
-      console.error('[CorporateRepository] Error getting learning progress:', err);
-      return null;
-    }
-  }
-
-  async upsertLearningProgress(
-    userId: string,
-    currentModuleId: string,
-    completedModuleIds: string[],
-    progressPercent: number,
-    timeSpentSeconds: number = 0
-  ): Promise<any> {
-    try {
-      const jsonCompleted = JSON.stringify(completedModuleIds);
-      const rows = await sql`
-        INSERT INTO corporate_learning_progress (
-          user_id, program_id, current_module_id, completed_module_ids, progress_percent, time_spent_seconds, last_accessed_at, updated_at
-        ) VALUES (
-          ${userId}, 'corporate_growth_partner', ${currentModuleId}, ${jsonCompleted}::jsonb, ${progressPercent}, ${timeSpentSeconds}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-        )
-        ON CONFLICT (user_id, program_id) DO UPDATE SET
-          current_module_id = EXCLUDED.current_module_id,
-          completed_module_ids = EXCLUDED.completed_module_ids,
-          progress_percent = EXCLUDED.progress_percent,
-          time_spent_seconds = corporate_learning_progress.time_spent_seconds + ${timeSpentSeconds},
-          last_accessed_at = CURRENT_TIMESTAMP,
-          updated_at = CURRENT_TIMESTAMP
-        RETURNING *;
-      `;
-      return rows[0];
-    } catch (err) {
-      console.error('[CorporateRepository] Error upserting learning progress:', err);
-      throw err;
-    }
-  }
   async updateReviewer(id: string, reviewer: string, status?: string): Promise<boolean> {
     try {
       const isUnassigned = !reviewer || reviewer === 'Unassigned' || status === 'pending' || status === 'submitted';
       const targetReviewer = isUnassigned ? 'Unassigned' : reviewer;
       const targetStatus = status || (isUnassigned ? 'submitted' : 'under_review');
 
-      // Fetch existing row to update status_history
       let historyLogs: any[] = [];
       try {
         const existing = await sql`
@@ -258,6 +289,53 @@ export class CorporateRepository {
     } catch (err) {
       console.error('[corporateRepository.updateReviewer] Error:', err);
       return false;
+    }
+  }
+
+  async getLearningProgress(userId: string) {
+    try {
+      const rows = await sql`
+        SELECT * FROM corporate_learning_progress
+        WHERE user_id = ${userId} AND program_id = 'corporate_growth_partner'
+        LIMIT 1;
+      `;
+      return rows.length > 0 ? rows[0] : null;
+    } catch (err) {
+      console.error('[CorporateRepository] Error getting learning progress:', err);
+      return null;
+    }
+  }
+
+  async upsertLearningProgress(
+    userId: string,
+    currentModuleId: string,
+    completedModuleIds: string[],
+    progressPercent: number,
+    timeSpentSeconds: number
+  ) {
+    try {
+      const jsonCompleted = JSON.stringify(completedModuleIds);
+      const rows = await sql`
+        INSERT INTO corporate_learning_progress (
+          user_id, program_id, current_module_id, completed_module_ids,
+          progress_percent, time_spent_seconds, last_accessed_at, updated_at
+        ) VALUES (
+          ${userId}, 'corporate_growth_partner', ${currentModuleId}, ${jsonCompleted}::jsonb, ${progressPercent}, ${timeSpentSeconds}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+        ON CONFLICT (user_id, program_id)
+        DO UPDATE SET
+          current_module_id = ${currentModuleId},
+          completed_module_ids = ${jsonCompleted}::jsonb,
+          progress_percent = ${progressPercent},
+          time_spent_seconds = corporate_learning_progress.time_spent_seconds + ${timeSpentSeconds},
+          last_accessed_at = CURRENT_TIMESTAMP,
+          updated_at = CURRENT_TIMESTAMP
+        RETURNING *;
+      `;
+      return rows[0];
+    } catch (err) {
+      console.error('[CorporateRepository] Error upserting learning progress:', err);
+      return null;
     }
   }
 }

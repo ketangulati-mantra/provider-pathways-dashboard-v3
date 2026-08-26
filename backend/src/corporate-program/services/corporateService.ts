@@ -34,15 +34,16 @@ export class CorporateService {
   }
 
   async getAdminApplications(statusFilter?: string, searchQuery?: string) {
-    const apps = await corporateRepository.getAllApplications(statusFilter, searchQuery);
-    const totalApplications = apps.length;
+    // Fetch all applications to calculate global counts for each pipeline status tab
+    const allApps = await corporateRepository.getAllApplications('all', searchQuery);
+    const totalApplications = allApps.length;
 
     let pendingCount = 0;
     let underReviewCount = 0;
     let reviewedCount = 0;
     let mailSentCount = 0;
 
-    apps.forEach((a: any) => {
+    allApps.forEach((a: any) => {
       const st = (a.application_status || 'submitted').toLowerCase();
       if (st === 'submitted' || st === 'pending' || st === '') {
         pendingCount++;
@@ -55,8 +56,28 @@ export class CorporateService {
       }
     });
 
+    // Filter applications for the table list if a specific tab is active
+    let filteredApps = allApps;
+    if (statusFilter && statusFilter !== 'all') {
+      if (statusFilter === 'pending' || statusFilter === 'submitted') {
+        filteredApps = allApps.filter((a: any) => {
+          const st = (a.application_status || 'submitted').toLowerCase();
+          return st === 'submitted' || st === 'pending' || st === '';
+        });
+      } else if (statusFilter === 'under_review') {
+        filteredApps = allApps.filter((a: any) => (a.application_status || '').toLowerCase() === 'under_review');
+      } else if (statusFilter === 'reviewed') {
+        filteredApps = allApps.filter((a: any) => {
+          const st = (a.application_status || '').toLowerCase();
+          return st === 'reviewed' || st === 'approved';
+        });
+      } else if (statusFilter === 'mail_sent') {
+        filteredApps = allApps.filter((a: any) => (a.application_status || '').toLowerCase() === 'mail_sent');
+      }
+    }
+
     return {
-      applications: apps,
+      applications: filteredApps,
       totalApplications,
       pendingCount,
       statusCounts: {

@@ -17,6 +17,7 @@ router.post('/interest', postCorporateInterest);
 router.post('/application', submitCorporateApplication);
 router.get('/admin/applications', getAdminCorporateApplications);
 router.patch('/admin/applications/:id/reviewer', patchCorporateReviewer);
+router.put('/admin/applications/:id/reviewer', patchCorporateReviewer);
 
 // Learning Academy Endpoints
 router.get('/learning/progress', getLearningProgress);

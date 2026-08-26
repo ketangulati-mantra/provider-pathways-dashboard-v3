@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
   Building2, HeartHandshake, ShieldCheck, TrendingUp, Users, Award,
-  CheckCircle2, ArrowRight, ArrowLeft, HelpCircle, Briefcase, Network, Sparkles, ChevronDown
+  CheckCircle2, ArrowRight, ArrowLeft, HelpCircle, Briefcase, Network, Sparkles, ChevronDown,
+  Info, XCircle, Check, DollarSign, Target
 } from 'lucide-react';
 import { goBack } from '../../mantra';
 
@@ -9,119 +10,137 @@ import { goBack } from '../../mantra';
 
 const STEPS = [
   {
-    id: 'why',
-    title: 'Why Corporate Wellness Matters',
-    badge: 'Educational Overview • Page 1 of 4',
+    id: 'intro',
+    title: 'Know a Company That Could Benefit From Mantra?',
+    badge: 'Referral Overview • Page 1 of 4',
     content: (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <p style={{ margin: 0, fontSize: '0.88rem', color: '#475569', lineHeight: 1.55 }}>
-          Over 65% of corporate employees report high stress, anxiety, and burnout. Forward-thinking organizations are actively looking for professional wellness and EAP solutions to support their workforce.
+        <p style={{ margin: 0, fontSize: '0.92rem', color: '#334155', lineHeight: 1.55, fontWeight: 600 }}>
+          Refer a company or organization to Mantra for EAP and corporate wellness solutions. If they become a Mantra corporate client, you may be eligible to earn 15–20% of the contract value and may have an opportunity to become their preferred provider.
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
-          {[
-            {
-              icon: HeartHandshake,
-              title: 'Workforce Mental Wellbeing',
-              desc: 'Organizations need professional guidance to build proactive mental health & counseling initiatives.'
-            },
-            {
-              icon: ShieldCheck,
-              title: 'Burnout Prevention & Resilience',
-              desc: 'Structured corporate wellness programs significantly reduce absenteeism and workplace stress.'
-            },
-            {
-              icon: TrendingUp,
-              title: 'Enhanced Organizational Productivity',
-              desc: 'Companies investing in wellness witness up to 4x ROI through increased focus and talent retention.'
-            },
-            {
-              icon: Briefcase,
-              title: 'Modern Workplace Culture',
-              desc: 'Corporations now integrate mental health counseling into their core employee benefit packages.'
-            }
-          ].map((item, idx) => {
-            const Icon = item.icon;
-            return (
-              <div key={idx} style={{
-                background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0',
-                padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px'
+        {/* Visual Workflow: Provider -> Referral -> Contract -> 15-20% Earn */}
+        <div style={{
+          background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)',
+          borderRadius: '14px',
+          border: '1.5px solid #bfdbfe',
+          padding: '16px 14px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px'
+        }}>
+          <div style={{ fontSize: '0.72rem', fontWeight: 900, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            HOW THE REFERRAL OPPORTUNITY WORKS
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
+            gap: '8px',
+            alignItems: 'stretch'
+          }}>
+            {[
+              { step: 'YOU', sub: 'Know a company', bg: '#ffffff', color: '#0f172a', border: '#cbd5e1' },
+              { step: 'INTRODUCE MANTRA', sub: 'Make the connection', bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe' },
+              { step: 'MANTRA', sub: 'Handles the corporate conversation', bg: '#ffffff', color: '#0f172a', border: '#cbd5e1' },
+              { step: 'COMPANY', sub: 'Signs a qualifying contract', bg: '#ecfdf5', color: '#059669', border: '#a7f3d0' },
+              { step: 'YOU', sub: 'Earn 15–20% + preferred-provider opportunity', bg: '#fef3c7', color: '#b45309', border: '#fcd34d' }
+            ].map((node, i) => (
+              <div key={i} style={{
+                background: node.bg,
+                border: `1.5px solid ${node.border}`,
+                borderRadius: '10px',
+                padding: '10px 8px',
+                textAlign: 'center',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                minHeight: '72px'
               }}>
-                <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: '#eff6ff', border: '1px solid #bfdbfe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
-                  <Icon size={18} />
-                </div>
-                <h4 style={{ margin: 0, fontSize: '0.86rem', fontWeight: 800, color: '#0f172a' }}>{item.title}</h4>
-                <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b', lineHeight: 1.45 }}>{item.desc}</p>
+                <div style={{ fontSize: '0.74rem', fontWeight: 900, color: node.color, lineHeight: 1.2 }}>{node.step}</div>
+                <div style={{ fontSize: '0.66rem', color: '#64748b', marginTop: '4px', lineHeight: 1.25 }}>{node.sub}</div>
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginTop: '4px' }}>
-          {[
-            { stat: '87%', label: 'Employees valuing wellness benefits', color: '#2563eb' },
-            { stat: '$3.27', label: 'Saved per $1 invested in wellness', color: '#059669' },
-            { stat: '41%', label: 'Reduction in workplace absenteeism', color: '#7c3aed' }
-          ].map((s, i) => (
-            <div key={i} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 8px', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.2rem', fontWeight: 900, color: s.color }}>{s.stat}</div>
-              <div style={{ fontSize: '0.66rem', color: '#64748b', marginTop: '2px', lineHeight: 1.3 }}>{s.label}</div>
+        <p style={{ margin: 0, fontSize: '0.86rem', color: '#475569', lineHeight: 1.55 }}>
+          If you already have a genuine relationship with a company, HR team, founder, business owner, organization, or other relevant decision-maker, you can introduce them to Mantra.
+        </p>
+
+        <p style={{ margin: 0, fontSize: '0.86rem', color: '#475569', lineHeight: 1.55 }}>
+          You make the introduction. Mantra's corporate team handles the conversation and next steps from there.
+        </p>
+
+        {/* Prominent Disclaimer Card */}
+        <div style={{
+          background: '#fefce8',
+          border: '1.5px solid #fef08a',
+          borderRadius: '12px',
+          padding: '14px 16px',
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'flex-start'
+        }}>
+          <Info size={20} color="#ca8a04" style={{ flexShrink: 0, marginTop: '2px' }} />
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: 900, color: '#854d0e', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '3px' }}>
+              THIS IS NOT A JOB APPLICATION
             </div>
-          ))}
+            <div style={{ fontSize: '0.78rem', color: '#713f12', lineHeight: 1.45 }}>
+              This is a referral partnership opportunity for Mantra providers who want to introduce companies or organizations to Mantra's EAP and corporate wellness services.
+            </div>
+          </div>
         </div>
       </div>
     )
   },
   {
     id: 'benefits',
-    title: 'Benefits of Joining the Program',
+    title: 'Why Refer a Company to Mantra?',
     badge: 'Partner Advantages • Page 2 of 4',
     content: (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         <p style={{ margin: 0, fontSize: '0.88rem', color: '#475569', lineHeight: 1.55 }}>
-          As a Corporate Growth Partner, you help organizations build healthier workplaces while expanding your own professional reach and earning rewards.
+          Your existing professional relationships can create opportunities beyond individual client referrals.
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
           {[
             {
-              icon: HeartHandshake,
-              title: 'Help Organizations Improve Wellbeing',
-              desc: 'Create healthier workplace environments and empower employees with expert mental health care.'
+              icon: Building2,
+              title: '01. Refer Companies',
+              desc: 'Introduce Mantra to companies or organizations you already know or have access to.'
             },
             {
               icon: Award,
-              title: 'Earn Program Commissions (15–20%)',
-              desc: 'Receive competitive commission rewards on finalized corporate agreements for successful referrals.'
+              title: '02. Earn From Successful Referrals',
+              desc: 'Receive 15–20% of the contract value when a referred company signs a qualifying Mantra contract.'
             },
             {
               icon: Sparkles,
-              title: 'Preferred Provider Opportunities',
-              desc: 'Get priority opportunity to serve as a preferred clinical provider for organizations you help onboard.'
+              title: '03. Become a Preferred Provider',
+              desc: 'A successful corporate referral may create an opportunity for you to serve that organization\'s employees as a preferred or primary provider, subject to the applicable arrangement.'
             },
             {
-              icon: Briefcase,
-              title: 'Business & Partnership Skills',
-              desc: 'Learn strategic business development, executive communication, and B2B partnership skills.'
-            },
-            {
-              icon: Network,
-              title: 'Expand Professional Network',
-              desc: 'Connect with HR decision-makers, corporate wellness heads, and an elite network of fellow partners.'
+              icon: TrendingUp,
+              title: '04. Grow Beyond Individual Referrals',
+              desc: 'Corporate relationships can create opportunities to support employees through Mantra\'s EAP and wellness programs.'
             }
           ].map((b, idx) => {
             const Icon = b.icon;
             return (
               <div key={idx} style={{
                 display: 'flex', alignItems: 'flex-start', gap: '12px',
-                background: '#ffffff', borderRadius: '12px', padding: '12px 14px',
-                border: '1px solid #e2e8f0'
+                background: '#ffffff', borderRadius: '12px', padding: '14px',
+                border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
               }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
-                  <Icon size={16} />
+                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
+                  <Icon size={18} />
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <h4 style={{ margin: '0 0 2px', fontSize: '0.86rem', fontWeight: 800, color: '#0f172a' }}>{b.title}</h4>
+                  <h4 style={{ margin: '0 0 4px', fontSize: '0.86rem', fontWeight: 800, color: '#0f172a' }}>{b.title}</h4>
                   <p style={{ margin: 0, fontSize: '0.78rem', color: '#475569', lineHeight: 1.45 }}>{b.desc}</p>
                 </div>
               </div>
@@ -133,20 +152,20 @@ const STEPS = [
   },
   {
     id: 'how',
-    title: 'How Corporate Partnerships Work',
+    title: 'How the Referral Process Works',
     badge: 'Process Overview • Page 3 of 4',
     content: (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         <p style={{ margin: 0, fontSize: '0.88rem', color: '#475569', lineHeight: 1.55 }}>
-          Understanding the complete process ensures a smooth collaboration between you and MantraCare's corporate team.
+          Your role is simple: make the introduction and let Mantra handle the corporate conversation.
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {[
-            { step: '01', title: 'Express Interest & Apply', desc: 'Submit a simple application highlighting your background and availability.' },
-            { step: '02', title: 'Review & Partner Orientation', desc: 'Our team reviews your profile and conducts a brief orientation on Mantra EAP solutions.' },
-            { step: '03', title: 'Introduce Corporate Leads', desc: 'Connect MantraCare with HR executives or decision-makers seeking wellness solutions.' },
-            { step: '04', title: 'Collaborate & Grow', desc: 'Earn referral rewards, deliver workshops if qualified, and build long-term provider relationships.' }
+            { step: '01', title: 'Know a Potential Company', desc: 'Think about companies, organizations, startups, schools, businesses, clinics, or other organizations where you already have a genuine professional connection.' },
+            { step: '02', title: 'Make the Introduction', desc: 'Connect Mantra with the appropriate HR leader, business owner, decision-maker, leadership team, or other relevant contact.' },
+            { step: '03', title: 'Mantra Takes It Forward', desc: 'Mantra\'s corporate team handles the EAP discussion, proposal, commercial conversation, and onboarding.' },
+            { step: '04', title: 'Earn & Grow', desc: 'If the company signs a qualifying contract with Mantra, you may be eligible to earn 15–20% of the contract value and may have an opportunity to become their preferred or primary provider, subject to the applicable arrangement.' }
           ].map((s, idx) => (
             <div key={idx}>
               <div style={{
@@ -165,16 +184,36 @@ const STEPS = [
                   <p style={{ margin: 0, fontSize: '0.78rem', color: '#475569', lineHeight: 1.45 }}>{s.desc}</p>
                 </div>
               </div>
-              {idx < 3 && <div style={{ width: '2px', height: '10px', background: '#bfdbfe', margin: '0 0 0 28px' }} />}
+              {idx < 3 && <div style={{ width: '2px', height: '8px', background: '#bfdbfe', margin: '0 0 0 28px' }} />}
             </div>
           ))}
         </div>
 
-        <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '10px', padding: '12px 14px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-          <CheckCircle2 size={16} color="#059669" style={{ flexShrink: 0, marginTop: '2px' }} />
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#065f46', marginBottom: '2px' }}>You are NOT expected to negotiate or sell</div>
-            <div style={{ fontSize: '0.76rem', color: '#047857', lineHeight: 1.45 }}>Your role is simply to identify opportunities and make warm introductions. MantraCare's experienced corporate team handles proposals, negotiations, contracts, and implementation.</div>
+        {/* Roles Breakdown Box: Your Part is Simple vs You do NOT need to */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px', marginTop: '6px' }}>
+          <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '10px', padding: '12px 14px' }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: 900, color: '#065f46', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <CheckCircle2 size={16} color="#059669" /> YOUR PART IS SIMPLE
+            </div>
+            <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '0.76rem', color: '#047857', lineHeight: 1.5 }}>
+              <li>Identify a company you have a genuine connection with</li>
+              <li>Make the introduction to Mantra</li>
+              <li>Help make the initial connection</li>
+              <li>Let Mantra's corporate team handle the EAP conversation and next steps</li>
+            </ul>
+          </div>
+
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '12px 14px' }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: 900, color: '#991b1b', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <XCircle size={16} color="#dc2626" /> YOU DO NOT NEED TO
+            </div>
+            <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '0.76rem', color: '#b91c1c', lineHeight: 1.5 }}>
+              <li>Apply for a job</li>
+              <li>Become a Mantra employee</li>
+              <li>Become a corporate salesperson</li>
+              <li>Negotiate the EAP contract</li>
+              <li>Manage the corporate implementation</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -182,8 +221,8 @@ const STEPS = [
   },
   {
     id: 'faq',
-    title: 'Program Summary & Application',
-    badge: 'Final Step • Page 4 of 4',
+    title: 'Have a Company You Can Refer?',
+    badge: 'Referral Submission • Page 4 of 4',
     content: (
       <FaqAndApplyStep />
     )
@@ -194,42 +233,109 @@ function FaqAndApplyStep() {
   const [openIdx, setOpenIdx] = useState(0);
 
   const faqs = [
-    { q: 'What is the role of a Corporate Growth Partner?', a: 'As a Corporate Growth Partner, you serve as a trusted bridge between MantraCare and corporate organizations. You facilitate introductions to HR leaders, help tailor wellness solutions, and position employee wellbeing as a strategic priority.' },
-    { q: 'Do I need prior sales experience?', a: 'No prior sales experience is required. You are positioned strictly as a professional partner, not a salesperson. Mantra provides full collateral, enterprise presentations, and handles all proposal negotiations.' },
-    { q: 'How does the commission structure work?', a: 'Corporate Growth Partners earn 15–20% commission on finalized corporate wellness contracts, subject to applicable program terms and the finalized agreement.' },
-    { q: 'Can I provide clinical services to onboarded companies?', a: 'Yes! Where appropriate, Corporate Growth Partners receive priority opportunity to serve as preferred providers for therapy sessions, workshops, and webinars for companies they help onboard.' }
+    {
+      q: 'Is this a job opportunity?',
+      a: 'No. This is a referral partnership opportunity for Mantra providers who can introduce companies or organizations to Mantra.'
+    },
+    {
+      q: 'What am I referring?',
+      a: 'You are referring a company or organization that may be interested in Mantra\'s EAP and corporate wellness solutions.'
+    },
+    {
+      q: 'Do I need to sell Mantra\'s services?',
+      a: 'No. Your primary role is to make the introduction. Mantra\'s corporate team handles the EAP discussion and next steps.'
+    },
+    {
+      q: 'How much can I earn?',
+      a: 'Eligible referrals may earn 15–20% of the contract value when the referred company enters into a qualifying contract with Mantra.'
+    },
+    {
+      q: 'Can I become the provider for that company?',
+      a: 'You may have the opportunity to become the organization\'s preferred or primary provider, depending on the corporate arrangement and applicable requirements.'
+    },
+    {
+      q: 'Will every referral result in a contract?',
+      a: 'No. A referral does not guarantee that the company will choose Mantra or enter into a contract.'
+    },
+    {
+      q: 'Do I become a Mantra employee?',
+      a: 'No. This is a referral partnership opportunity and does not create an employment relationship with Mantra.'
+    }
   ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <p style={{ margin: 0, fontSize: '0.88rem', color: '#475569', lineHeight: 1.55 }}>
-        Review common questions below before submitting your interest to join the Corporate Growth Partner Program.
+        Do you already know a company, organization, HR team, or business decision-maker who may be interested in Mantra's EAP or corporate wellness solutions?
       </p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {faqs.map((faq, idx) => {
-          const isOpen = openIdx === idx;
-          return (
-            <div key={idx} style={{ border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden', background: '#ffffff' }}>
-              <button
-                onClick={() => setOpenIdx(isOpen ? null : idx)}
-                style={{
-                  width: '100%', padding: '12px 14px', background: isOpen ? '#f8fafc' : '#ffffff',
-                  border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  textAlign: 'left', cursor: 'pointer', fontSize: '0.84rem', fontWeight: 800, color: '#0f172a'
-                }}
-              >
-                <span style={{ paddingRight: '8px' }}>{faq.q}</span>
-                <ChevronDown size={15} color="#64748b" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', flexShrink: 0 }} />
-              </button>
-              {isOpen && (
-                <div style={{ padding: '10px 14px 14px', fontSize: '0.78rem', color: '#475569', lineHeight: 1.55, borderTop: '1px solid #f1f5f9' }}>
-                  {faq.a}
-                </div>
-              )}
-            </div>
-          );
-        })}
+      {/* Prominent Informational Box */}
+      <div style={{
+        background: '#f8fafc',
+        borderRadius: '12px',
+        border: '1px solid #e2e8f0',
+        padding: '14px 16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px'
+      }}>
+        <div>
+          <div style={{ fontSize: '0.74rem', fontWeight: 900, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>
+            THIS FORM IS FOR REFERRALS
+          </div>
+          <div style={{ fontSize: '0.8rem', color: '#334155', lineHeight: 1.45 }}>
+            Submit this form if you would like to introduce a company to Mantra. This is not a job application and does not mean you are applying to work for Mantra.
+          </div>
+        </div>
+
+        <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '8px' }}>
+          <div style={{ fontSize: '0.72rem', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', marginBottom: '2px' }}>
+            WHAT HAPPENS AFTER YOU REFER?
+          </div>
+          <div style={{ fontSize: '0.78rem', color: '#475569', lineHeight: 1.45 }}>
+            Mantra's corporate team will review the referral and handle the EAP discussion and next steps with the company.
+          </div>
+        </div>
+
+        <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '8px' }}>
+          <div style={{ fontSize: '0.72rem', fontWeight: 900, color: '#059669', textTransform: 'uppercase', marginBottom: '2px' }}>
+            YOUR POTENTIAL BENEFIT
+          </div>
+          <div style={{ fontSize: '0.78rem', color: '#475569', lineHeight: 1.45 }}>
+            If your referred company signs a qualifying contract with Mantra, you may be eligible to receive 15–20% of the contract value. You may also have an opportunity to become a preferred or primary provider for that organization, subject to the applicable arrangement.
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0f172a', marginBottom: '8px' }}>
+          Frequently Asked Questions
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {faqs.map((faq, idx) => {
+            const isOpen = openIdx === idx;
+            return (
+              <div key={idx} style={{ border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden', background: '#ffffff' }}>
+                <button
+                  onClick={() => setOpenIdx(isOpen ? null : idx)}
+                  style={{
+                    width: '100%', padding: '12px 14px', background: isOpen ? '#f8fafc' : '#ffffff',
+                    border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    textAlign: 'left', cursor: 'pointer', fontSize: '0.84rem', fontWeight: 800, color: '#0f172a'
+                  }}
+                >
+                  <span style={{ paddingRight: '8px' }}>{faq.q}</span>
+                  <ChevronDown size={15} color="#64748b" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', flexShrink: 0 }} />
+                </button>
+                {isOpen && (
+                  <div style={{ padding: '10px 14px 14px', fontSize: '0.78rem', color: '#475569', lineHeight: 1.55, borderTop: '1px solid #f1f5f9' }}>
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -285,10 +391,10 @@ export default function CorporateLandingPage({ onExpressInterest, onOptOut, onBa
         {/* Program Title Banner */}
         <div style={{ marginBottom: '16px' }}>
           <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>
-            Mantra Executive Partnerships
+            Mantra Corporate Referral Program
           </div>
           <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', lineHeight: 1.25 }}>
-            Corporate Growth Partner Program
+            Refer Companies & Earn 15–20% Contract Value
           </h1>
         </div>
 
@@ -301,22 +407,22 @@ export default function CorporateLandingPage({ onExpressInterest, onOptOut, onBa
             }}>
               {stepData.badge}
             </span>
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b' }}>
+            <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#64748b' }}>
               Step {currentStep + 1} of {totalSteps}
             </span>
           </div>
 
-          {/* Progress Bar */}
-          <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+          <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
             <div style={{
               width: `${((currentStep + 1) / totalSteps) * 100}%`,
-              height: '100%', background: 'linear-gradient(90deg, #2563eb, #3b82f6)',
-              borderRadius: '3px', transition: 'width 0.3s ease-in-out'
+              height: '100%',
+              background: 'linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)',
+              transition: 'width 0.3s ease'
             }} />
           </div>
         </div>
 
-        {/* Step Card */}
+        {/* Step Content Card */}
         <div style={{
           background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0',
           padding: '20px 16px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
@@ -376,14 +482,14 @@ export default function CorporateLandingPage({ onExpressInterest, onOptOut, onBa
                 <button
                   onClick={onExpressInterest}
                   style={{
-                    flex: '1 1 180px', padding: '10px 18px', borderRadius: '9px', border: 'none',
+                    flex: '1 1 200px', padding: '10px 18px', borderRadius: '9px', border: 'none',
                     background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
                     color: '#ffffff', fontWeight: 900, fontSize: '0.86rem', cursor: 'pointer',
                     boxShadow: '0 4px 14px rgba(5, 150, 105, 0.35)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
                   }}
                 >
-                  Yes, I'm Interested <ArrowRight size={16} />
+                  Refer a Company to Mantra <ArrowRight size={16} />
                 </button>
               </div>
             )}

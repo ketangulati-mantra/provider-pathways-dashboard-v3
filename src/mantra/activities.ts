@@ -248,7 +248,7 @@ export const activities: Activity[] = [
     lessonId: 'corporate-eap',
     activityId: '',
     services: ['*'],
-    title: 'Corporate Growth Partner Program',
+    title: 'Mantra Corporate Referral Program',
     rewardPoints: 50,
     estimatedDuration: '5 min',
     route: '/task/corporate-eap'

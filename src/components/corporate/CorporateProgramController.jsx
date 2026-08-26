@@ -49,7 +49,8 @@ export default function CorporateProgramController({ onBack }) {
   }, [userId]);
 
   // Handle "YES, I'M INTERESTED" -> Open Application Modal (only form submission records entry)
-  const handleExpressInterest = () => {
+  const handleExpressInterest = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     setShowAppModal(true);
   };
 
