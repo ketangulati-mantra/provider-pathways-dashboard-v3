@@ -159,10 +159,11 @@ export default function DeveloperLessonsPage({ onNavigate }) {
       setServiceContext(act.services[0]);
     }
     const targetRoute = act.route || `/task/${act.lessonId}`;
-    
-    // Construct clean URL with origin and hash route so new tabs always render the exact task
     const cleanRoute = targetRoute.startsWith('/') ? targetRoute : `/${targetRoute}`;
-    const targetUrl = preserveQueryParams(`${window.location.origin}/#${cleanRoute}`);
+    
+    // Preserve current origin and base pathname (e.g., / or /app/content/provider_pathways)
+    const basePath = window.location.pathname.endsWith('/') ? window.location.pathname.slice(0, -1) : window.location.pathname;
+    const targetUrl = preserveQueryParams(`${window.location.origin}${basePath}/#${cleanRoute}`);
     window.open(targetUrl, '_blank', 'noopener,noreferrer');
   };
 
