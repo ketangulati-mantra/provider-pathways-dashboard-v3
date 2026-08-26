@@ -102,18 +102,8 @@ export function handleExit() {
     return;
   }
 
-  // 3. Standalone browser:
-  // On localhost / dev environments, route back to local pathways dashboard
-  const isLocalhost = 
-    window.location.hostname === "localhost" || 
-    window.location.hostname === "127.0.0.1";
-
-  if (isLocalhost) {
-    window.location.href = `${window.location.origin}/#/admin/pathways`;
-  } else {
-    // On production standalone browser
-    window.location.href = "https://provider.mantracare.com/tasks";
-  }
+  // 3. Standalone browser
+  window.location.href = "https://provider.mantracare.com/tasks";
 }
 
 /**
@@ -161,7 +151,7 @@ export function navigateToClientsPage() {
 		window.parent.postMessage(
 			{
 				action: 'navigate',
-				params: { page: "/clients" }
+				page: '/clients',
 			},
 			'https://provider.mantracare.com',
 		);
@@ -171,7 +161,6 @@ export function navigateToClientsPage() {
 	// 3. Standalone browser
 	window.location.href = 'https://provider.mantracare.com/clients';
 }
-
 /**
  * Navigates to the Bank Details page across all 3 contexts:
  * 1. React Native WebView -> window.ReactNativeWebView.postMessage(JSON.stringify({ action: "navigate", params: { page: "/settings/bank" } }))
@@ -223,7 +212,7 @@ export const goBack = (onBackCallback?: () => void) => {
  * Redirects back to Dashboard / Exit.
  */
 export const goToDashboard = () => {
-  return handleExit();
+  handleExit();
 };
 
 /**
