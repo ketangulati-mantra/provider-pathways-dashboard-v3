@@ -146,33 +146,34 @@ export function navigateToNativeScreen(
  * 3. Standalone browser -> window.location.href = "https://provider.mantracare.com/clients"
  */
 export function navigateToClientsPage() {
-  if (typeof window === "undefined") return;
+	if (typeof window === 'undefined') return;
 
-  // 1. React Native WebView
-  if (window.ReactNativeWebView) {
-    window.ReactNativeWebView.postMessage(
-      JSON.stringify({
-        action: "navigate",
-        params: { page: "/clients" }
-      })
-    );
-    return;
-  }
+	// 1. React Native WebView
+	if (window.ReactNativeWebView) {
+		window.ReactNativeWebView.postMessage(
+			JSON.stringify({
+				action: 'navigate',
+				screen: 'EHRClients',
+				params: {},
+			}),
+		);
+		return;
+	}
 
-  // 2. iframe inside provider.mantracare.com
-  if (window.parent !== window) {
-    window.parent.postMessage(
-      {
-        action: "navigate",
-        params: { page: "/clients" }
-      },
-      "https://provider.mantracare.com"
-    );
-    return;
-  }
+	// 2. iframe inside provider.mantracare.com
+	if (window.parent !== window) {
+		window.parent.postMessage(
+			{
+				action: 'navigate',
+				page: '/clients',
+			},
+			'https://provider.mantracare.com',
+		);
+		return;
+	}
 
-  // 3. Standalone browser
-  window.location.href = "https://provider.mantracare.com/clients";
+	// 3. Standalone browser
+	window.location.href = 'https://provider.mantracare.com/clients';
 }
 
 /**
