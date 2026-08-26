@@ -161,7 +161,7 @@ export function navigateToClientsPage() {
 		window.parent.postMessage(
 			{
 				action: 'navigate',
-				page: '/clients',
+				params: { page: "/clients" }
 			},
 			'https://provider.mantracare.com',
 		);
