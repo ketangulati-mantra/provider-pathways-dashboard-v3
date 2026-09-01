@@ -223,26 +223,27 @@ function SubmissionDetailsModal({ app, isOpen, onClose }) {
               <Building2 size={13} /> COMPANY DETAILS
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px 16px' }}>
-              <div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px 20px' }}>
+              <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: '0.66rem', fontWeight: 700, color: '#64748b' }}>Company / Organization</div>
-                <div style={{ fontSize: '0.86rem', fontWeight: 800, color: '#0f172a', marginTop: '1px' }}>
+                <div style={{ fontSize: '0.86rem', fontWeight: 800, color: '#0f172a', marginTop: '1px', wordBreak: 'break-word' }}>
                   {safeVal(displayCompanyName, 'Not provided')}
                 </div>
               </div>
 
-              <div>
+              <div style={{ minWidth: 0, overflow: 'hidden' }}>
                 <div style={{ fontSize: '0.66rem', fontWeight: 700, color: '#64748b' }}>Website</div>
-                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', marginTop: '1px' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', marginTop: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {app.company_website || app.website ? (
                     <a
                       href={(app.company_website || app.website).startsWith('http') ? (app.company_website || app.website) : `https://${app.company_website || app.website}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ color: '#2563eb', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                      title={app.company_website || app.website}
+                      style={{ color: '#2563eb', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', maxWidth: '100%' }}
                     >
-                      <span>{app.company_website || app.website}</span>
-                      <ExternalLink size={12} />
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{app.company_website || app.website}</span>
+                      <ExternalLink size={12} style={{ flexShrink: 0 }} />
                     </a>
                   ) : (
                     <span style={{ color: '#94a3b8' }}>Not provided</span>
@@ -250,30 +251,30 @@ function SubmissionDetailsModal({ app, isOpen, onClose }) {
                 </div>
               </div>
 
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: '0.66rem', fontWeight: 700, color: '#64748b' }}>Country</div>
-                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', marginTop: '1px' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', marginTop: '1px', wordBreak: 'break-word' }}>
                   {safeVal(displayCompanyCountry, 'India')}
                 </div>
               </div>
 
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: '0.66rem', fontWeight: 700, color: '#64748b' }}>City / Location</div>
-                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', marginTop: '1px' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', marginTop: '1px', wordBreak: 'break-word' }}>
                   {safeVal(displayCompanyCity, 'Not provided')}
                 </div>
               </div>
 
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: '0.66rem', fontWeight: 700, color: '#64748b' }}>Industry</div>
-                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', marginTop: '1px' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', marginTop: '1px', wordBreak: 'break-word' }}>
                   {safeVal(app.company_industry || app.industry || app.industries, 'Not provided')}
                 </div>
               </div>
 
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: '0.66rem', fontWeight: 700, color: '#64748b' }}>Company Size</div>
-                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', marginTop: '1px' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', marginTop: '1px', wordBreak: 'break-word' }}>
                   {safeVal(app.company_size || app.companySize, 'Not provided')}
                 </div>
               </div>
