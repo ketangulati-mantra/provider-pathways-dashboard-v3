@@ -7,6 +7,7 @@ import RequestMoreInfoModal from './RequestMoreInfoModal';
 import ManageReviewersModal from './ManageReviewersModal';
 import { MANTRA_CONFIG } from '../../mantra';
 import { useAuth } from '../../auth/AuthContext';
+import { getAdminAuthHeaders } from '../../mantra/api';
 
 const API_BASE = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null ? MANTRA_CONFIG.apiBaseUrl : (import.meta.env.PROD ? '' : 'http://localhost:5000');
 
@@ -74,7 +75,10 @@ export default function CampusAdminDashboard() {
   const fetchApplications = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE}/api/campus-program/admin/applications?status=${activeTab}&search=${encodeURIComponent(searchQuery)}`);
+      const res = await fetch(`${API_BASE}/api/campus-program/admin/applications?status=${activeTab}&search=${encodeURIComponent(searchQuery)}`, {
+        headers: getAdminAuthHeaders(),
+        credentials: 'include'
+      });
       const json = await res.json();
       if (json.success) {
         setApplicationsData(json.data);
@@ -93,7 +97,10 @@ export default function CampusAdminDashboard() {
 
   const fetchAnalytics = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/campus-program/admin/analytics`);
+      const res = await fetch(`${API_BASE}/api/campus-program/admin/analytics`, {
+        headers: getAdminAuthHeaders(),
+        credentials: 'include'
+      });
       const json = await res.json();
       if (json.success) {
         setAnalyticsData(json.data);
@@ -150,7 +157,8 @@ export default function CampusAdminDashboard() {
     try {
       await fetch(`${API_BASE}/api/campus-program/admin/review`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...getAdminAuthHeaders(), 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           applicationId,
           action: targetStatus,
@@ -182,7 +190,8 @@ export default function CampusAdminDashboard() {
     try {
       const res = await fetch(`${API_BASE}/api/campus-program/admin/review`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...getAdminAuthHeaders(), 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           applicationId: rejectModalApp.id,
           action: 'reject',
@@ -207,7 +216,8 @@ export default function CampusAdminDashboard() {
     try {
       const res = await fetch(`${API_BASE}/api/campus-program/admin/review`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...getAdminAuthHeaders(), 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           applicationId: requestInfoModalApp.id,
           action: 'request_info',
@@ -239,7 +249,7 @@ export default function CampusAdminDashboard() {
       case 'under_review':
         return <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '4px 12px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 900, whiteSpace: 'nowrap', display: 'inline-block' }}>Under Review</span>;
       default:
-        return <span style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0', padding: '4px 12px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 900, whiteSpace: 'nowrap', display: 'inline-block' }}>Submitted</span>;
+        return <span style={{ background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', padding: '4px 12px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 900, whiteSpace: 'nowrap', display: 'inline-block' }}>Pending Review</span>;
     }
   };
 

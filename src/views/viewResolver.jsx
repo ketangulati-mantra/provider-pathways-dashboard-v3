@@ -82,8 +82,8 @@ import GrowYourPracticeAcademy from '../components/corporate/GrowYourPracticeAca
  * Can specify default Component or service-specific overrides.
  */
 const ROUTE_VIEW_REGISTRY = {
-  '/': { default: (props) => <ProtectedRoute><DeveloperLessonsPage {...props} /></ProtectedRoute> },
-  '/provider_activity': { default: (props) => <ProtectedRoute><DeveloperLessonsPage {...props} /></ProtectedRoute> },
+  '/': { default: MantraGrowthJourneyPage },
+  '/provider_activity': { default: MantraGrowthJourneyPage },
   '/task/growth-journey': { default: MantraGrowthJourneyPage },
   '/task/ehr-mantra-ai': { default: MantraEhrLessonPage },
   '/task/bank-details': { default: BankDetailsLessonPage },

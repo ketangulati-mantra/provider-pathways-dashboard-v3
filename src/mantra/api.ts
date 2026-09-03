@@ -257,6 +257,22 @@ export const uploadFileToCloudinary = async (file: File): Promise<{
 };
 
 /**
+ * Helper to get admin authentication headers (Bearer token & JSON headers)
+ */
+export const getAdminAuthHeaders = (): Record<string, string> => {
+  const headers: Record<string, string> = {
+    'Accept': 'application/json'
+  };
+  if (typeof localStorage !== 'undefined') {
+    const token = localStorage.getItem('mantra_admin_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+  return headers;
+};
+
+/**
  * Fetches activity submissions list with pagination & filters.
  */
 export const fetchAllSubmissions = async ({ page = 1, limit = 20, status = '', search = '' } = {}) => {
@@ -269,7 +285,10 @@ export const fetchAllSubmissions = async ({ page = 1, limit = 20, status = '', s
   });
   
   try {
-    const res = await fetch(`${backendUrl}/api/activity-submissions?${params}`);
+    const res = await fetch(`${backendUrl}/api/activity-submissions?${params}`, {
+      headers: getAdminAuthHeaders(),
+      credentials: 'include'
+    });
     if (!res.ok) {
       return { success: false, data: [], statusCounts: null, pagination: null, error: `HTTP ${res.status}` };
     }
@@ -288,7 +307,7 @@ export const reviewSubmissionStatus = async (id: string, status?: string, review
   try {
     const res = await fetch(`${backendUrl}/api/activity-submissions/${id}/review`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...getAdminAuthHeaders(), 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ 
         ...(status ? { status } : {}), 
@@ -318,7 +337,10 @@ export const fetchSubmissionAnalytics = async ({ range = 'this_month', startDate
   });
 
   try {
-    const res = await fetch(`${backendUrl}/api/activity-submissions/analytics?${params}`);
+    const res = await fetch(`${backendUrl}/api/activity-submissions/analytics?${params}`, {
+      headers: getAdminAuthHeaders(),
+      credentials: 'include'
+    });
     if (!res.ok) {
       return { success: false, error: `HTTP ${res.status}` };
     }
@@ -335,7 +357,10 @@ export const fetchSubmissionAnalytics = async ({ range = 'this_month', startDate
 export const fetchAdminReviewers = async () => {
   const backendUrl = MANTRA_CONFIG.apiBaseUrl;
   try {
-    const res = await fetch(`${backendUrl}/api/admin/reviewers`);
+    const res = await fetch(`${backendUrl}/api/admin/reviewers`, {
+      headers: getAdminAuthHeaders(),
+      credentials: 'include'
+    });
     if (!res.ok) {
       return { success: false, data: ['Unassigned'], reviewers: [], error: `HTTP ${res.status}` };
     }
@@ -351,7 +376,8 @@ export const addAdminReviewer = async (name: string) => {
   try {
     const res = await fetch(`${backendUrl}/api/admin/reviewers`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...getAdminAuthHeaders(), 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ name })
     });
     if (!res.ok) {
@@ -368,7 +394,9 @@ export const deleteAdminReviewer = async (name: string) => {
   const backendUrl = MANTRA_CONFIG.apiBaseUrl;
   try {
     const res = await fetch(`${backendUrl}/api/admin/reviewers/${encodeURIComponent(name)}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: getAdminAuthHeaders(),
+      credentials: 'include'
     });
     if (!res.ok) {
       return { success: false, error: `HTTP ${res.status}` };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { Loader2 } from 'lucide-react';
 
@@ -9,6 +9,46 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireSuperAdmin = false }) => {
   const { admin, isAuthenticated, isLoading } = useAuth();
+
+  // Detect if current session context is a normal provider
+  const isProviderSession = (() => {
+    if (typeof window === 'undefined') return false;
+    const searchParams = new URLSearchParams(window.location.search);
+    const hash = window.location.hash || '';
+    const hashQueryStr = hash.includes('?') ? hash.substring(hash.indexOf('?') + 1) : '';
+    const hashParams = new URLSearchParams(hashQueryStr);
+
+    const hasProviderUrlParams = Boolean(
+      searchParams.get('upa_id') ||
+      searchParams.get('upaId') ||
+      searchParams.get('uid') ||
+      searchParams.get('service') ||
+      searchParams.get('token') ||
+      hashParams.get('upa_id') ||
+      hashParams.get('uid') ||
+      hashParams.get('service') ||
+      hashParams.get('token')
+    );
+
+    const hasProviderSessionStorage = Boolean(
+      sessionStorage.getItem('user_id') && !sessionStorage.getItem('admin_user')
+    );
+
+    return hasProviderUrlParams || hasProviderSessionStorage;
+  })();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      if (isProviderSession) {
+        // Safe redirect for providers attempting to manipulate URL hash to /admin/*
+        const search = window.location.search || '';
+        window.location.replace(`${window.location.pathname}${search}#/task/growth-journey`);
+      } else {
+        // Unauthenticated guest visitor accessing /admin/*
+        window.location.replace('#/admin/login');
+      }
+    }
+  }, [isLoading, isAuthenticated, isProviderSession]);
 
   if (isLoading) {
     return (
@@ -33,8 +73,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
   }
 
   if (!isAuthenticated) {
-    // Redirect unauthenticated user to admin login
-    window.location.href = '#/admin/login';
+    // Return null while redirection completes to prevent any UI flashing
     return null;
   }
 

@@ -21,6 +21,7 @@ import {
   getAdminAnalytics,
   resubmitApplicationVersion
 } from '../controllers/campusController.js';
+import { authenticateAdmin } from '../../middleware/authenticateAdmin.js';
 
 const router = Router();
 
@@ -44,10 +45,10 @@ router.patch('/application', patchApplication);
 router.post('/application/resubmit', resubmitApplication);
 
 // Phase 4 Dedicated Admin Module Endpoints
-router.get('/admin/applications', getAdminApplications);
-router.get('/admin/applications/:id', getAdminApplicationDetails);
-router.post('/admin/review', postAdminReview);
-router.get('/admin/analytics', getAdminAnalytics);
+router.get('/admin/applications', authenticateAdmin, getAdminApplications);
+router.get('/admin/applications/:id', authenticateAdmin, getAdminApplicationDetails);
+router.post('/admin/review', authenticateAdmin, postAdminReview);
+router.get('/admin/analytics', authenticateAdmin, getAdminAnalytics);
 
 // Journey State Endpoints
 router.post('/step', saveStep);

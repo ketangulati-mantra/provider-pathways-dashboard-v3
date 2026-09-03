@@ -10,28 +10,15 @@ const MANTRA_LOGO_URL = 'https://res.cloudinary.com/hxbamdqf/image/upload/v17846
 
 export default function DeveloperLessonsPage({ onNavigate }) {
   const { admin: currentAdmin, logout } = useAuth();
-  
-  const storedAdminJson = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('admin_user') : null;
-  let storedAdmin = null;
-  try {
-    storedAdmin = storedAdminJson ? JSON.parse(storedAdminJson) : null;
-  } catch (e) {
-    storedAdmin = null;
-  }
-  const displayAdmin = currentAdmin || storedAdmin || {
-    name: 'Ketan Gulati',
-    email: (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('user_id')) || 'ketan.gulati@mantra.care',
-    role: 'super_admin'
-  };
 
-  const isSuperAdmin = displayAdmin?.role === 'super_admin' || displayAdmin?.role === 'Super Admin' || displayAdmin?.role === 'superadmin';
+  const isSuperAdmin = currentAdmin?.role === 'super_admin' || currentAdmin?.role === 'Super Admin' || currentAdmin?.role === 'superadmin';
   const allowedPages = useMemo(() => {
     return isSuperAdmin 
       ? ['submissions', 'corporate_admin', 'campus_admin', 'lessons']
-      : (Array.isArray(displayAdmin?.allowed_pages) && displayAdmin.allowed_pages.length > 0 
-          ? displayAdmin.allowed_pages 
+      : (Array.isArray(currentAdmin?.allowed_pages) && currentAdmin.allowed_pages.length > 0 
+          ? currentAdmin.allowed_pages 
           : ['submissions', 'corporate_admin', 'campus_admin', 'lessons']);
-  }, [isSuperAdmin, displayAdmin?.allowed_pages]);
+  }, [isSuperAdmin, currentAdmin?.allowed_pages]);
 
   const [selectedService, setSelectedService] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -431,10 +418,10 @@ export default function DeveloperLessonsPage({ onNavigate }) {
             <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ padding: '8px 10px', borderRadius: '8px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
                 <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {displayAdmin?.name || 'Ketan Gulati'}
+                  {currentAdmin?.name || 'Administrator'}
                 </div>
                 <div style={{ fontSize: '0.72rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '2px' }}>
-                  {displayAdmin?.email || (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('user_id')) || 'ketan.gulati@mantra.care'}
+                  {currentAdmin?.email || ''}
                 </div>
                 <div style={{ marginTop: '4px' }}>
                   <span style={{
@@ -446,7 +433,7 @@ export default function DeveloperLessonsPage({ onNavigate }) {
                     borderRadius: '4px',
                     textTransform: 'uppercase'
                   }}>
-                    {String(displayAdmin?.role || 'SUPER ADMIN').replace('_', ' ').toUpperCase()}
+                    {String(currentAdmin?.role || 'ADMIN').replace('_', ' ').toUpperCase()}
                   </span>
                 </div>
               </div>

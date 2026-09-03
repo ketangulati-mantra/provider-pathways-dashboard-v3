@@ -9,7 +9,7 @@ import {
 import ManageReviewersModal from './ManageReviewersModal';
 import { MANTRA_CONFIG } from '../../mantra';
 import { useAuth } from '../../auth/AuthContext';
-import { fetchAdminReviewers } from '../../mantra/api';
+import { fetchAdminReviewers, getAdminAuthHeaders } from '../../mantra/api';
 
 const API_BASE = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null ? MANTRA_CONFIG.apiBaseUrl : (import.meta.env.PROD ? '' : 'http://localhost:5000');
 
@@ -617,7 +617,10 @@ export default function CorporateAdminDashboard() {
   const fetchApplications = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE}/api/corporate-program/admin/applications?status=${activeTab}&search=${encodeURIComponent(searchQuery)}`);
+      const res = await fetch(`${API_BASE}/api/corporate-program/admin/applications?status=${activeTab}&search=${encodeURIComponent(searchQuery)}`, {
+        headers: getAdminAuthHeaders(),
+        credentials: 'include'
+      });
       const json = await res.json();
       if (json.success) {
         setApplicationsData(json.data);
@@ -736,7 +739,8 @@ export default function CorporateAdminDashboard() {
     try {
       const res = await fetch(`${API_BASE}/api/corporate-program/admin/applications/${appId}/reviewer`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...getAdminAuthHeaders(), 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ reviewer: targetReviewer, status: newStatus })
       });
       const data = await res.json();

@@ -4,6 +4,9 @@ import { getCurrentService, getAvailableActivities, preserveQueryParams, handleE
 import { resolveLessonView } from './views/viewResolver';
 import DeveloperLessonsPage from './views/DeveloperLessonsPage';
 import IntroductionLessonPage from './views/IntroductionLessonPage';
+import AdminLoginPage from './views/AdminLoginPage';
+import AdminUsersPage from './views/AdminUsersPage';
+import { ProtectedRoute } from './auth/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
@@ -163,18 +166,31 @@ function App() {
   const renderView = () => {
     const onBackCallback = () => handleExit();
 
-    // 1. Home Screen / Admin Dashboard Base Routes
-    if (
-      currentPath === '/' || 
-      currentPath === '/provider_activity' || 
-      currentPath === '/admin' || 
-      currentPath === '/admin/dashboard' || 
-      currentPath === '/dev'
-    ) {
-      return <DeveloperLessonsPage onNavigate={navigate} />;
+    // 1. Explicit Admin Login Route
+    if (currentPath === '/admin/login') {
+      return <AdminLoginPage />;
     }
 
-    // 2. Try to resolve specific activity/lesson view
+    // 2. Dedicated Super Admin Users Route
+    if (currentPath === '/admin/users') {
+      return (
+        <ProtectedRoute requireSuperAdmin>
+          <AdminUsersPage onNavigate={navigate} />
+        </ProtectedRoute>
+      );
+    }
+
+    // 3. Central Protection for the ENTIRE /admin/* and /dev Route Group
+    // Covers #/admin/dashboard, #/admin/campus, #/admin/corporate, #/admin/pathways, and all future admin subpaths
+    if (currentPath.startsWith('/admin') || currentPath.startsWith('/dev')) {
+      return (
+        <ProtectedRoute>
+          <DeveloperLessonsPage onNavigate={navigate} />
+        </ProtectedRoute>
+      );
+    }
+
+    // 4. Try to resolve specific activity/lesson view (e.g. /task/growth-journey, /task/introduction)
     const resolvedView = resolveLessonView({
       currentPath,
       currentService,
@@ -186,13 +202,25 @@ function App() {
       return resolvedView;
     }
 
-    // 3. OCD Service Context Fallback -> OcdCertificatePage
+    // 5. OCD Service Context Fallback -> OcdCertificatePage
     if (currentService === 'ocd' || currentService === 'ocdmantra' || currentService === 'ocd_mantra') {
       return <OcdCertificatePage onBack={onBackCallback} />;
     }
 
-    // 4. Default Fallback -> DeveloperLessonsPage (Home Screen / Admin Dashboard)
-    return <DeveloperLessonsPage onNavigate={navigate} />;
+    // 6. Default Provider Pathway Fallback for root / or /provider_activity
+    // Always render a safe provider-facing pathway instead of internal admin pages
+    const defaultActivity = availableActivities[0];
+    if (defaultActivity) {
+      const defaultResolved = resolveLessonView({
+        currentPath: defaultActivity.route,
+        currentService,
+        onBack: onBackCallback,
+        activities: availableActivities
+      });
+      if (defaultResolved) return defaultResolved;
+    }
+
+    return <IntroductionLessonPage onBack={onBackCallback} />;
   };
 
   return (

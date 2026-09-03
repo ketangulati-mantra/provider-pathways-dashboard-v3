@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { X, CheckCircle2, XCircle, HelpCircle, ExternalLink, Clock, FileText, History } from 'lucide-react';
 import { MANTRA_CONFIG } from '../../mantra';
+import { getAdminAuthHeaders } from '../../mantra/api';
 
 const API_BASE = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null ? MANTRA_CONFIG.apiBaseUrl : (import.meta.env.PROD ? '' : 'http://localhost:5000');
 
@@ -31,7 +32,10 @@ export default function CampusApplicationDetailsDrawer({ isOpen, onClose, applic
   const fetchDetails = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE}/api/campus-program/admin/applications/${applicationId}`);
+      const res = await fetch(`${API_BASE}/api/campus-program/admin/applications/${applicationId}`, {
+        headers: getAdminAuthHeaders(),
+        credentials: 'include'
+      });
       const json = await res.json();
       if (json.success) {
         setDetails(json.data);
@@ -52,7 +56,8 @@ export default function CampusApplicationDetailsDrawer({ isOpen, onClose, applic
     try {
       const res = await fetch(`${API_BASE}/api/campus-program/admin/review`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...getAdminAuthHeaders(), 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           applicationId,
           action: 'approve',
@@ -81,7 +86,7 @@ export default function CampusApplicationDetailsDrawer({ isOpen, onClose, applic
       case 'under_review':
         return { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe', label: 'Under Review' };
       default:
-        return { bg: '#f1f5f9', text: '#475569', border: '#e2e8f0', label: 'Submitted' };
+        return { bg: '#fef3c7', text: '#b45309', border: '#fde68a', label: 'Pending Review' };
     }
   };
 

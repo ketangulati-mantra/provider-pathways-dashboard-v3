@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { User, X, Plus, Trash2, ChevronDown, Loader2, AlertCircle, Search, Check } from 'lucide-react';
 import { MANTRA_CONFIG } from '../../mantra';
+import { getAdminAuthHeaders } from '../../mantra/api';
 
 const API_BASE = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null 
   ? MANTRA_CONFIG.apiBaseUrl 
@@ -44,8 +45,8 @@ export default function ManageReviewersModal({ isOpen, onClose, onReviewersChang
       setSearchTerm('');
 
       const [availRes, activeRes] = await Promise.all([
-        fetch(`${API_BASE}/api/admin/reviewers/available-users`, { credentials: 'include' }),
-        fetch(`${API_BASE}/api/admin/reviewers`, { credentials: 'include' })
+        fetch(`${API_BASE}/api/admin/reviewers/available-users`, { headers: getAdminAuthHeaders(), credentials: 'include' }),
+        fetch(`${API_BASE}/api/admin/reviewers`, { headers: getAdminAuthHeaders(), credentials: 'include' })
       ]);
 
       const availJson = await availRes.json();
@@ -110,7 +111,7 @@ export default function ManageReviewersModal({ isOpen, onClose, onReviewersChang
 
       let res = await fetch(`${API_BASE}/api/admin/reviewers`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...getAdminAuthHeaders(), 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(payload)
       });
@@ -120,7 +121,7 @@ export default function ManageReviewersModal({ isOpen, onClose, onReviewersChang
       if (!json || !json.success) {
         res = await fetch(`${API_BASE}/api/submissions/admin/reviewers`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { ...getAdminAuthHeaders(), 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify(payload)
         });
@@ -149,6 +150,7 @@ export default function ManageReviewersModal({ isOpen, onClose, onReviewersChang
       setIsSubmitting(true);
       const res = await fetch(`${API_BASE}/api/admin/reviewers/${encodeURIComponent(user_id)}`, {
         method: 'DELETE',
+        headers: getAdminAuthHeaders(),
         credentials: 'include'
       });
 
