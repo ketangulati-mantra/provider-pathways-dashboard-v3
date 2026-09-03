@@ -1657,7 +1657,7 @@ export default function SubmissionsTable() {
             <Mail size={13} color="#334155" />
           </div>
           <div>
-            <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Mail Sent</div>
+            <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Contacted</div>
             <div style={{ fontSize: '0.98rem', fontWeight: 900, color: '#0f172a', lineHeight: 1, marginTop: '1px' }}>{statusCounts.mailSent}</div>
           </div>
         </div>

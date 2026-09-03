@@ -48,6 +48,13 @@ async function ensureSubmissionsSchema() {
       ALTER TABLE activity_submissions 
       ADD COLUMN IF NOT EXISTS status_history JSONB DEFAULT '[]'::jsonb;
     `;
+    // Create partial unique index on (user_id, lesson_id) where status IN ('pending', 'submitted')
+    // This enforces database-level concurrency protection against race conditions and double-submits
+    await sql`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_pending_activity_sub 
+      ON activity_submissions (user_id, lesson_id) 
+      WHERE status IN ('pending', 'submitted');
+    `;
     isSchemaEnsured = true;
   } catch (err) {
     console.error('[submissionService] Schema migration check warning:', err);
@@ -163,6 +170,9 @@ async function enrichSubmissions(rawSubmissions: any[]) {
   });
 }
 
+// In-process concurrent mutation lock map to serialize overlapping requests for the same (userId:lessonId)
+const inFlightSubmissions = new Map<string, Promise<any>>();
+
 export const submissionService = {
   async createSubmission(input: CreateSubmissionInput) {
     await ensureSubmissionsSchema();
@@ -177,41 +187,119 @@ export const submissionService = {
       submissionData = {},
     } = input;
 
-    const jsonFormData = typeof formData === 'string' ? formData : JSON.stringify(formData);
-    const jsonSubmissionData = typeof submissionData === 'string' ? submissionData : JSON.stringify(submissionData);
+    const cleanUserId = String(userId || '').trim();
+    const cleanLessonId = String(lessonId || '').trim();
+    const lockKey = `${cleanUserId}:::${cleanLessonId}`;
 
-    const result = await sql`
-      INSERT INTO activity_submissions (
-        user_id,
-        service,
-        lesson_id,
-        activity_title,
-        submission_type,
-        form_data,
-        submission_data,
-        status,
-        reviewed_by,
-        created_at,
-        updated_at
-      )
-      VALUES (
-        ${userId},
-        ${service || null},
-        ${lessonId},
-        ${activityTitle},
-        ${submissionType},
-        ${jsonFormData}::jsonb,
-        ${jsonSubmissionData}::jsonb,
-        'pending',
-        'Unassigned',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-      )
-      RETURNING *;
-    `;
+    // If an identical submission request is currently in-flight, wait for it rather than racing
+    if (inFlightSubmissions.has(lockKey)) {
+      try {
+        const existingPromise = inFlightSubmissions.get(lockKey);
+        const res = await existingPromise;
+        if (res) return res;
+      } catch (err) {
+        // Continue to fresh execution if previous promise rejected
+      }
+    }
 
-    const enriched = await enrichSubmissions(result);
-    return enriched[0];
+    const executionPromise = (async () => {
+      const cleanService = service ? String(service).trim() : null;
+      const jsonFormData = typeof formData === 'string' ? formData : JSON.stringify(formData);
+      const jsonSubmissionData = typeof submissionData === 'string' ? submissionData : JSON.stringify(submissionData);
+
+      try {
+        // First, check if an existing pending/submitted record exists or was created in the last 60 seconds
+        const existing = await sql`
+          SELECT * FROM activity_submissions 
+          WHERE user_id = ${cleanUserId} 
+            AND lesson_id = ${cleanLessonId}
+            AND (
+              status IN ('pending', 'submitted') OR
+              created_at >= (CURRENT_TIMESTAMP - INTERVAL '60 seconds')
+            )
+          ORDER BY id DESC
+          LIMIT 1;
+        `;
+
+        if (existing && existing.length > 0) {
+          const existingId = existing[0].id;
+          const updated = await sql`
+            UPDATE activity_submissions
+            SET
+              service = COALESCE(${cleanService}, service),
+              activity_title = ${activityTitle},
+              submission_type = ${submissionType},
+              form_data = ${jsonFormData}::jsonb,
+              submission_data = ${jsonSubmissionData}::jsonb,
+              updated_at = CURRENT_TIMESTAMP
+            WHERE id = ${existingId}
+            RETURNING *;
+          `;
+          const enriched = await enrichSubmissions(updated.length > 0 ? updated : existing);
+          return enriched[0];
+        }
+
+        const inserted = await sql`
+          INSERT INTO activity_submissions (
+            user_id,
+            service,
+            lesson_id,
+            activity_title,
+            submission_type,
+            form_data,
+            submission_data,
+            status,
+            reviewed_by,
+            created_at,
+            updated_at
+          )
+          VALUES (
+            ${cleanUserId},
+            ${cleanService},
+            ${cleanLessonId},
+            ${activityTitle},
+            ${submissionType},
+            ${jsonFormData}::jsonb,
+            ${jsonSubmissionData}::jsonb,
+            'pending',
+            'Unassigned',
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+          )
+          RETURNING *;
+        `;
+
+        const enriched = await enrichSubmissions(inserted);
+        return enriched[0];
+      } catch (err: any) {
+        if (err.code === '23505' || err.message?.includes('duplicate key') || err.message?.includes('idx_unique_pending_activity_sub')) {
+          const fallback = await sql`
+            SELECT * FROM activity_submissions 
+            WHERE user_id = ${cleanUserId} 
+              AND lesson_id = ${cleanLessonId}
+              AND status IN ('pending', 'submitted')
+            ORDER BY id DESC
+            LIMIT 1;
+          `;
+          if (fallback && fallback.length > 0) {
+            const enriched = await enrichSubmissions(fallback);
+            return enriched[0];
+          }
+        }
+        throw err;
+      }
+    })();
+
+    inFlightSubmissions.set(lockKey, executionPromise);
+    try {
+      const result = await executionPromise;
+      return result;
+    } finally {
+      // Clear lock key after brief delay to coalesce rapid follow-up duplicate bursts
+      setTimeout(() => {
+        inFlightSubmissions.delete(lockKey);
+      }, 500);
+    }
   },
 
   async getAnalytics(options: { range?: string; startDate?: string; endDate?: string }) {

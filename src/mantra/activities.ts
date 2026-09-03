@@ -678,3 +678,46 @@ export const getAvailableActivities = (targetService?: string): Activity[] => {
     activity.services.map(s => normalizeService(s)).includes(service)
   );
 };
+
+/**
+ * Validates whether a requested activity route or lessonId is authorized for the provider's active service context.
+ */
+export const isActivityAuthorizedForService = (
+  routeOrLessonId: string,
+  targetService?: string
+): boolean => {
+  if (!routeOrLessonId) return false;
+  const service = normalizeService(targetService || getCurrentService());
+  const clean = routeOrLessonId.toLowerCase().trim();
+
+  // Find matching activity
+  const matched = activities.find(a => {
+    const aRoute = a.route.toLowerCase();
+    const aLesson = a.lessonId.toLowerCase();
+    return (
+      clean === aRoute ||
+      clean === `/task/${aLesson}` ||
+      clean === aLesson ||
+      clean.startsWith(`${aRoute}/`) ||
+      clean.startsWith(`/task/${aLesson}/`)
+    );
+  });
+
+  if (!matched) {
+    // Check known special certificate / academy routes
+    if (clean.includes('ocd-certificate') || clean.includes('ocd_certificate')) {
+      return service === 'ocd' || service === 'therapy' || service === 'psychiatry';
+    }
+    if (clean.includes('women-wellness-certificate') || clean.includes('women_wellness_certificate')) {
+      return service === 'women_wellness' || service === 'therapy';
+    }
+    return false;
+  }
+
+  // Allowed if common to all services OR explicitly belongs to provider's service
+  return (
+    matched.services.includes('*') ||
+    matched.services.map(s => normalizeService(s)).includes(service)
+  );
+};
+

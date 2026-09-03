@@ -4,7 +4,7 @@ import {
   Search, Eye, Filter, CheckCircle2, XCircle, Clock, Building2, Calendar,
   UserCheck, Plus, ChevronDown, X, Mail, User, RefreshCw, Download,
   FileSpreadsheet, Globe, Phone, Tag, ShieldCheck, ArrowRight, Briefcase, HelpCircle,
-  ExternalLink, Sparkles, MapPin, Check, ChevronUp, AlertCircle
+  ExternalLink, Sparkles, MapPin, Check, ChevronUp, AlertCircle, PhoneForwarded, ThumbsDown
 } from 'lucide-react';
 import ManageReviewersModal from './ManageReviewersModal';
 import { MANTRA_CONFIG } from '../../mantra';
@@ -35,8 +35,12 @@ function SubmissionDetailsModal({ app, isOpen, onClose }) {
     under_review: { label: 'Under Review', bg: '#ffedd5', color: '#c2410c', border: '#fed7aa' },
     reviewed: { label: 'Reviewed', bg: '#dcfce7', color: '#15803d', border: '#bbf7d0' },
     mail_sent: { label: 'Contacted', bg: '#f0f9ff', color: '#0369a1', border: '#bae6fd' },
+    follow_up: { label: 'Follow Up', bg: '#faf5ff', color: '#7e22ce', border: '#e9d5ff' },
+    followup: { label: 'Follow Up', bg: '#faf5ff', color: '#7e22ce', border: '#e9d5ff' },
+    not_interested: { label: 'Not Interested', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+    notinterested: { label: 'Not Interested', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
     approved: { label: 'Reviewed', bg: '#dcfce7', color: '#15803d', border: '#bbf7d0' },
-    rejected: { label: 'Archived', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' }
+    rejected: { label: 'Not Interested', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' }
   };
 
   const currentSt = (app.review_status || app.application_status || app.status || 'pending').toLowerCase();
@@ -652,6 +656,8 @@ export default function CorporateAdminDashboard() {
     under_review: { label: 'Under Review', bg: '#ffedd5', border: '#fed7aa', color: '#c2410c' },
     reviewed: { label: 'Reviewed', bg: '#dcfce7', border: '#bbf7d0', color: '#15803d' },
     mail_sent: { label: 'Contacted', bg: '#f0f9ff', border: '#bae6fd', color: '#0369a1' },
+    follow_up: { label: 'Follow Up', bg: '#faf5ff', border: '#e9d5ff', color: '#7e22ce' },
+    not_interested: { label: 'Not Interested', bg: '#fef2f2', border: '#fecaca', color: '#b91c1c' },
   };
 
   const handleStatusChange = async (app, newStatus) => {
@@ -667,7 +673,7 @@ export default function CorporateAdminDashboard() {
     setApplicationsData(prev => {
       if (!prev) return prev;
       const appsList = prev.applications || (Array.isArray(prev) ? prev : []);
-      const prevCounts = { ...(prev.statusCounts || { pending: 0, underReview: 0, reviewed: 0, mailSent: 0, all: appsList.length }) };
+      const prevCounts = { ...(prev.statusCounts || { pending: 0, underReview: 0, reviewed: 0, mailSent: 0, followUp: 0, notInterested: 0, all: appsList.length }) };
 
       const oldApp = appsList.find(item => 
         (item.id !== undefined && app.id !== undefined && String(item.id) === String(app.id)) ||
@@ -675,20 +681,24 @@ export default function CorporateAdminDashboard() {
       );
 
       const oldSt = (oldApp?.application_status || oldApp?.review_status || app.application_status || 'pending').toLowerCase();
-      const normalizeSt = (s) => (s === 'submitted' || s === 'pending' || s === '') ? 'pending' : s === 'approved' ? 'reviewed' : s;
+      const normalizeSt = (s) => (s === 'submitted' || s === 'pending' || s === '') ? 'pending' : s === 'approved' ? 'reviewed' : s === 'followup' || s === 'follow-up' ? 'follow_up' : s === 'notinterested' || s === 'not-interested' || s === 'rejected' ? 'not_interested' : s;
       const oldNorm = normalizeSt(oldSt);
       const newNorm = normalizeSt(newStatus.toLowerCase());
 
       if (oldNorm !== newNorm) {
-        if (oldNorm === 'pending') prevCounts.pending = Math.max(0, prevCounts.pending - 1);
-        else if (oldNorm === 'under_review') prevCounts.underReview = Math.max(0, prevCounts.underReview - 1);
-        else if (oldNorm === 'reviewed') prevCounts.reviewed = Math.max(0, prevCounts.reviewed - 1);
-        else if (oldNorm === 'mail_sent') prevCounts.mailSent = Math.max(0, prevCounts.mailSent - 1);
+        if (oldNorm === 'pending') prevCounts.pending = Math.max(0, (prevCounts.pending || 0) - 1);
+        else if (oldNorm === 'under_review') prevCounts.underReview = Math.max(0, (prevCounts.underReview || 0) - 1);
+        else if (oldNorm === 'reviewed') prevCounts.reviewed = Math.max(0, (prevCounts.reviewed || 0) - 1);
+        else if (oldNorm === 'mail_sent') prevCounts.mailSent = Math.max(0, (prevCounts.mailSent || 0) - 1);
+        else if (oldNorm === 'follow_up') prevCounts.followUp = Math.max(0, (prevCounts.followUp || 0) - 1);
+        else if (oldNorm === 'not_interested') prevCounts.notInterested = Math.max(0, (prevCounts.notInterested || 0) - 1);
 
-        if (newNorm === 'pending') prevCounts.pending++;
-        else if (newNorm === 'under_review') prevCounts.underReview++;
-        else if (newNorm === 'reviewed') prevCounts.reviewed++;
-        else if (newNorm === 'mail_sent') prevCounts.mailSent++;
+        if (newNorm === 'pending') prevCounts.pending = (prevCounts.pending || 0) + 1;
+        else if (newNorm === 'under_review') prevCounts.underReview = (prevCounts.underReview || 0) + 1;
+        else if (newNorm === 'reviewed') prevCounts.reviewed = (prevCounts.reviewed || 0) + 1;
+        else if (newNorm === 'mail_sent') prevCounts.mailSent = (prevCounts.mailSent || 0) + 1;
+        else if (newNorm === 'follow_up') prevCounts.followUp = (prevCounts.followUp || 0) + 1;
+        else if (newNorm === 'not_interested') prevCounts.notInterested = (prevCounts.notInterested || 0) + 1;
       }
 
       const updatedApps = appsList.map(item => {
@@ -762,7 +772,7 @@ export default function CorporateAdminDashboard() {
     setApplicationsData(prev => {
       if (!prev) return prev;
       const appsList = prev.applications || (Array.isArray(prev) ? prev : []);
-      const prevCounts = { ...(prev.statusCounts || { pending: 0, underReview: 0, reviewed: 0, mailSent: 0, all: appsList.length }) };
+      const prevCounts = { ...(prev.statusCounts || { pending: 0, underReview: 0, reviewed: 0, mailSent: 0, followUp: 0, notInterested: 0, all: appsList.length }) };
 
       const oldApp = appsList.find(item => 
         (item.id !== undefined && app.id !== undefined && String(item.id) === String(app.id)) ||
@@ -770,20 +780,24 @@ export default function CorporateAdminDashboard() {
       );
 
       const oldSt = (oldApp?.application_status || oldApp?.review_status || app.application_status || 'pending').toLowerCase();
-      const normalizeSt = (s) => (s === 'submitted' || s === 'pending' || s === '') ? 'pending' : s === 'approved' ? 'reviewed' : s;
+      const normalizeSt = (s) => (s === 'submitted' || s === 'pending' || s === '') ? 'pending' : s === 'approved' ? 'reviewed' : s === 'followup' || s === 'follow-up' ? 'follow_up' : s === 'notinterested' || s === 'not-interested' || s === 'rejected' ? 'not_interested' : s;
       const oldNorm = normalizeSt(oldSt);
       const newNorm = normalizeSt(targetStatus.toLowerCase());
 
       if (oldNorm !== newNorm) {
-        if (oldNorm === 'pending') prevCounts.pending = Math.max(0, prevCounts.pending - 1);
-        else if (oldNorm === 'under_review') prevCounts.underReview = Math.max(0, prevCounts.underReview - 1);
-        else if (oldNorm === 'reviewed') prevCounts.reviewed = Math.max(0, prevCounts.reviewed - 1);
-        else if (oldNorm === 'mail_sent') prevCounts.mailSent = Math.max(0, prevCounts.mailSent - 1);
+        if (oldNorm === 'pending') prevCounts.pending = Math.max(0, (prevCounts.pending || 0) - 1);
+        else if (oldNorm === 'under_review') prevCounts.underReview = Math.max(0, (prevCounts.underReview || 0) - 1);
+        else if (oldNorm === 'reviewed') prevCounts.reviewed = Math.max(0, (prevCounts.reviewed || 0) - 1);
+        else if (oldNorm === 'mail_sent') prevCounts.mailSent = Math.max(0, (prevCounts.mailSent || 0) - 1);
+        else if (oldNorm === 'follow_up') prevCounts.followUp = Math.max(0, (prevCounts.followUp || 0) - 1);
+        else if (oldNorm === 'not_interested') prevCounts.notInterested = Math.max(0, (prevCounts.notInterested || 0) - 1);
 
-        if (newNorm === 'pending') prevCounts.pending++;
-        else if (newNorm === 'under_review') prevCounts.underReview++;
-        else if (newNorm === 'reviewed') prevCounts.reviewed++;
-        else if (newNorm === 'mail_sent') prevCounts.mailSent++;
+        if (newNorm === 'pending') prevCounts.pending = (prevCounts.pending || 0) + 1;
+        else if (newNorm === 'under_review') prevCounts.underReview = (prevCounts.underReview || 0) + 1;
+        else if (newNorm === 'reviewed') prevCounts.reviewed = (prevCounts.reviewed || 0) + 1;
+        else if (newNorm === 'mail_sent') prevCounts.mailSent = (prevCounts.mailSent || 0) + 1;
+        else if (newNorm === 'follow_up') prevCounts.followUp = (prevCounts.followUp || 0) + 1;
+        else if (newNorm === 'not_interested') prevCounts.notInterested = (prevCounts.notInterested || 0) + 1;
       }
 
       const updatedApps = appsList.map(item => {
@@ -914,118 +928,92 @@ export default function CorporateAdminDashboard() {
 
   const uniqueIndustries = Array.from(new Set(applications.map(a => a.company_industry || a.industry || a.industries).filter(Boolean)));
 
+  const statusCounts = applicationsData?.statusCounts || {
+    pending: 0,
+    underReview: 0,
+    reviewed: 0,
+    mailSent: 0,
+    followUp: 0,
+    notInterested: 0,
+    all: applications.length
+  };
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredApps.length / pageSize) || 1;
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedApps = filteredApps.slice(startIndex, startIndex + pageSize);
+
+  // Clear All Filters
   const handleClearAllFilters = () => {
     setDateFilter('all');
-    setCustomStartDate('');
-    setCustomEndDate('');
     setReviewerFilter('all');
     setSelectedLocation('all');
     setSelectedIndustry('all');
+    setCustomStartDate('');
+    setCustomEndDate('');
     setSearchQuery('');
   };
 
-  const isAnyFilterActive =
-    dateFilter !== 'all' ||
-    reviewerFilter !== 'all' ||
-    selectedLocation !== 'all' ||
-    selectedIndustry !== 'all' ||
-    searchQuery.trim() !== '';
+  const isAnyFilterActive = dateFilter !== 'all' || reviewerFilter !== 'all' || selectedLocation !== 'all' || selectedIndustry !== 'all' || searchQuery !== '';
 
+  // Export to CSV
   const handleExportCSV = () => {
-    if (!filteredApps.length) return;
     const headers = [
-      'Referrer Name', 'Referrer Email', 'Referrer Phone', 'Relationship to Company', 'Connection Reach',
-      'Company Name', 'Website', 'Country', 'City / Location', 'Industry', 'Company Size',
-      'Contact Role', 'Introduction Method', 'Direct Contact Person', 'Company Needs', 'Referral Context',
-      'Date Submitted', 'Status', 'Reviewer'
+      'Referrer Name', 'Referrer Email', 'Company Name', 'Website',
+      'Location', 'Industry', 'Direct Contact Person', 'Contact Role',
+      'Contact Email', 'Contact Phone', 'Company Need', 'Status',
+      'Reviewer', 'Submitted Date'
     ];
 
     const rows = filteredApps.map(a => [
-      `"${a.full_name || ''}"`,
-      `"${a.email || ''}"`,
-      `"${a.phone || ''}"`,
-      `"${a.relationship || ''}"`,
-      `"${a.connection_reach || a.connection_strength || ''}"`,
-      `"${a.company_name || a.companyName || ''}"`,
-      `"${a.company_website || a.website || ''}"`,
-      `"${a.company_country || a.companyCountry || 'India'}"`,
-      `"${a.company_city || a.companyCity || a.city || ''}"`,
-      `"${a.company_industry || a.industry || a.industries || ''}"`,
-      `"${a.company_size || a.companySize || ''}"`,
-      `"${a.decision_maker || a.company_connections || ''}"`,
-      `"${a.intro_method || ''}"`,
-      `"${a.direct_contact_person || ''}"`,
-      `"${Array.isArray(a.company_needs) ? a.company_needs.join(', ') : (a.company_needs || '')}"`,
-      `"${(a.referral_context || a.motivation || '').replace(/"/g, '""')}"`,
-      `"${a.submitted_at || a.created_at || ''}"`,
-      `"${a.application_status || 'pending'}"`,
-      `"${a.reviewed_by || 'Unassigned'}"`
+      `"${(a.referrer_name || a.name || '').replace(/"/g, '""')}"`,
+      `"${(a.referrer_email || a.email || '').replace(/"/g, '""')}"`,
+      `"${(a.company_name || '').replace(/"/g, '""')}"`,
+      `"${(a.company_website || a.website || '').replace(/"/g, '""')}"`,
+      `"${[a.company_city || a.city, a.company_country].filter(Boolean).join(', ').replace(/"/g, '""')}"`,
+      `"${(a.company_industry || a.industry || a.industries || '').replace(/"/g, '""')}"`,
+      `"${(a.direct_contact_person || a.contact_person || '').replace(/"/g, '""')}"`,
+      `"${(a.contact_person_role || a.contact_role || '').replace(/"/g, '""')}"`,
+      `"${(a.contact_person_email || a.contact_email || '').replace(/"/g, '""')}"`,
+      `"${(a.contact_person_phone || a.contact_phone || '').replace(/"/g, '""')}"`,
+      `"${(Array.isArray(a.company_needs) ? a.company_needs.join(', ') : a.company_needs || '').replace(/"/g, '""')}"`,
+      `"${(a.review_status || a.application_status || 'Pending').replace(/"/g, '""')}"`,
+      `"${(a.reviewed_by || 'Unassigned').replace(/"/g, '""')}"`,
+      `"${(a.submitted_at || a.created_at || '').replace(/"/g, '""')}"`
     ]);
 
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Corporate_Company_Referrals_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `Corporate_Referrals_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const statusCounts = applicationsData?.statusCounts || {
-    pending: 0,
-    underReview: 0,
-    reviewed: 0,
-    mailSent: 0,
-    all: 0
-  };
-
   return (
-    <div style={{ padding: '24px 32px', maxWidth: '1440px', margin: '0 auto', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-
-      {/* Header Banner */}
-      <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+    <div style={{ padding: '24px 32px', maxWidth: '1600px', margin: '0 auto', fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}>
+      
+      {/* Header and Manage Reviewers Button */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h1 style={{ margin: 0, fontSize: '1.45rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h1 style={{ fontSize: '1.45rem', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
               Corporate Referrals Pipeline
             </h1>
-            <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '3px 10px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 800 }}>
+            <span style={{ background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', padding: '3px 9px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 800 }}>
               Company Lead Pipeline
             </span>
           </div>
-          <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.84rem' }}>
+          <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.8rem', fontWeight: 500 }}>
             Review company and organization referrals submitted by providers for EAP and corporate wellness partnerships.
           </p>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <button
-            onClick={() => setIsManagingReviewers(true)}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 14px',
-              borderRadius: '8px',
-              border: '1px solid #cbd5e1',
-              background: '#ffffff',
-              color: '#334155',
-              fontSize: '0.78rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            <UserCheck size={14} color="#2563eb" />
-            <span>Manage Reviewers ({reviewerOptions.length})</span>
-          </button>
         </div>
       </div>
 
       {/* Analytics Summary Cards (Standard Compact Strip) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px', marginBottom: '16px' }}>
         
         {/* Card 1: PENDING */}
         <div
@@ -1047,7 +1035,7 @@ export default function CorporateAdminDashboard() {
           </div>
           <div>
             <div style={{ fontSize: '0.64rem', fontWeight: 800, color: '#854d0e', textTransform: 'uppercase', letterSpacing: '0.04em' }}>PENDING</div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#713f12', lineHeight: 1.1 }}>{statusCounts.pending}</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#713f12', lineHeight: 1.1 }}>{statusCounts.pending || 0}</div>
           </div>
         </div>
 
@@ -1071,7 +1059,7 @@ export default function CorporateAdminDashboard() {
           </div>
           <div>
             <div style={{ fontSize: '0.64rem', fontWeight: 800, color: '#9a3412', textTransform: 'uppercase', letterSpacing: '0.04em' }}>UNDER REVIEW</div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#7c2d12', lineHeight: 1.1 }}>{statusCounts.underReview}</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#7c2d12', lineHeight: 1.1 }}>{statusCounts.underReview || 0}</div>
           </div>
         </div>
 
@@ -1095,7 +1083,7 @@ export default function CorporateAdminDashboard() {
           </div>
           <div>
             <div style={{ fontSize: '0.64rem', fontWeight: 800, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.04em' }}>REVIEWED</div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#14532d', lineHeight: 1.1 }}>{statusCounts.reviewed}</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#14532d', lineHeight: 1.1 }}>{statusCounts.reviewed || 0}</div>
           </div>
         </div>
 
@@ -1118,8 +1106,56 @@ export default function CorporateAdminDashboard() {
             <Mail size={15} />
           </div>
           <div>
-            <div style={{ fontSize: '0.64rem', fontWeight: 800, color: '#075985', textTransform: 'uppercase', letterSpacing: '0.04em' }}>MAIL SENT</div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0c4a6e', lineHeight: 1.1 }}>{statusCounts.mailSent}</div>
+            <div style={{ fontSize: '0.64rem', fontWeight: 800, color: '#075985', textTransform: 'uppercase', letterSpacing: '0.04em' }}>CONTACTED</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0c4a6e', lineHeight: 1.1 }}>{statusCounts.mailSent || 0}</div>
+          </div>
+        </div>
+
+        {/* Card 5: FOLLOW UP */}
+        <div
+          onClick={() => setActiveTab('follow_up')}
+          style={{
+            background: activeTab === 'follow_up' ? '#f3e8ff' : '#faf5ff',
+            border: `1.5px solid ${activeTab === 'follow_up' ? '#a855f7' : '#f3e8ff'}`,
+            borderRadius: '8px',
+            padding: '8px 12px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#f3e8ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7e22ce', flexShrink: 0 }}>
+            <PhoneForwarded size={15} />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.64rem', fontWeight: 800, color: '#7e22ce', textTransform: 'uppercase', letterSpacing: '0.04em' }}>FOLLOW UP</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#581c87', lineHeight: 1.1 }}>{statusCounts.followUp || 0}</div>
+          </div>
+        </div>
+
+        {/* Card 6: NOT INTERESTED */}
+        <div
+          onClick={() => setActiveTab('not_interested')}
+          style={{
+            background: activeTab === 'not_interested' ? '#fee2e2' : '#fef2f2',
+            border: `1.5px solid ${activeTab === 'not_interested' ? '#ef4444' : '#fee2e2'}`,
+            borderRadius: '8px',
+            padding: '8px 12px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#b91c1c', flexShrink: 0 }}>
+            <ThumbsDown size={15} />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.64rem', fontWeight: 800, color: '#b91c1c', textTransform: 'uppercase', letterSpacing: '0.04em' }}>NOT INTERESTED</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#7f1d1d', lineHeight: 1.1 }}>{statusCounts.notInterested || 0}</div>
           </div>
         </div>
 
@@ -1132,10 +1168,12 @@ export default function CorporateAdminDashboard() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           {[
             { key: 'all', label: 'All Referrals', count: statusCounts.all },
-            { key: 'pending', label: 'Pending', count: statusCounts.pending },
-            { key: 'under_review', label: 'Under Review', count: statusCounts.underReview },
-            { key: 'reviewed', label: 'Reviewed', count: statusCounts.reviewed },
-            { key: 'mail_sent', label: 'Contacted', count: statusCounts.mailSent },
+            { key: 'pending', label: 'Pending', count: statusCounts.pending || 0 },
+            { key: 'under_review', label: 'Under Review', count: statusCounts.underReview || 0 },
+            { key: 'reviewed', label: 'Reviewed', count: statusCounts.reviewed || 0 },
+            { key: 'mail_sent', label: 'Contacted', count: statusCounts.mailSent || 0 },
+            { key: 'follow_up', label: 'Follow Up', count: statusCounts.followUp || 0 },
+            { key: 'not_interested', label: 'Not Interested', count: statusCounts.notInterested || 0 },
           ].map(tab => (
             <button
               key={tab.key}
@@ -1539,6 +1577,8 @@ export default function CorporateAdminDashboard() {
                               <option value="under_review">Under Review</option>
                               <option value="reviewed">Reviewed</option>
                               <option value="mail_sent">Contacted</option>
+                              <option value="follow_up">Follow Up</option>
+                              <option value="not_interested">Not Interested</option>
                             </select>
                           );
                         })()}

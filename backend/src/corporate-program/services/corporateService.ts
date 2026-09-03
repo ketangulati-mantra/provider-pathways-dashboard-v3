@@ -42,6 +42,8 @@ export class CorporateService {
     let underReviewCount = 0;
     let reviewedCount = 0;
     let mailSentCount = 0;
+    let followUpCount = 0;
+    let notInterestedCount = 0;
 
     allApps.forEach((a: any) => {
       const st = (a.application_status || 'submitted').toLowerCase();
@@ -53,6 +55,10 @@ export class CorporateService {
         reviewedCount++;
       } else if (st === 'mail_sent') {
         mailSentCount++;
+      } else if (st === 'follow_up' || st === 'followup' || st === 'follow-up') {
+        followUpCount++;
+      } else if (st === 'not_interested' || st === 'notinterested' || st === 'not-interested' || st === 'rejected') {
+        notInterestedCount++;
       }
     });
 
@@ -73,6 +79,16 @@ export class CorporateService {
         });
       } else if (statusFilter === 'mail_sent') {
         filteredApps = allApps.filter((a: any) => (a.application_status || '').toLowerCase() === 'mail_sent');
+      } else if (statusFilter === 'follow_up') {
+        filteredApps = allApps.filter((a: any) => {
+          const st = (a.application_status || '').toLowerCase();
+          return st === 'follow_up' || st === 'followup' || st === 'follow-up';
+        });
+      } else if (statusFilter === 'not_interested') {
+        filteredApps = allApps.filter((a: any) => {
+          const st = (a.application_status || '').toLowerCase();
+          return st === 'not_interested' || st === 'notinterested' || st === 'not-interested' || st === 'rejected';
+        });
       }
     }
 
@@ -85,6 +101,8 @@ export class CorporateService {
         underReview: underReviewCount,
         reviewed: reviewedCount,
         mailSent: mailSentCount,
+        followUp: followUpCount,
+        notInterested: notInterestedCount,
         all: totalApplications
       }
     };

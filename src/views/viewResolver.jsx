@@ -228,10 +228,19 @@ const ROUTE_VIEW_REGISTRY = {
   '/ocd_certificate': { default: OcdCertificatePage }
 };
 
+import { isActivityAuthorizedForService } from '../mantra';
+
 /**
  * Resolves and renders the React component for a given route and service.
  */
 export const resolveLessonView = ({ currentPath, currentService, onBack, activities }) => {
+  // Validate if requested activity path is authorized for provider's active service
+  if (currentPath && currentPath.startsWith('/task/') && currentPath !== '/task/growth-journey' && currentPath !== '/task/introduction') {
+    if (!isActivityAuthorizedForService(currentPath, currentService)) {
+      return null;
+    }
+  }
+
   const routeMapping = ROUTE_VIEW_REGISTRY[currentPath];
 
   if (routeMapping) {

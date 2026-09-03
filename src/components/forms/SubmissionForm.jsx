@@ -122,6 +122,8 @@ export default function SubmissionForm({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (isSubmitting) return;
+
     if (!fullName.trim()) {
       showToast('Please enter your full name.', 'warning');
       return;

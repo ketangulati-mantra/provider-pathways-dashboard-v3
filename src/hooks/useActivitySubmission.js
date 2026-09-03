@@ -21,6 +21,9 @@ export function useActivitySubmission({
   const [cachedUpload, setCachedUpload] = useState(null);
 
   const submit = async ({ formData = {}, file = null } = {}) => {
+    if (isSubmitting) {
+      return { success: false, error: 'Submission already in progress' };
+    }
     setIsSubmitting(true);
 
     let uploadData = cachedUpload;
