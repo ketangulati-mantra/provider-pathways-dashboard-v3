@@ -207,8 +207,19 @@ function App() {
       return <OcdCertificatePage onBack={onBackCallback} />;
     }
 
-    // 6. Default Provider Pathway Fallback for root / or /provider_activity
-    // Always render a safe provider-facing pathway instead of internal admin pages
+    // 6. Active Session / Default Provider Pathway Fallback for root / or trimmed /provider_activity
+    // If provider was already on an active lesson in this session, keep them on that lesson
+    const savedLastPath = typeof window !== 'undefined' ? sessionStorage.getItem('mantra_last_path') : null;
+    if (savedLastPath && savedLastPath !== currentPath) {
+      const savedResolved = resolveLessonView({
+        currentPath: savedLastPath,
+        currentService,
+        onBack: onBackCallback,
+        activities: availableActivities
+      });
+      if (savedResolved) return savedResolved;
+    }
+
     const defaultActivity = availableActivities[0];
     if (defaultActivity) {
       const defaultResolved = resolveLessonView({
