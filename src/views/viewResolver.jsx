@@ -234,10 +234,12 @@ import { isActivityAuthorizedForService } from '../mantra';
  * Resolves and renders the React component for a given route and service.
  */
 export const resolveLessonView = ({ currentPath, currentService, onBack, activities }) => {
-  // Validate if requested activity path is authorized for provider's active service
-  if (currentPath && currentPath.startsWith('/task/') && currentPath !== '/task/growth-journey' && currentPath !== '/task/introduction') {
-    if (!isActivityAuthorizedForService(currentPath, currentService)) {
-      return null;
+  // Prevent URL path tampering: unknown task paths or invalid aliases (e.g. /task/tasks) must not resolve
+  if (currentPath && currentPath.startsWith('/task/')) {
+    if (currentPath !== '/task/growth-journey' && currentPath !== '/task/introduction') {
+      if (!isActivityAuthorizedForService(currentPath, currentService)) {
+        return null;
+      }
     }
   }
 
