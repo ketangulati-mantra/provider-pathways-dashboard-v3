@@ -10,7 +10,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const isProd = process.env.NODE_ENV === 'production';
-const targetPort = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
+const targetPort = process.env.PORT ? parseInt(process.env.PORT, 10) : 80;
 
 const DEFAULT_DB_URL = 'postgresql://neondb_owner:npg_p3UDOg6fsydB@ep-still-wave-azxe0y0q.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
 
@@ -24,6 +24,11 @@ export const config = {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME || 'hxbamdqf',
     apiKey: process.env.CLOUDINARY_API_KEY || '945291215694863',
     apiSecret: process.env.CLOUDINARY_API_SECRET || 'bf4nrUef-ITYjztuN3vZecq_KWI',
+  },
+  newCloudinary: {
+    cloudName: process.env.CLOUDINARY_NEW_CLOUD_NAME || 'jigtelxj',
+    apiKey: process.env.CLOUDINARY_NEW_API_KEY || '846191681134135',
+    apiSecret: process.env.CLOUDINARY_NEW_API_SECRET || 'LJxJP_gziQTVol1bikDNAJTtJDc',
   },
   gemini: {
     apiKey: process.env.GEMINI_API_KEY || '',
