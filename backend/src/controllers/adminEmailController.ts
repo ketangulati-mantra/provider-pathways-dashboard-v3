@@ -10,7 +10,27 @@ const campusRepo = new CampusRepository();
 const campusService = new CampusService();
 
 // In-memory cache for OAuth CSRF state verification (expires in 15 mins)
-const oauthStateCache = new Map<string, { senderId: string; adminName: string; expiresAt: number }>();
+const oauthStateCache = new Map<string, { senderId: string; adminName: string; redirectUri?: string; expiresAt: number }>();
+
+/**
+ * Helper to compute the exact callback URL for the active platform host
+ */
+function getRequestRedirectUri(req: Request): string {
+  const host = req.get('x-forwarded-host') || req.get('host') || 'platform.mantracare.com';
+  const proto = req.get('x-forwarded-proto') || (req.secure ? 'https' : 'https');
+  
+  if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    return 'http://localhost:5000/api/admin/gmail/oauth/callback';
+  }
+  
+  // If request arrived via subpath proxy /provider_activity
+  const origUrl = req.originalUrl || req.baseUrl || req.url || '';
+  if (origUrl.includes('/provider_activity') || req.get('referer')?.includes('/provider_activity')) {
+    return `${proto}://${host}/provider_activity/api/admin/gmail/oauth/callback`;
+  }
+  
+  return `${proto}://${host}/api/admin/gmail/oauth/callback`;
+}
 
 /**
  * GET /api/admin/email/senders
@@ -36,12 +56,14 @@ export async function initiateGmailAuth(req: AuthRequest, res: Response, next: N
   try {
     const senderId = req.params.senderId?.toLowerCase();
     const adminName = req.admin?.name || req.admin?.email || 'Admin';
+    const dynamicRedirectUri = getRequestRedirectUri(req);
 
     // Generate secure CSRF state token
     const stateToken = crypto.randomBytes(24).toString('hex');
     oauthStateCache.set(stateToken, {
       senderId,
       adminName,
+      redirectUri: dynamicRedirectUri,
       expiresAt: Date.now() + 15 * 60 * 1000
     });
 
@@ -50,14 +72,15 @@ export async function initiateGmailAuth(req: AuthRequest, res: Response, next: N
       if (Date.now() > v.expiresAt) oauthStateCache.delete(k);
     }
 
-    const authUrl = emailService.generateAuthUrl(senderId, stateToken);
+    const authUrl = emailService.generateAuthUrl(senderId, stateToken, dynamicRedirectUri);
 
     res.json({
       success: true,
       data: {
         authUrl,
         senderId,
-        state: stateToken
+        state: stateToken,
+        redirectUri: dynamicRedirectUri
       }
     });
   } catch (error: any) {
@@ -98,10 +121,11 @@ export async function handleGmailOAuthCallback(req: Request, res: Response, next
       return res.status(400).send('Invalid or expired OAuth state token. Please try connecting again.');
     }
 
+    const redirectUri = cachedState.redirectUri || getRequestRedirectUri(req);
     oauthStateCache.delete(state);
 
-    console.log(`[AdminEmailController] Starting OAuth callback exchange for sender "${cachedState.senderId}"...`);
-    const result = await emailService.handleOAuthCallback(code, cachedState.senderId, cachedState.adminName);
+    console.log(`[AdminEmailController] Starting OAuth callback exchange for sender "${cachedState.senderId}" with redirectUri "${redirectUri}"...`);
+    const result = await emailService.handleOAuthCallback(code, cachedState.senderId, cachedState.adminName, redirectUri);
     console.log(`[AdminEmailController] Successfully connected sender "${result.senderId}" (${result.email})`);
 
     // Send friendly HTML message that automatically notifies parent opener window and closes

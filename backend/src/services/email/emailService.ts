@@ -55,8 +55,9 @@ export class GmailEmailService {
   /**
    * Initializes OAuth2 client for Google Gmail API
    */
-  public getOAuth2Client() {
-    const { clientId, clientSecret, redirectUri } = config.google;
+  public getOAuth2Client(customRedirectUri?: string) {
+    const { clientId, clientSecret } = config.google;
+    const redirectUri = customRedirectUri || config.google.redirectUri;
     if (!clientId || !clientSecret) {
       throw new Error('Google OAuth Client ID and Secret are not configured (GOOGLE_GMAIL_CLIENT_ID, GOOGLE_GMAIL_CLIENT_SECRET).');
     }
@@ -66,7 +67,7 @@ export class GmailEmailService {
   /**
    * Generates authorization URL for a specific sender identity ('ketan' | 'nirmay')
    */
-  public generateAuthUrl(senderId: string, stateToken: string): string {
+  public generateAuthUrl(senderId: string, stateToken: string, customRedirectUri?: string): string {
     const cleanId = String(senderId || '').trim().toLowerCase();
     const senders = config.email.senders as Record<string, { id: string; name: string; email: string }>;
 
@@ -74,7 +75,7 @@ export class GmailEmailService {
       throw new Error(`Invalid sender identity: "${senderId}". Allowed identities: ${Object.keys(senders).join(', ')}`);
     }
 
-    const oauth2Client = this.getOAuth2Client();
+    const oauth2Client = this.getOAuth2Client(customRedirectUri);
     const targetEmail = senders[cleanId].email;
 
     return oauth2Client.generateAuthUrl({
@@ -89,7 +90,7 @@ export class GmailEmailService {
   /**
    * Exchanges OAuth authorization code for tokens and saves refresh token encrypted in DB
    */
-  public async handleOAuthCallback(code: string, senderId: string, adminName: string) {
+  public async handleOAuthCallback(code: string, senderId: string, adminName: string, customRedirectUri?: string) {
     const cleanId = String(senderId || '').trim().toLowerCase();
     const senders = config.email.senders as Record<string, { id: string; name: string; email: string }>;
 
@@ -98,7 +99,7 @@ export class GmailEmailService {
     }
 
     const expectedConfig = senders[cleanId];
-    const oauth2Client = this.getOAuth2Client();
+    const oauth2Client = this.getOAuth2Client(customRedirectUri);
 
     let tokens: any;
     try {
