@@ -100,7 +100,9 @@ export async function handleGmailOAuthCallback(req: Request, res: Response, next
 
     oauthStateCache.delete(state);
 
+    console.log(`[AdminEmailController] Starting OAuth callback exchange for sender "${cachedState.senderId}"...`);
     const result = await emailService.handleOAuthCallback(code, cachedState.senderId, cachedState.adminName);
+    console.log(`[AdminEmailController] Successfully connected sender "${result.senderId}" (${result.email})`);
 
     // Send friendly HTML message that automatically notifies parent opener window and closes
     return res.send(`
@@ -144,7 +146,8 @@ export async function handleGmailOAuthCallback(req: Request, res: Response, next
       <head><title>Gmail Connection Error</title></head>
       <body style="font-family:sans-serif; text-align:center; padding:50px; background:#fef2f2; color:#991b1b;">
         <h2>❌ Connection Error</h2>
-        <p>${error?.message || 'Failed to exchange authorization tokens with Google.'}</p>
+        <p style="color:#b91c1c; font-weight:600;">${error?.message || 'Failed to exchange authorization tokens with Google.'}</p>
+        <p style="color:#6b7280; font-size:13px;">Please make sure you are signed into the correct Google workspace account and try clicking Connect again.</p>
         <button onclick="window.close()" style="padding:10px 20px; background:#b91c1c; color:#fff; border:none; border-radius:6px; cursor:pointer;">Close Window</button>
       </body>
       </html>

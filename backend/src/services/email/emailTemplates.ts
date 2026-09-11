@@ -20,7 +20,7 @@ Thank you for applying to the Mantra Campus Ambassador Program (Application #{{a
 We’ve received your application and our team is currently reviewing your profile and statement of motivation. We carefully review each application to select students who are passionate about promoting mental health awareness and creating a positive impact on their campuses.
 
 What happens next?
-- Our team will review your application within 2-3 business days.
+- Our team will review your application within 2–3 business days.
 - We’ll email you once your application status has been updated.
 - If selected, you’ll receive the next steps to get started as a Mantra Campus Ambassador.
 
