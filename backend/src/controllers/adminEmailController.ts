@@ -17,11 +17,13 @@ const oauthStateCache = new Map<string, { senderId: string; adminName: string; r
  */
 function getRequestRedirectUri(req: Request): string {
   const host = req.get('x-forwarded-host') || req.get('host') || 'platform.mantracare.com';
-  const proto = req.get('x-forwarded-proto') || (req.secure ? 'https' : 'https');
   
   if (host.includes('localhost') || host.includes('127.0.0.1')) {
     return 'http://localhost:5000/api/admin/gmail/oauth/callback';
   }
+  
+  // Production reverse proxies terminate TLS at ingress, so always enforce https://
+  const proto = 'https';
   
   // If request arrived via subpath proxy /provider_activity
   const origUrl = req.originalUrl || req.baseUrl || req.url || '';
