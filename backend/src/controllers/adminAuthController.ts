@@ -46,15 +46,16 @@ export async function login(req: AuthRequest, res: Response) {
       });
     }
 
-    const isValid = await verifyPassword(password, admin.password_hash);
-    if (!isValid) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid email or password.'
-      });
-    }
+    // LOCAL TESTING OVERRIDE: Password validation commented out as requested
+    // const isValid = await verifyPassword(password, admin.password_hash);
+    // if (!isValid) {
+    //   return res.status(401).json({
+    //     success: false,
+    //     error: 'Invalid email or password.'
+    //   });
+    // }
 
-    // Update last login timestamp in DB
+    // Update last login timestamp in DB 
     await updateAdminLastLogin(admin.id);
 
     const payload: AdminJwtPayload = {

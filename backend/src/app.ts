@@ -12,6 +12,7 @@ import certificateRoutes from './routes/certificateRoutes.js';
 import adminAuthRoutes from './routes/adminAuthRoutes.js';
 import adminUserRoutes from './routes/adminUserRoutes.js';
 import reviewerRoutes from './routes/reviewerRoutes.js';
+import adminEmailRoutes from './routes/adminEmailRoutes.js';
 import campusRoutes from './campus-program/routes/campusRoutes.js';
 import corporateRoutes from './corporate-program/routes/corporateRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -51,6 +52,8 @@ apiPrefixes.forEach((prefix) => {
   app.use(`${prefix}/admin/auth`, adminAuthRoutes);
   app.use(`${prefix}/admin/users`, adminUserRoutes);
   app.use(`${prefix}/admin/reviewers`, reviewerRoutes);
+  app.use(`${prefix}/admin/email`, adminEmailRoutes);
+  app.use(`${prefix}/admin/gmail`, adminEmailRoutes);
   app.use(`${prefix}/users`, userRoutes);
   app.use(`${prefix}/activities`, activityRoutes);
   app.use(`${prefix}/campus-program`, campusRoutes);

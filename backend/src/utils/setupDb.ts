@@ -175,6 +175,50 @@ export async function setupDb(): Promise<void> {
       console.log('[setupDb] corporate_learning_progress check passed');
     }
 
+    // 7. Reusable Admin Email Logs Table
+    try {
+      await sql`
+        CREATE TABLE IF NOT EXISTS email_logs (
+          id BIGSERIAL PRIMARY KEY,
+          application_id VARCHAR(255),
+          recipient_email VARCHAR(255) NOT NULL,
+          sender_email VARCHAR(255) NOT NULL,
+          sender_id VARCHAR(100) NOT NULL,
+          template VARCHAR(100),
+          subject TEXT NOT NULL,
+          status VARCHAR(50) DEFAULT 'sent',
+          sent_by VARCHAR(255) DEFAULT 'admin',
+          provider_message_id VARCHAR(255),
+          error_message TEXT,
+          sent_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+      await sql`CREATE INDEX IF NOT EXISTS idx_email_logs_app_id ON email_logs(application_id);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_email_logs_recipient ON email_logs(recipient_email);`;
+    } catch (e) {
+      console.log('[setupDb] email_logs check passed');
+    }
+
+    // 8. Gmail Sender OAuth Accounts Table
+    try {
+      await sql`
+        CREATE TABLE IF NOT EXISTS gmail_sender_accounts (
+          id BIGSERIAL PRIMARY KEY,
+          sender_id VARCHAR(100) UNIQUE NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          display_name VARCHAR(255) NOT NULL,
+          refresh_token_encrypted TEXT NOT NULL,
+          google_account_id VARCHAR(255),
+          status VARCHAR(50) DEFAULT 'connected',
+          connected_by VARCHAR(255) DEFAULT 'admin',
+          connected_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+    } catch (e) {
+      console.log('[setupDb] gmail_sender_accounts check passed');
+    }
+
     console.log('[setupDb] Database schema initialized successfully.');
   } catch (err) {
     console.error('[setupDb] Error initializing database:', err);

@@ -5,7 +5,10 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load backend-specific .env file
+// Load backend-specific and root .env files safely
+dotenv.config(); // Loads .env in current working directory
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+dotenv.config({ path: path.resolve(process.cwd(), 'backend/.env') });
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
@@ -33,5 +36,25 @@ export const config = {
   gemini: {
     apiKey: process.env.GEMINI_API_KEY || '',
     modelName: process.env.MODEL_NAME || 'gemini-2.5-flash'
+  },
+  google: {
+    clientId: process.env.GOOGLE_GMAIL_CLIENT_ID || '',
+    clientSecret: process.env.GOOGLE_GMAIL_CLIENT_SECRET || '',
+    redirectUri: process.env.GOOGLE_GMAIL_REDIRECT_URI || 'https://provider.mantracare.com/api/admin/gmail/oauth/callback',
+  },
+  email: {
+    tokenEncryptionSecret: process.env.TOKEN_ENCRYPTION_SECRET || process.env.JWT_SECRET || 'mantra_gmail_token_encryption_secret_2026',
+    senders: {
+      ketan: {
+        id: 'ketan',
+        name: process.env.EMAIL_SENDER_1_NAME || 'Ketan Gulati',
+        email: process.env.EMAIL_SENDER_1_EMAIL || 'ketan.gulati@mantra.care',
+      },
+      nirmay: {
+        id: 'nirmay',
+        name: process.env.EMAIL_SENDER_2_NAME || 'Nirmay',
+        email: process.env.EMAIL_SENDER_2_EMAIL || 'nirmay@mantra.care',
+      }
+    }
   }
 };

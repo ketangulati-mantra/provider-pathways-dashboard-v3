@@ -60,9 +60,12 @@ export interface CampusApplication {
   approval_at?: string;
   activation_at?: string;
   version?: number;
-  parent_application_id?: string | null;
   submitted_at?: string;
   updated_at?: string;
+  latest_email_status?: string | null;
+  latest_email_template?: string | null;
+  latest_email_sent_at?: string | null;
+  latest_email_sender?: string | null;
 }
 
 export interface LearningProgress {

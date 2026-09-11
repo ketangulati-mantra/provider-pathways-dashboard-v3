@@ -431,3 +431,140 @@ export const fetchSubmissionActivities = async () => {
 export const getLesson = (lessonId: string) => {
   return activities.find(a => a.lessonId === lessonId) || null;
 };
+
+/**
+ * ==============================================================================
+ * REUSABLE ADMIN EMAIL SENDING API CLIENT
+ * ==============================================================================
+ */
+
+export const fetchEmailSenders = async () => {
+  const backendUrl = MANTRA_CONFIG.apiBaseUrl;
+  try {
+    const res = await fetch(`${backendUrl}/api/admin/email/senders`, {
+      headers: getAdminAuthHeaders(),
+      credentials: 'include'
+    });
+    if (!res.ok) {
+      return { success: false, data: [], error: `HTTP ${res.status}` };
+    }
+    return await res.json();
+  } catch (error) {
+    console.error('[Mantra API] Error fetching email senders:', error);
+    return { success: false, data: [], error: 'Failed to fetch email senders' };
+  }
+};
+
+export const fetchEmailTemplates = async () => {
+  const backendUrl = MANTRA_CONFIG.apiBaseUrl;
+  try {
+    const res = await fetch(`${backendUrl}/api/admin/email/templates`, {
+      headers: getAdminAuthHeaders(),
+      credentials: 'include'
+    });
+    if (!res.ok) {
+      return { success: false, data: [], error: `HTTP ${res.status}` };
+    }
+    return await res.json();
+  } catch (error) {
+    console.error('[Mantra API] Error fetching email templates:', error);
+    return { success: false, data: [], error: 'Failed to fetch email templates' };
+  }
+};
+
+export const renderEmailTemplate = async (templateId: string, applicationId?: string | number) => {
+  const backendUrl = MANTRA_CONFIG.apiBaseUrl;
+  try {
+    const res = await fetch(`${backendUrl}/api/admin/email/render`, {
+      method: 'POST',
+      headers: { ...getAdminAuthHeaders(), 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ templateId, applicationId })
+    });
+    if (!res.ok) {
+      return { success: false, error: `HTTP ${res.status}` };
+    }
+    return await res.json();
+  } catch (error) {
+    console.error('[Mantra API] Error rendering email template:', error);
+    return { success: false, error: 'Failed to render email template' };
+  }
+};
+
+export const sendAdminEmail = async (payload: {
+  senderId: string;
+  to: string;
+  subject: string;
+  text?: string;
+  html?: string;
+  applicationId?: string | number;
+  templateId?: string;
+  idempotencyKey?: string;
+}) => {
+  const backendUrl = MANTRA_CONFIG.apiBaseUrl;
+  try {
+    const res = await fetch(`${backendUrl}/api/admin/email/send`, {
+      method: 'POST',
+      headers: {
+        ...getAdminAuthHeaders(),
+        'Content-Type': 'application/json',
+        ...(payload.idempotencyKey ? { 'X-Idempotency-Key': payload.idempotencyKey } : {})
+      },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    return json;
+  } catch (error) {
+    console.error('[Mantra API] Error sending admin email:', error);
+    return { success: false, error: 'Unable to connect to email sending server. Please try again.' };
+  }
+};
+
+export const fetchApplicationEmailLogs = async (applicationId: string | number) => {
+  const backendUrl = MANTRA_CONFIG.apiBaseUrl;
+  try {
+    const res = await fetch(`${backendUrl}/api/admin/email/logs/${applicationId}`, {
+      headers: getAdminAuthHeaders(),
+      credentials: 'include'
+    });
+    if (!res.ok) {
+      return { success: false, data: [], error: `HTTP ${res.status}` };
+    }
+    return await res.json();
+  } catch (error) {
+    console.error('[Mantra API] Error fetching email logs:', error);
+    return { success: false, data: [], error: 'Failed to fetch email logs' };
+  }
+};
+
+export const initiateGmailOAuth = async (senderId: string) => {
+  const backendUrl = MANTRA_CONFIG.apiBaseUrl;
+  try {
+    const res = await fetch(`${backendUrl}/api/admin/email/auth/${encodeURIComponent(senderId)}`, {
+      headers: getAdminAuthHeaders(),
+      credentials: 'include'
+    });
+    return await res.json();
+  } catch (error) {
+    console.error('[Mantra API] Error initiating Gmail auth:', error);
+    return { success: false, error: 'Failed to initiate Gmail authorization' };
+  }
+};
+
+export const disconnectGmailSender = async (senderId: string) => {
+  const backendUrl = MANTRA_CONFIG.apiBaseUrl;
+  try {
+    const res = await fetch(`${backendUrl}/api/admin/email/disconnect/${encodeURIComponent(senderId)}`, {
+      method: 'POST',
+      headers: getAdminAuthHeaders(),
+      credentials: 'include'
+    });
+    return await res.json();
+  } catch (error) {
+    console.error('[Mantra API] Error disconnecting Gmail sender:', error);
+    return { success: false, error: 'Failed to disconnect Gmail sender' };
+  }
+};
+
+

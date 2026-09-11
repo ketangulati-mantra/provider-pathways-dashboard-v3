@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { Search, Eye, Filter, CheckCircle2, XCircle, Clock, GraduationCap, Calendar, UserCheck, Plus, ChevronDown, Sparkles, Building2, BookOpen, X } from 'lucide-react';
+import { Search, Eye, Filter, CheckCircle2, XCircle, Clock, GraduationCap, Calendar, UserCheck, Plus, ChevronDown, Sparkles, Building2, BookOpen, X, Mail, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import CampusApplicationDetailsDrawer from './CampusApplicationDetailsDrawer';
 import RejectReasonModal from './RejectReasonModal';
 import RequestMoreInfoModal from './RequestMoreInfoModal';
@@ -241,16 +241,116 @@ export default function CampusAdminDashboard() {
   const getStatusBadge = (st) => {
     switch (st) {
       case 'approved':
-        return <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '4px 12px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 900, whiteSpace: 'nowrap', display: 'inline-block' }}>Approved</span>;
+        return <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '3px 10px', borderRadius: '8px', fontSize: '0.72rem', fontWeight: 900, whiteSpace: 'nowrap', display: 'inline-block' }}>Approved</span>;
       case 'rejected':
-        return <span style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', padding: '4px 12px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 900, whiteSpace: 'nowrap', display: 'inline-block' }}>Rejected</span>;
+        return <span style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', padding: '3px 10px', borderRadius: '8px', fontSize: '0.72rem', fontWeight: 900, whiteSpace: 'nowrap', display: 'inline-block' }}>Rejected</span>;
       case 'more_info_required':
-        return <span style={{ background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5', padding: '4px 12px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 900, whiteSpace: 'nowrap', display: 'inline-block' }}>Info Requested</span>;
+        return <span style={{ background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5', padding: '3px 10px', borderRadius: '8px', fontSize: '0.72rem', fontWeight: 900, whiteSpace: 'nowrap', display: 'inline-block' }}>Info Requested</span>;
       case 'under_review':
-        return <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '4px 12px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 900, whiteSpace: 'nowrap', display: 'inline-block' }}>Under Review</span>;
+        return <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '3px 10px', borderRadius: '8px', fontSize: '0.72rem', fontWeight: 900, whiteSpace: 'nowrap', display: 'inline-block' }}>Under Review</span>;
       default:
-        return <span style={{ background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', padding: '4px 12px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 900, whiteSpace: 'nowrap', display: 'inline-block' }}>Pending Review</span>;
+        return <span style={{ background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', padding: '3px 10px', borderRadius: '8px', fontSize: '0.72rem', fontWeight: 900, whiteSpace: 'nowrap', display: 'inline-block' }}>Pending Review</span>;
     }
+  };
+
+  const getMailStatusBadge = (app) => {
+    const status = app.latest_email_status;
+    const template = app.latest_email_template;
+    const sentAt = app.latest_email_sent_at;
+
+    if (!status) {
+      return (
+        <span 
+          style={{ 
+            background: '#f8fafc', 
+            color: '#94a3b8', 
+            border: '1px solid #e2e8f0', 
+            padding: '3px 8px', 
+            borderRadius: '8px', 
+            fontSize: '0.71rem', 
+            fontWeight: 700, 
+            whiteSpace: 'nowrap', 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            gap: '4px' 
+          }}
+          title="No emails sent yet"
+        >
+          <Mail size={11} color="#94a3b8" /> Unsent
+        </span>
+      );
+    }
+
+    if (status === 'sent') {
+      let wordLabel = 'Sent';
+      let badgeBg = '#eff6ff';
+      let badgeColor = '#1d4ed8';
+      let badgeBorder = '#bfdbfe';
+
+      if (template === 'application_received') {
+        wordLabel = 'Received';
+        badgeBg = '#eff6ff';
+        badgeColor = '#1d4ed8';
+        badgeBorder = '#bfdbfe';
+      } else if (template === 'application_approved') {
+        wordLabel = 'Approved';
+        badgeBg = '#ecfdf5';
+        badgeColor = '#047857';
+        badgeBorder = '#a7f3d0';
+      } else if (template === 'application_rejected') {
+        wordLabel = 'Rejected';
+        badgeBg = '#fef2f2';
+        badgeColor = '#b91c1c';
+        badgeBorder = '#fecaca';
+      } else if (template === 'need_more_information') {
+        wordLabel = 'Info';
+        badgeBg = '#fff7ed';
+        badgeColor = '#c2410c';
+        badgeBorder = '#ffedd5';
+      }
+
+      return (
+        <span 
+          style={{ 
+            background: badgeBg, 
+            color: badgeColor, 
+            border: `1px solid ${badgeBorder}`, 
+            padding: '3px 8px', 
+            borderRadius: '8px', 
+            fontSize: '0.71rem', 
+            fontWeight: 800, 
+            whiteSpace: 'nowrap', 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            gap: '4px' 
+          }}
+          title={sentAt ? `Sent: ${new Date(sentAt).toLocaleString('en-US')}` : `${wordLabel} email sent`}
+        >
+          <CheckCircle size={11} color={badgeColor} /> {wordLabel}
+        </span>
+      );
+    }
+
+    return (
+      <span 
+        style={{ 
+          background: '#fef2f2', 
+          color: '#b91c1c', 
+          border: '1px solid #fecaca', 
+          padding: '3px 8px', 
+          borderRadius: '8px', 
+          fontSize: '0.71rem', 
+          fontWeight: 800, 
+          whiteSpace: 'nowrap', 
+          display: 'inline-flex', 
+          alignItems: 'center', 
+          gap: '4px' 
+        }}
+        title="Email delivery failed"
+      >
+        <AlertCircle size={11} color="#dc2626" /> Failed
+      </span>
+    );
   };
 
   // Custom Date Range State
@@ -758,26 +858,27 @@ export default function CampusAdminDashboard() {
         <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.76rem' }}>
           <thead>
             <tr style={{ background: '#043263', borderBottom: '1px solid #03254c', color: '#ffffff', fontWeight: 800, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              <th style={{ padding: '7px 10px', width: '18%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Applicant Name</th>
-              <th style={{ padding: '7px 10px', width: '15%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>University / College</th>
-              <th style={{ padding: '7px 10px', width: '14%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Course / Year</th>
-              <th style={{ padding: '7px 10px', width: '11%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Date Applied</th>
-              <th style={{ padding: '7px 10px', width: '11%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Submissions</th>
+              <th style={{ padding: '7px 10px', width: '17%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Applicant Name</th>
+              <th style={{ padding: '7px 10px', width: '14%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>University / College</th>
+              <th style={{ padding: '7px 10px', width: '12%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Course / Year</th>
+              <th style={{ padding: '7px 10px', width: '10%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Date Applied</th>
+              <th style={{ padding: '7px 10px', width: '9%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Submissions</th>
               <th style={{ padding: '7px 10px', width: '11%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Current Status</th>
-              <th style={{ padding: '7px 10px', width: '12%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Reviewer</th>
-              <th style={{ padding: '7px 10px', width: '8%', textAlign: 'right', whiteSpace: 'nowrap' }}>Actions</th>
+              <th style={{ padding: '7px 10px', width: '10%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Mail Status</th>
+              <th style={{ padding: '7px 10px', width: '10%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Reviewer</th>
+              <th style={{ padding: '7px 10px', width: '7%', textAlign: 'right', whiteSpace: 'nowrap' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} style={{ padding: '20px', textAlign: 'center', color: '#64748b', fontWeight: 700 }}>
+                <td colSpan={9} style={{ padding: '20px', textAlign: 'center', color: '#64748b', fontWeight: 700 }}>
                   Loading campus applications...
                 </td>
               </tr>
             ) : rawApplications.length === 0 ? (
               <tr>
-                <td colSpan={8} style={{ padding: '20px', textAlign: 'center', color: '#64748b', fontWeight: 700 }}>
+                <td colSpan={9} style={{ padding: '20px', textAlign: 'center', color: '#64748b', fontWeight: 700 }}>
                   No campus applications found matching current criteria.
                 </td>
               </tr>
@@ -816,6 +917,11 @@ export default function CampusAdminDashboard() {
                   {/* Current Status */}
                   <td style={{ padding: '6px 10px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {getStatusBadge(app.application_status)}
+                  </td>
+
+                  {/* Mail Status */}
+                  <td style={{ padding: '6px 10px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {getMailStatusBadge(app)}
                   </td>
 
                   {/* Reviewer Dropdown with Custom Name Option */}

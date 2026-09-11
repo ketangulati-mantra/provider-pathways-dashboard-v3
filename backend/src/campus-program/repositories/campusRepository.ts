@@ -187,11 +187,29 @@ export class CampusRepository {
     const page = queryParams.page || 1;
     const limit = queryParams.limit || 20;
 
-    // Fetch all applications
+    // Fetch all applications with latest email log
     const allRows = await sql`
-      SELECT DISTINCT ON (user_id) *
-      FROM campus_program_applications
-      ORDER BY user_id, version DESC, id DESC;
+      WITH latest_emails AS (
+        SELECT DISTINCT ON (COALESCE(application_id, recipient_email))
+          application_id,
+          recipient_email,
+          status as latest_email_status,
+          template as latest_email_template,
+          sent_at as latest_email_sent_at,
+          sender_id as latest_email_sender
+        FROM email_logs
+        ORDER BY COALESCE(application_id, recipient_email), sent_at DESC, id DESC
+      )
+      SELECT DISTINCT ON (cpa.user_id) 
+        cpa.*,
+        le.latest_email_status,
+        le.latest_email_template,
+        le.latest_email_sent_at,
+        le.latest_email_sender
+      FROM campus_program_applications cpa
+      LEFT JOIN latest_emails le 
+        ON (le.application_id = CAST(cpa.id AS VARCHAR) OR le.recipient_email = cpa.email)
+      ORDER BY cpa.user_id, cpa.version DESC, cpa.id DESC;
     `;
 
     let filtered = allRows as CampusApplication[];

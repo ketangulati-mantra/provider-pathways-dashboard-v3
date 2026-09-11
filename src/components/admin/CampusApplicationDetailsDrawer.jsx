@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { X, CheckCircle2, XCircle, HelpCircle, ExternalLink, Clock, FileText, History } from 'lucide-react';
+import { X, CheckCircle2, XCircle, HelpCircle, ExternalLink, Clock, FileText, History, Mail } from 'lucide-react';
 import { MANTRA_CONFIG } from '../../mantra';
-import { getAdminAuthHeaders } from '../../mantra/api';
+import { getAdminAuthHeaders, fetchApplicationEmailLogs } from '../../mantra/api';
+import SendEmailModal from './SendEmailModal';
 
 const API_BASE = MANTRA_CONFIG.apiBaseUrl !== undefined && MANTRA_CONFIG.apiBaseUrl !== null ? MANTRA_CONFIG.apiBaseUrl : (import.meta.env.PROD ? '' : 'http://localhost:5000');
 
 export default function CampusApplicationDetailsDrawer({ isOpen, onClose, applicationId, onActionSuccess, onOpenRejectModal, onOpenRequestInfoModal }) {
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('details'); // 'details' | 'history'
+  const [activeTab, setActiveTab] = useState('details'); // 'details' | 'history' | 'emails'
+  const [isSendEmailOpen, setIsSendEmailOpen] = useState(false);
+  const [emailLogs, setEmailLogs] = useState([]);
+  const [loadingEmails, setLoadingEmails] = useState(false);
 
   // Lock background body scroll when modal is open
   useEffect(() => {
@@ -26,8 +30,24 @@ export default function CampusApplicationDetailsDrawer({ isOpen, onClose, applic
   useEffect(() => {
     if (isOpen && applicationId) {
       fetchDetails();
+      fetchEmailHistory();
     }
   }, [isOpen, applicationId]);
+
+  const fetchEmailHistory = async () => {
+    if (!applicationId) return;
+    try {
+      setLoadingEmails(true);
+      const res = await fetchApplicationEmailLogs(applicationId);
+      if (res.success && res.data) {
+        setEmailLogs(res.data);
+      }
+    } catch (err) {
+      console.error('[CampusApplicationDetailsDrawer] Error fetching email history:', err);
+    } finally {
+      setLoadingEmails(false);
+    }
+  };
 
   const fetchDetails = async () => {
     try {
@@ -184,18 +204,18 @@ export default function CampusApplicationDetailsDrawer({ isOpen, onClose, applic
           </button>
         </div>
 
-        {/* Simplified 2 Tabs for Non-Tech Users */}
-        <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', padding: '0 16px' }}>
+        {/* Simplified Tabs: Details, Submission History, and Email Communications */}
+        <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', padding: '0 16px', gap: '4px' }}>
           <button
             onClick={() => setActiveTab('details')}
             style={{
-              padding: '12px 18px',
+              padding: '12px 16px',
               border: 'none',
               background: 'transparent',
               borderBottom: activeTab === 'details' ? '2.5px solid #2563eb' : '2.5px solid transparent',
               color: activeTab === 'details' ? '#2563eb' : '#64748b',
               fontWeight: 800,
-              fontSize: '0.86rem',
+              fontSize: '0.84rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -208,13 +228,13 @@ export default function CampusApplicationDetailsDrawer({ isOpen, onClose, applic
           <button
             onClick={() => setActiveTab('history')}
             style={{
-              padding: '12px 18px',
+              padding: '12px 16px',
               border: 'none',
               background: 'transparent',
               borderBottom: activeTab === 'history' ? '2.5px solid #2563eb' : '2.5px solid transparent',
               color: activeTab === 'history' ? '#2563eb' : '#64748b',
               fontWeight: 800,
-              fontSize: '0.86rem',
+              fontSize: '0.84rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -222,6 +242,25 @@ export default function CampusApplicationDetailsDrawer({ isOpen, onClose, applic
             }}
           >
             <History size={15} /> Submission History ({versionHistory.length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab('emails')}
+            style={{
+              padding: '12px 16px',
+              border: 'none',
+              background: 'transparent',
+              borderBottom: activeTab === 'emails' ? '2.5px solid #2563eb' : '2.5px solid transparent',
+              color: activeTab === 'emails' ? '#2563eb' : '#64748b',
+              fontWeight: 800,
+              fontSize: '0.84rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <Mail size={15} /> Email History ({emailLogs.length})
           </button>
         </div>
 
@@ -349,6 +388,126 @@ export default function CampusApplicationDetailsDrawer({ isOpen, onClose, applic
                   })}
                 </div>
               )}
+
+              {activeTab === 'emails' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h4 style={{ margin: 0, fontSize: '0.88rem', fontWeight: 900, color: '#0f172a' }}>
+                      Email Communication History ({emailLogs.length})
+                    </h4>
+                    <button
+                      onClick={() => setIsSendEmailOpen(true)}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: '#2563eb',
+                        color: '#ffffff',
+                        fontWeight: 800,
+                        fontSize: '0.78rem',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <Mail size={13} /> Compose Email
+                    </button>
+                  </div>
+
+                  {loadingEmails ? (
+                    <div style={{ textAlign: 'center', padding: '30px', color: '#64748b', fontSize: '0.85rem' }}>
+                      Loading email communications...
+                    </div>
+                  ) : emailLogs.length === 0 ? (
+                    <div style={{
+                      textAlign: 'center',
+                      padding: '36px 20px',
+                      background: '#f8fafc',
+                      borderRadius: '14px',
+                      border: '1px dashed #cbd5e1',
+                      color: '#64748b'
+                    }}>
+                      <Mail size={28} style={{ margin: '0 auto 8px', opacity: 0.5, display: 'block' }} />
+                      <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#334155' }}>No emails sent yet</div>
+                      <p style={{ margin: '4px 0 14px', fontSize: '0.8rem' }}>
+                        Send a predefined template email directly to {app.full_name || 'this applicant'}.
+                      </p>
+                      <button
+                        onClick={() => setIsSendEmailOpen(true)}
+                        style={{
+                          padding: '7px 16px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: '#2563eb',
+                          color: '#ffffff',
+                          fontWeight: 800,
+                          fontSize: '0.8rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Send First Email
+                      </button>
+                    </div>
+                  ) : (
+                    emailLogs.map((log) => {
+                      const isSent = log.status === 'sent';
+                      return (
+                        <div key={log.id} style={{
+                          background: '#ffffff',
+                          border: '1px solid #e2e8f0',
+                          borderLeft: isSent ? '4px solid #10b981' : '4px solid #ef4444',
+                          padding: '14px 16px',
+                          borderRadius: '12px',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.02)'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+                            <div>
+                              <span style={{
+                                background: isSent ? '#ecfdf5' : '#fef2f2',
+                                color: isSent ? '#047857' : '#b91c1c',
+                                border: `1px solid ${isSent ? '#a7f3d0' : '#fecaca'}`,
+                                padding: '2px 8px',
+                                borderRadius: '6px',
+                                fontSize: '0.72rem',
+                                fontWeight: 800,
+                                display: 'inline-block',
+                                marginBottom: '4px'
+                              }}>
+                                {isSent ? '✓ Sent' : '✕ Failed'} {log.template ? `· ${log.template}` : ''}
+                              </span>
+                              <h5 style={{ margin: 0, fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>
+                                {log.subject}
+                              </h5>
+                            </div>
+                            <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                              {new Date(log.sent_at).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+
+                          <div style={{ fontSize: '0.78rem', color: '#64748b', display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '4px' }}>
+                            <span><strong>To:</strong> {log.recipient_email}</span>
+                            <span><strong>From:</strong> {log.sender_email}</span>
+                            <span><strong>Sent by:</strong> {log.sent_by}</span>
+                          </div>
+
+                          {log.error_message && (
+                            <div style={{ marginTop: '6px', fontSize: '0.76rem', color: '#b91c1c', background: '#fef2f2', padding: '6px 10px', borderRadius: '6px' }}>
+                              Error: {log.error_message}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
             </>
           )}
 
@@ -365,24 +524,45 @@ export default function CampusApplicationDetailsDrawer({ isOpen, onClose, applic
           gap: '12px',
           flexWrap: 'wrap'
         }}>
-          <button
-            onClick={() => onOpenRequestInfoModal(app)}
-            style={{
-              padding: '9px 16px',
-              borderRadius: '99px',
-              border: '1px solid #fed7aa',
-              background: '#fff7ed',
-              color: '#c2410c',
-              fontWeight: 800,
-              fontSize: '0.82rem',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <HelpCircle size={14} /> Request Info
-          </button>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button
+              onClick={() => setIsSendEmailOpen(true)}
+              style={{
+                padding: '9px 16px',
+                borderRadius: '99px',
+                border: '1px solid #bfdbfe',
+                background: '#eff6ff',
+                color: '#1d4ed8',
+                fontWeight: 800,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <Mail size={14} /> Send Email
+            </button>
+
+            <button
+              onClick={() => onOpenRequestInfoModal(app)}
+              style={{
+                padding: '9px 16px',
+                borderRadius: '99px',
+                border: '1px solid #fed7aa',
+                background: '#fff7ed',
+                color: '#c2410c',
+                fontWeight: 800,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <HelpCircle size={14} /> Request Info
+            </button>
+          </div>
 
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
@@ -427,6 +607,20 @@ export default function CampusApplicationDetailsDrawer({ isOpen, onClose, applic
         </div>
 
       </div>
+
+      {/* Send Email Modal Portal */}
+      <SendEmailModal
+        isOpen={isSendEmailOpen}
+        onClose={() => setIsSendEmailOpen(false)}
+        application={app}
+        onEmailSentSuccess={() => {
+          fetchEmailHistory();
+          fetchDetails();
+          if (onActionSuccess) {
+            onActionSuccess();
+          }
+        }}
+      />
 
     </div>
   );
