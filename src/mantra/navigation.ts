@@ -82,16 +82,14 @@ export function handleExit() {
   if (typeof window === "undefined") return;
 
   // 1. React Native WebView
-  if (window.ReactNativeWebView) {
+if (window.ReactNativeWebView) {
     window.ReactNativeWebView.postMessage(
-      JSON.stringify({
-        action: "navigate",
-        screen: "Tasks",
-        params: { page: "/tasks" }
-      })
+     JSON.stringify({
+        action: 'exit'
+     })
     );
     return;
-  }
+}
 
   // 2. iframe inside web.mantracare.com
 if (window.parent !== window) {
@@ -99,7 +97,7 @@ if (window.parent !== window) {
      {
         action: "exit",
      },
-     "https://provider.mantracare.com/tasks"
+     "https://provider.mantracare.com"
     );
     return;
   }
