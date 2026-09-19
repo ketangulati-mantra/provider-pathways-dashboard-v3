@@ -82,22 +82,26 @@ export function handleExit() {
   if (typeof window === "undefined") return;
 
   // 1. React Native WebView
-if (window.ReactNativeWebView) {
+  if (window.ReactNativeWebView) {
     window.ReactNativeWebView.postMessage(
-     JSON.stringify({
-        action: 'exit'
-     })
+      JSON.stringify({
+        action: "navigate",
+        screen: "Tasks",
+        params: { page: "/tasks" }
+      })
     );
     return;
-}
+  }
 
-  // 2. iframe inside web.mantracare.com
-if (window.parent !== window) {
+  // 2. iframe inside provider.mantracare.com
+  if (window.parent !== window) {
     window.parent.postMessage(
-     {
-        action: "exit",
-     },
-     "https://provider.mantracare.com"
+      {
+        action: "navigate",
+        page: "/tasks",
+        params: { page: "/tasks" }
+      },
+      "https://provider.mantracare.com"
     );
     return;
   }
@@ -117,60 +121,41 @@ if (window.parent !== window) {
 }
 
 /**
- * Navigates to a specific screen inside the native React Native app (e.g. after task completion)
- */
-export function navigateToNativeScreen(
-  screen: string = "Home",
-  params: Record<string, any> = {}
-) {
-  if (typeof window === "undefined") return;
-  if (window.ReactNativeWebView) {
-    window.ReactNativeWebView.postMessage(
-      JSON.stringify({
-        action: "navigate",
-        screen,
-        params,
-      })
-    );
-  }
-}
-
-/**
  * Navigates to the Clients page across all 3 contexts:
  * 1. React Native WebView -> window.ReactNativeWebView.postMessage(JSON.stringify({ action: "navigate", params: { page: "/clients" } }))
  * 2. iframe inside provider.mantracare.com -> window.parent.postMessage({ action: "navigate", params: { page: "/clients" } }, "https://provider.mantracare.com")
  * 3. Standalone browser -> window.location.href = "https://provider.mantracare.com/clients"
  */
 export function navigateToClientsPage() {
-	if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
-	// 1. React Native WebView
-	if (window.ReactNativeWebView) {
-		window.ReactNativeWebView.postMessage(
-			JSON.stringify({
-				action: 'navigate',
-				screen: 'EHRClients',
-				params: {},
-			}),
-		);
-		return;
-	}
+  // 1. React Native WebView
+  if (window.ReactNativeWebView) {
+    window.ReactNativeWebView.postMessage(
+      JSON.stringify({
+        action: "navigate",
+        params: { page: "/clients" }
+      })
+    );
+    return;
+  }
 
-	// 2. iframe inside provider.mantracare.com
-	if (window.parent !== window) {
-		window.parent.postMessage(
-			{
-				action: 'navigate',
-				page: '/clients',
-			},
-			'https://provider.mantracare.com',
-		);
-		return;
-	}
+  // 2. iframe inside provider.mantracare.com
+  if (window.parent !== window) {
+    window.parent.postMessage(
+      {
+        action: "navigate",
+        params: { page: "/clients" }
+      },
+      "https://provider.mantracare.com"
+    );
+    return;
+  }
 
-	// 3. Standalone browser
-	window.location.href = 'https://provider.mantracare.com/clients';
+  // 3. Standalone browser
+  window.location.href = "https://provider.mantracare.com/clients";
 }
+
 /**
  * Navigates to the Bank Details page across all 3 contexts:
  * 1. React Native WebView -> window.ReactNativeWebView.postMessage(JSON.stringify({ action: "navigate", params: { page: "/settings/bank" } }))

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { completeLesson, getCurrentUserId, goToDashboard, handleExit, navigateToNativeScreen } from '../mantra';
+import { completeLesson, getCurrentUserId, goToDashboard, handleExit } from '../mantra';
 import { useToast } from '../components';
 
 /**

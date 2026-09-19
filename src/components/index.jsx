@@ -50,7 +50,7 @@ export const Button = ({
   );
 };
 
-import { goToDashboard, goBack, handleExit, navigateToNativeScreen } from '../mantra/navigation';
+import { goToDashboard, goBack, handleExit } from '../mantra/navigation';
 
 /* ==========================================================================
    2. LESSON HEADER COMPONENT
