@@ -93,15 +93,13 @@ export function handleExit() {
     return;
   }
 
-  // 2. iframe inside provider.mantracare.com
-  if (window.parent !== window) {
+  // 2. iframe inside web.mantracare.com
+if (window.parent !== window) {
     window.parent.postMessage(
-      {
-        action: "navigate",
-        page: "/tasks",
-        params: { page: "/tasks" }
-      },
-      "https://provider.mantracare.com"
+     {
+        action: "exit",
+     },
+     "https://provider.mantracare.com"
     );
     return;
   }
