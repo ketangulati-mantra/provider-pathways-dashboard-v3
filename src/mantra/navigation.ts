@@ -99,7 +99,7 @@ if (window.parent !== window) {
      {
         action: "exit",
      },
-     "https://provider.mantracare.com"
+     "https://provider.mantracare.com/tasks"
     );
     return;
   }
