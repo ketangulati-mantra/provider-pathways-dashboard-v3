@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getCurrentUserId, MANTRA_CONFIG, goToDashboard } from '../../mantra';
+import { getCurrentUserId, MANTRA_CONFIG, goToDashboard, completeLesson } from '../../mantra';
 import OnboardingWizardContainer from './onboarding/OnboardingWizardContainer';
 import CampusApplicationModal from './application/CampusApplicationModal';
 import ApplicationSuccessModal from './application/ApplicationSuccessModal';
@@ -75,6 +75,21 @@ export default function CampusProgramController({ onBack }) {
         setStatusData(json.data);
         setShowAppModal(false);
         setShowSuccessModal(true);
+
+        // Store user email in sessionStorage to maintain consistent user identity across reloads
+        if (appFormData?.email) {
+          try {
+            sessionStorage.setItem('user_id', appFormData.email.trim().toLowerCase());
+          } catch (e) {}
+        }
+
+        // Trigger authoritative activity completion webhook
+        try {
+          console.log('[CampusProgramController] Triggering completion webhook for campus-awareness');
+          await completeLesson('campus-awareness');
+        } catch (webhookErr) {
+          console.error('[CampusProgramController] Error triggering completion webhook:', webhookErr);
+        }
       }
     } catch (err) {
       console.error('[CampusProgramController] Error submitting application:', err);

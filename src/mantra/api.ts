@@ -7,10 +7,30 @@ import { getCurrentService } from './services';
  */
 const getWebhookContext = () => {
   const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const rawHash = typeof window !== 'undefined' ? (window.location.hash || '') : '';
+  const hashQueryStr = rawHash.includes('?') ? rawHash.substring(rawHash.indexOf('?') + 1) : '';
+  const hashParams = new URLSearchParams(hashQueryStr);
+
+  let upaId = params.get('upa_id') || params.get('upaId') || hashParams.get('upa_id') || hashParams.get('upaId');
+  let uid = params.get('uid') || hashParams.get('uid');
+
+  if (typeof window !== 'undefined') {
+    if (upaId) {
+      try { sessionStorage.setItem('upa_id', upaId); } catch (e) {}
+    } else {
+      try { upaId = sessionStorage.getItem('upa_id'); } catch (e) {}
+    }
+
+    if (uid) {
+      try { sessionStorage.setItem('uid', uid); } catch (e) {}
+    } else {
+      try { uid = sessionStorage.getItem('uid'); } catch (e) {}
+    }
+  }
 
   return {
-    upaId: params.get('upa_id'),
-    uid: params.get('uid'),
+    upaId,
+    uid,
     service: getCurrentService()
   };
 };

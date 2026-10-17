@@ -274,7 +274,7 @@ export const activities: Activity[] = [
   {
     lessonId: 'campus-awareness',
     activityId: '',
-    services: ['therapy', 'listener', 'psychiatry'],
+    services: ['*'],
     title: 'Campus Ambassador Program',
     rewardPoints: 50,
     estimatedDuration: '2 min',

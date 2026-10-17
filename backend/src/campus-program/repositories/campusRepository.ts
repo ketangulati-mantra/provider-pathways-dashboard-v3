@@ -45,52 +45,102 @@ export class CampusRepository {
 
   /**
    * Insert or update Phase 2.5 application form entries into DB
+   * Links applicants by normalized email so guest sessions / incognito don't create orphan duplicates
    */
   async createOrUpdateApplication(appData: Partial<CampusApplication>): Promise<CampusApplication> {
     const programId = appData.program_id || 'campus_awareness';
-    const rows = await sql`
-      INSERT INTO campus_program_applications (
-        user_id, program_id, full_name, email, country_code, phone, college, course, year, city,
-        motivation, availability, linkedin_url, instagram_url, previous_experience,
-        terms_accepted, community_guidelines_accepted, application_status, version
-      ) VALUES (
-        ${appData.user_id}, ${programId}, ${appData.full_name || null}, ${appData.email || null}, 
-        ${appData.country_code || '+1'}, ${appData.phone || ''}, ${appData.college || ''}, 
-        ${appData.course || ''}, ${appData.year || '1st Year'}, ${appData.city || ''},
-        ${appData.motivation || ''}, ${appData.availability || '3-5 hours/week'}, 
-        ${appData.linkedin_url || null}, ${appData.instagram_url || null}, ${appData.previous_experience || null},
-        ${appData.terms_accepted ?? true}, ${appData.community_guidelines_accepted ?? true}, 'submitted', 1
-      )
-      ON CONFLICT (user_id, program_id, version) DO UPDATE SET
-        full_name = EXCLUDED.full_name,
-        email = EXCLUDED.email,
-        country_code = EXCLUDED.country_code,
-        phone = EXCLUDED.phone,
-        college = EXCLUDED.college,
-        course = EXCLUDED.course,
-        year = EXCLUDED.year,
-        city = EXCLUDED.city,
-        motivation = EXCLUDED.motivation,
-        availability = EXCLUDED.availability,
-        linkedin_url = EXCLUDED.linkedin_url,
-        instagram_url = EXCLUDED.instagram_url,
-        previous_experience = EXCLUDED.previous_experience,
-        application_status = 'submitted',
-        updated_at = CURRENT_TIMESTAMP
-      RETURNING *;
-    `;
+    const cleanEmail = (appData.email || '').trim().toLowerCase();
+
+    // Check if an application already exists for this email or userId
+    let existingApp: CampusApplication | null = null;
+    if (cleanEmail) {
+      const emailRows = await sql`
+        SELECT * FROM campus_program_applications 
+        WHERE LOWER(TRIM(email)) = ${cleanEmail} AND program_id = ${programId}
+        ORDER BY version DESC, id DESC LIMIT 1;
+      `;
+      if (emailRows.length > 0) {
+        existingApp = emailRows[0] as CampusApplication;
+      }
+    }
+
+    if (!existingApp && appData.user_id) {
+      existingApp = await this.findApplicationByUserId(appData.user_id, programId);
+    }
+
+    let rows: any[];
+
+    if (existingApp) {
+      // If an application already exists for this applicant/email, update or version it
+      const targetUserId = existingApp.user_id || appData.user_id;
+      const targetVersion = existingApp.version || 1;
+
+      // If existing app is already submitted or under review, update the latest record in place
+      rows = await sql`
+        UPDATE campus_program_applications SET
+          full_name = COALESCE(${appData.full_name || null}, full_name),
+          email = ${cleanEmail || existingApp.email},
+          country_code = COALESCE(${appData.country_code || null}, country_code),
+          phone = COALESCE(${appData.phone || null}, phone),
+          college = COALESCE(${appData.college || null}, college),
+          course = COALESCE(${appData.course || null}, course),
+          year = COALESCE(${appData.year || null}, year),
+          city = COALESCE(${appData.city || null}, city),
+          motivation = COALESCE(${appData.motivation || null}, motivation),
+          availability = COALESCE(${appData.availability || null}, availability),
+          linkedin_url = COALESCE(${appData.linkedin_url || null}, linkedin_url),
+          instagram_url = COALESCE(${appData.instagram_url || null}, instagram_url),
+          previous_experience = COALESCE(${appData.previous_experience || null}, previous_experience),
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ${existingApp.id}
+        RETURNING *;
+      `;
+    } else {
+      // Brand new applicant
+      rows = await sql`
+        INSERT INTO campus_program_applications (
+          user_id, program_id, full_name, email, country_code, phone, college, course, year, city,
+          motivation, availability, linkedin_url, instagram_url, previous_experience,
+          terms_accepted, community_guidelines_accepted, application_status, version
+        ) VALUES (
+          ${appData.user_id}, ${programId}, ${appData.full_name || null}, ${cleanEmail || null}, 
+          ${appData.country_code || '+1'}, ${appData.phone || ''}, ${appData.college || ''}, 
+          ${appData.course || ''}, ${appData.year || '1st Year'}, ${appData.city || ''},
+          ${appData.motivation || ''}, ${appData.availability || '3-5 hours/week'}, 
+          ${appData.linkedin_url || null}, ${appData.instagram_url || null}, ${appData.previous_experience || null},
+          ${appData.terms_accepted ?? true}, ${appData.community_guidelines_accepted ?? true}, 'submitted', 1
+        )
+        ON CONFLICT (user_id, program_id, version) DO UPDATE SET
+          full_name = EXCLUDED.full_name,
+          email = EXCLUDED.email,
+          country_code = EXCLUDED.country_code,
+          phone = EXCLUDED.phone,
+          college = EXCLUDED.college,
+          course = EXCLUDED.course,
+          year = EXCLUDED.year,
+          city = EXCLUDED.city,
+          motivation = EXCLUDED.motivation,
+          availability = EXCLUDED.availability,
+          linkedin_url = EXCLUDED.linkedin_url,
+          instagram_url = EXCLUDED.instagram_url,
+          previous_experience = EXCLUDED.previous_experience,
+          application_status = 'submitted',
+          updated_at = CURRENT_TIMESTAMP
+        RETURNING *;
+      `;
+    }
 
     const app = rows[0] as CampusApplication;
     
     // Log initial audit history entry
     await this.createAuditEntry(
       app.id ? String(app.id) : null,
-      appData.user_id!,
+      app.user_id,
       programId,
-      'draft',
+      existingApp?.application_status || 'draft',
       'submitted',
-      appData.user_id!,
-      'Initial application submission'
+      app.user_id,
+      existingApp ? 'Applicant refreshed application details' : 'Initial application submission'
     );
 
     return app;
@@ -103,6 +153,7 @@ export class CampusRepository {
     const latest = await this.findApplicationByUserId(userId, programId);
     const newVersion = (latest?.version || 1) + 1;
     const parentId = latest?.id ? parseInt(latest.id, 10) : null;
+    const cleanEmail = (appData.email || latest?.email || '').trim().toLowerCase();
 
     const rows = await sql`
       INSERT INTO campus_program_applications (
@@ -112,7 +163,7 @@ export class CampusRepository {
       ) VALUES (
         ${userId}, ${programId}, 
         ${appData.full_name || latest?.full_name || null}, 
-        ${appData.email || latest?.email || null}, 
+        ${cleanEmail || null}, 
         ${appData.country_code || latest?.country_code || '+1'}, 
         ${appData.phone || latest?.phone || ''}, 
         ${appData.college || latest?.college || ''}, 
@@ -145,12 +196,14 @@ export class CampusRepository {
   }
 
   /**
-   * Find latest application entry by userId
+   * Find latest application entry by userId or email
    */
   async findApplicationByUserId(userId: string, programId: string = 'campus_awareness'): Promise<CampusApplication | null> {
+    // If user has email in their current profile or passed directly
     const rows = await sql`
       SELECT * FROM campus_program_applications 
-      WHERE user_id = ${userId} AND program_id = ${programId} 
+      WHERE (user_id = ${userId} OR LOWER(TRIM(email)) = LOWER(TRIM(${userId})))
+        AND program_id = ${programId} 
       ORDER BY version DESC, id DESC LIMIT 1;
     `;
     return (rows[0] as CampusApplication) || null;
@@ -160,9 +213,14 @@ export class CampusRepository {
    * Get all version entries for an applicant
    */
   async getApplicationVersionHistory(userId: string, programId: string = 'campus_awareness'): Promise<CampusApplication[]> {
+    // First lookup user application to get their email if available
+    const latest = await this.findApplicationByUserId(userId, programId);
+    const email = latest?.email ? latest.email.trim().toLowerCase() : '';
+
     const rows = await sql`
       SELECT * FROM campus_program_applications 
-      WHERE user_id = ${userId} AND program_id = ${programId}
+      WHERE (user_id = ${userId} ${email ? sql`OR LOWER(TRIM(email)) = ${email}` : sql``})
+        AND program_id = ${programId}
       ORDER BY version ASC, submitted_at ASC;
     `;
     return rows as CampusApplication[];
@@ -187,7 +245,7 @@ export class CampusRepository {
     const page = queryParams.page || 1;
     const limit = queryParams.limit || 20;
 
-    // Fetch all applications with latest email log
+    // Fetch all applications deduplicated by email (or user_id if no email) with total submission count
     const allRows = await sql`
       WITH latest_emails AS (
         SELECT DISTINCT ON (COALESCE(application_id, recipient_email))
@@ -199,17 +257,27 @@ export class CampusRepository {
           sender_id as latest_email_sender
         FROM email_logs
         ORDER BY COALESCE(application_id, recipient_email), sent_at DESC, id DESC
+      ),
+      submission_counts AS (
+        SELECT 
+          COALESCE(NULLIF(LOWER(TRIM(email)), ''), user_id) as applicant_key,
+          COUNT(*)::int as total_submissions
+        FROM campus_program_applications
+        GROUP BY COALESCE(NULLIF(LOWER(TRIM(email)), ''), user_id)
       )
-      SELECT DISTINCT ON (cpa.user_id) 
+      SELECT DISTINCT ON (COALESCE(NULLIF(LOWER(TRIM(cpa.email)), ''), cpa.user_id)) 
         cpa.*,
+        COALESCE(sc.total_submissions, 1) as version,
         le.latest_email_status,
         le.latest_email_template,
         le.latest_email_sent_at,
         le.latest_email_sender
       FROM campus_program_applications cpa
+      LEFT JOIN submission_counts sc
+        ON sc.applicant_key = COALESCE(NULLIF(LOWER(TRIM(cpa.email)), ''), cpa.user_id)
       LEFT JOIN latest_emails le 
         ON (le.application_id = CAST(cpa.id AS VARCHAR) OR le.recipient_email = cpa.email)
-      ORDER BY cpa.user_id, cpa.version DESC, cpa.id DESC;
+      ORDER BY COALESCE(NULLIF(LOWER(TRIM(cpa.email)), ''), cpa.user_id), cpa.version DESC, cpa.id DESC;
     `;
 
     let filtered = allRows as CampusApplication[];
