@@ -11,20 +11,31 @@ export const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
   application_received: {
     id: 'application_received',
     name: 'Application Received',
-    description: 'Acknowledge receipt of the application and set expectations for next steps.',
+    description: 'Acknowledge receipt of the application and request college resource person contact details.',
     defaultSubject: 'We’ve Received Your Mantra Campus Ambassador Application',
-    defaultText: `Hi {{applicantName}},
+    defaultText: `Dear {{applicantName}},
 
-Thank you for applying to the Mantra Campus Ambassador Program (Application #{{applicationId}}).
+Thank you for applying to the Mantra Campus Ambassador Program (Application #{{applicationId}})! We appreciate your interest in joining us and contributing to mental health awareness and positive change on your campus.
 
-We’ve received your application and our team is currently reviewing your profile and statement of motivation. We carefully review each application to select students who are passionate about promoting mental health awareness and creating a positive impact on their campuses.
+We have received your application, and our team is currently reviewing your profile and statement of motivation.
 
 What happens next?
-- Our team will review your application within 2–3 business days.
-- We’ll email you once your application status has been updated.
-- If selected, you’ll receive the next steps to get started as a Mantra Campus Ambassador.
 
-If you have any questions in the meantime, simply reply to this email and we’ll be happy to help.
+To help us take your application forward, we request you to share the contact details of a relevant resource person from your college/university, such as a faculty member, placement officer, student affairs coordinator, or any other appropriate point of contact.
+
+Please share the following details, if available:
+- Name of the resource person
+- Designation
+- Official email address
+- Contact number
+
+This will help us connect with the concerned person and forward your application for further consideration.
+
+Once we receive these details, our team will proceed with the next steps and keep you updated on your application status via email.
+
+If you have any questions, feel free to reply to this email. We’ll be happy to assist you.
+
+Thank you once again for your enthusiasm and interest in becoming a part of the Mantra Campus Ambassador Program!
 
 Warm regards,
 {{reviewerName}}
@@ -34,18 +45,24 @@ MantraCare`,
     <h1 style="margin: 0; font-size: 1.4rem; font-weight: 800;">Mantra Campus Ambassador Program</h1>
     <p style="margin: 6px 0 0; opacity: 0.9; font-size: 0.95rem;">Application Received</p>
   </div>
-  <p>Hi <strong>{{applicantName}}</strong>,</p>
-  <p>Thank you for applying to the <strong>Mantra Campus Ambassador Program</strong> (Application <strong>#{{applicationId}}</strong>).</p>
-  <p>We’ve received your application and our team is currently reviewing your profile and statement of motivation. We carefully review each application to select students who are passionate about promoting mental health awareness and creating a positive impact on their campuses.</p>
+  <p>Dear <strong>{{applicantName}}</strong>,</p>
+  <p>Thank you for applying to the <strong>Mantra Campus Ambassador Program</strong> (Application <strong>#{{applicationId}}</strong>)! We appreciate your interest in joining us and contributing to mental health awareness and positive change on your campus.</p>
+  <p>We have received your application, and our team is currently reviewing your profile and statement of motivation.</p>
   <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 20px 0;">
-    <h3 style="margin: 0 0 8px; font-size: 0.95rem; color: #0f172a;">What happens next?</h3>
+    <h3 style="margin: 0 0 10px; font-size: 0.95rem; color: #0f172a;">What happens next?</h3>
+    <p style="margin: 0 0 12px; font-size: 0.9rem; color: #334155;">To help us take your application forward, we request you to share the contact details of a relevant resource person from your college/university, such as a faculty member, placement officer, student affairs coordinator, or any other appropriate point of contact.</p>
+    <p style="margin: 0 0 6px; font-size: 0.9rem; font-weight: 600; color: #0f172a;">Please share the following details, if available:</p>
     <ul style="margin: 0; padding-left: 20px; font-size: 0.9rem; color: #475569;">
-      <li>Our team will review your application within 2–3 business days.</li>
-      <li>We’ll email you once your application status has been updated.</li>
-      <li>If selected, you’ll receive the next steps to get started as a Mantra Campus Ambassador.</li>
+      <li>Name of the resource person</li>
+      <li>Designation</li>
+      <li>Official email address</li>
+      <li>Contact number</li>
     </ul>
+    <p style="margin: 12px 0 0; font-size: 0.9rem; color: #334155;">This will help us connect with the concerned person and forward your application for further consideration.</p>
   </div>
-  <p>If you have any questions in the meantime, simply reply to this email and we’ll be happy to help.</p>
+  <p>Once we receive these details, our team will proceed with the next steps and keep you updated on your application status via email.</p>
+  <p>If you have any questions, feel free to reply to this email. We’ll be happy to assist you.</p>
+  <p>Thank you once again for your enthusiasm and interest in becoming a part of the Mantra Campus Ambassador Program!</p>
   <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
   <p style="margin: 0; font-size: 0.85rem; color: #64748b;">
     Warm regards,<br />

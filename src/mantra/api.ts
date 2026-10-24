@@ -492,14 +492,14 @@ export const fetchEmailTemplates = async () => {
   }
 };
 
-export const renderEmailTemplate = async (templateId: string, applicationId?: string | number) => {
+export const renderEmailTemplate = async (templateId: string, applicationId?: string | number, senderId?: string) => {
   const backendUrl = MANTRA_CONFIG.apiBaseUrl;
   try {
     const res = await fetch(`${backendUrl}/api/admin/email/render`, {
       method: 'POST',
       headers: { ...getAdminAuthHeaders(), 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ templateId, applicationId })
+      body: JSON.stringify({ templateId, applicationId, senderId })
     });
     if (!res.ok) {
       return { success: false, error: `HTTP ${res.status}` };

@@ -1,6 +1,7 @@
 import { Response, NextFunction, Request } from 'express';
 import crypto from 'crypto';
 import { AuthRequest } from '../types/auth.js';
+import { config } from '../config/index.js';
 import { emailService } from '../services/email/emailService.js';
 import { EMAIL_TEMPLATES, renderTemplateString } from '../services/email/emailTemplates.js';
 import { CampusRepository } from '../campus-program/repositories/campusRepository.js';
@@ -224,7 +225,7 @@ export async function getEmailTemplates(req: AuthRequest, res: Response, next: N
  */
 export async function renderApplicationTemplate(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const { templateId, applicationId } = req.body;
+    const { templateId, applicationId, senderId } = req.body;
 
     if (!templateId || !EMAIL_TEMPLATES[templateId]) {
       return res.status(400).json({ success: false, error: 'Valid templateId is required.' });
@@ -234,7 +235,20 @@ export async function renderApplicationTemplate(req: AuthRequest, res: Response,
 
     let applicantName = 'Applicant';
     let appNumber = String(applicationId || '');
-    let reviewerName = req.admin?.name || req.admin?.email || 'Mantra Review Team';
+    
+    // Resolve reviewerName dynamically:
+    // 1. If senderId provided, match against configured senders
+    // 2. Otherwise fallback to authenticated admin or Mantra Review Team
+    let reviewerName = 'Mantra Review Team';
+    const cleanSenderId = String(senderId || '').trim().toLowerCase();
+    const configuredSenders = config.email.senders as Record<string, { id: string; name: string; email: string }>;
+    if (cleanSenderId && configuredSenders[cleanSenderId]?.name) {
+      reviewerName = configuredSenders[cleanSenderId].name;
+    } else if (req.admin?.name && req.admin.name.trim()) {
+      reviewerName = req.admin.name.trim();
+    } else if (configuredSenders['ketan']?.name) {
+      reviewerName = configuredSenders['ketan'].name;
+    }
 
     if (applicationId) {
       const app = await campusRepo.findApplicationById(applicationId);

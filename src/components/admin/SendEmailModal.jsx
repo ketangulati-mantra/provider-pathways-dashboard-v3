@@ -161,8 +161,8 @@ export default function SendEmailModal({
         const finalTplId = matched ? defaultTpl : templatesRes.data[0].id;
         setSelectedTemplateId(finalTplId);
         
-        // Render initial template content
-        await handleTemplateSelect(finalTplId);
+        // Render initial template content with selected sender
+        await handleTemplateSelect(finalTplId, hasKetan ? 'ketan' : sendersRes.data[0].id);
       }
     } catch (err) {
       console.error('[SendEmailModal] Error loading configs:', err);
@@ -199,13 +199,14 @@ export default function SendEmailModal({
     }
   };
 
-  const handleTemplateSelect = async (tplId) => {
+  const handleTemplateSelect = async (tplId, senderIdToUse) => {
     setSelectedTemplateId(tplId);
     if (!tplId) return;
 
     try {
       setRenderingTemplate(true);
-      const res = await renderEmailTemplate(tplId, application?.id);
+      const activeSenderId = senderIdToUse !== undefined ? senderIdToUse : selectedSenderId;
+      const res = await renderEmailTemplate(tplId, application?.id, activeSenderId);
       if (res.success && res.data) {
         setSubject(res.data.subject || '');
         setMessage(res.data.text || '');
@@ -214,6 +215,13 @@ export default function SendEmailModal({
       console.error('[SendEmailModal] Error rendering template:', err);
     } finally {
       setRenderingTemplate(false);
+    }
+  };
+
+  const handleSenderChange = async (newSenderId) => {
+    setSelectedSenderId(newSenderId);
+    if (selectedTemplateId) {
+      await handleTemplateSelect(selectedTemplateId, newSenderId);
     }
   };
 
@@ -450,7 +458,7 @@ export default function SendEmailModal({
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <select
                     value={selectedSenderId}
-                    onChange={(e) => setSelectedSenderId(e.target.value)}
+                    onChange={(e) => handleSenderChange(e.target.value)}
                     disabled={sendingState === 'sending' || loadingConfig}
                     style={{
                       flex: 1,
