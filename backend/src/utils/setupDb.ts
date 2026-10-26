@@ -4,46 +4,10 @@ export async function setupDb(): Promise<void> {
   try {
     console.log('[setupDb] Initializing database schema...');
 
-    // 1. Users Table
-    try {
-      await sql`
-        CREATE TABLE IF NOT EXISTS users (
-          id BIGSERIAL PRIMARY KEY,
-          user_id VARCHAR(255) UNIQUE,
-          email VARCHAR(255) NOT NULL,
-          name VARCHAR(255),
-          role VARCHAR(50) DEFAULT 'user',
-          is_reviewer BOOLEAN DEFAULT FALSE,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-        );
-      `;
-    } catch (e) {
-      console.log('[setupDb] users table check passed');
-    }
+    // 1. Users table is managed in public schema (public.users with password_hash, roles, and allowed_pages)
 
-    // 2. Admin Users Table
-    try {
-      await sql`
-        CREATE TABLE IF NOT EXISTS admin_users (
-          id BIGSERIAL PRIMARY KEY,
-          username VARCHAR(255) UNIQUE NOT NULL,
-          password_hash VARCHAR(255) NOT NULL,
-          name VARCHAR(255),
-          role VARCHAR(50) DEFAULT 'admin',
-          allowed_pages JSONB DEFAULT '["submissions", "corporate_admin", "campus_admin", "lessons"]'::jsonb,
-          last_login_at TIMESTAMP WITH TIME ZONE,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-        );
-      `;
-      await sql`
-        ALTER TABLE admin_users 
-        ADD COLUMN IF NOT EXISTS allowed_pages JSONB DEFAULT '["submissions", "corporate_admin", "campus_admin", "lessons"]'::jsonb;
-      `;
-    } catch (e) {
-      console.log('[setupDb] admin_users table check passed');
-    }
+
+
 
     // 3. Form Submissions Table
     try {

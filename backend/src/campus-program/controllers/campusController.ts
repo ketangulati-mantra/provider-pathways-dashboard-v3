@@ -413,6 +413,41 @@ export async function postAdminReview(req: Request, res: Response, next: NextFun
 }
 
 /**
+ * PATCH /api/campus-program/admin/mail-status
+ * Manually update mail status for an application and track authenticated reviewer
+ */
+export async function patchAdminMailStatus(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { applicationId, mailStatus } = req.body;
+    const authReq = req as any;
+
+    if (!applicationId || !mailStatus) {
+      return res.status(400).json({ success: false, error: 'applicationId and mailStatus are required' });
+    }
+
+    const adminName = authReq.admin?.name || authReq.admin?.email || 'Admin';
+
+    const updated = await campusService.updateApplicationMailStatus(
+      String(applicationId),
+      String(mailStatus),
+      adminName,
+      'admin'
+    );
+
+    res.json({
+      success: true,
+      message: 'Mail status updated successfully',
+      data: updated
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      error: error.message || 'Failed to update mail status'
+    });
+  }
+}
+
+/**
  * GET /api/campus-program/admin/analytics
  */
 export async function getAdminAnalytics(req: Request, res: Response, next: NextFunction) {

@@ -370,6 +370,21 @@ export async function sendAdminEmail(req: AuthRequest, res: Response, next: Next
             adminName
           );
         }
+        // Sync mail_status tracking field with System actor
+        let mailStatusValue = 'unsent';
+        if (templateId === 'application_received') mailStatusValue = 'received';
+        else if (templateId === 'application_approved') mailStatusValue = 'approved';
+        else if (templateId === 'application_rejected') mailStatusValue = 'rejected';
+        else if (templateId === 'need_more_information') mailStatusValue = 'more_info_required';
+
+        if (mailStatusValue !== 'unsent') {
+          await campusService.updateApplicationMailStatus(
+            String(applicationId),
+            mailStatusValue,
+            'System',
+            'system'
+          );
+        }
       } catch (syncErr) {
         console.error('[AdminEmailController] Warning: Failed to sync application status with email:', syncErr);
       }

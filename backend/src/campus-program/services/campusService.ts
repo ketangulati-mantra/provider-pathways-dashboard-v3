@@ -108,6 +108,40 @@ export class CampusService {
   }
 
   /**
+   * Update mail status for an application
+   */
+  async updateApplicationMailStatus(
+    applicationId: string,
+    mailStatus: string,
+    updatedBy: string,
+    updatedByType: 'admin' | 'system' = 'admin'
+  ) {
+    const validStatuses = ['unsent', 'received', 'approved', 'rejected', 'more_info_required', 'replied_on_mail'];
+    const normalized = mailStatus.trim().toLowerCase();
+    if (!validStatuses.includes(normalized)) {
+      throw new Error(`Invalid mail status '${mailStatus}'. Supported statuses: ${validStatuses.join(', ')}`);
+    }
+
+    const app = await this.repo.findApplicationById(applicationId);
+    if (!app) {
+      throw new Error(`Application #${applicationId} not found`);
+    }
+
+    const effectiveActor = updatedByType === 'system' 
+      ? 'System' 
+      : (updatedBy && updatedBy.trim() ? updatedBy.trim() : 'Admin');
+
+    const updated = await this.repo.updateMailStatus(
+      applicationId,
+      normalized,
+      effectiveActor,
+      updatedByType
+    );
+
+    return updated;
+  }
+
+  /**
    * Phase 4 Admin Analytics Summary
    */
   async getAdminAnalyticsSummary() {

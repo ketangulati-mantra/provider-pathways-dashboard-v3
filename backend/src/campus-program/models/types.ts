@@ -62,6 +62,10 @@ export interface CampusApplication {
   version?: number;
   submitted_at?: string;
   updated_at?: string;
+  mail_status?: string | null;
+  mail_status_updated_by?: string | null;
+  mail_status_updated_at?: string | null;
+  mail_status_updated_by_type?: string | null;
   latest_email_status?: string | null;
   latest_email_template?: string | null;
   latest_email_sent_at?: string | null;

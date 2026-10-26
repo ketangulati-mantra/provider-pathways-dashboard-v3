@@ -22,6 +22,8 @@ export default function CampusAdminDashboard() {
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'more_info_required'
   const [dateFilter, setDateFilter] = useState('all'); // 'all' | 'today' | '7days' | '30days' | 'this_month'
   const [reviewerFilter, setReviewerFilter] = useState('all'); // 'all' | reviewerName
+  const [mailStatusFilter, setMailStatusFilter] = useState('all'); // 'all' | 'received' | 'approved' | 'rejected' | 'more_info_required' | 'replied_on_mail'
+  const [updatingMailStatus, setUpdatingMailStatus] = useState({}); // { [appId]: boolean }
   const [searchQuery, setSearchQuery] = useState('');
   const [applicationsData, setApplicationsData] = useState(null);
   const [analyticsData, setAnalyticsData] = useState(null);
@@ -45,6 +47,7 @@ export default function CampusAdminDashboard() {
   const [filterVisibility, setFilterVisibility] = useState({
     date: true,
     status: true,
+    mailStatus: true,
     activity: true,
     search: true,
     reviewer: true,
@@ -171,18 +174,110 @@ export default function CampusAdminDashboard() {
     }
   };
 
-  const handleCustomReviewerSubmit = async (e) => {
-    e.preventDefault();
-    const cleanName = customNameInput.trim();
-    if (!cleanName || !customReviewerApp) return;
+  const handleMailStatusChange = async (app, newStatus) => {
+    if (!app || !app.id || updatingMailStatus[app.id]) return;
 
-    if (!reviewerOptions.includes(cleanName)) {
-      setReviewerOptions(prev => [...prev, cleanName]);
+    // Previous values to restore on error
+    const prevMailStatus = app.mail_status || getMailStatusValue(app);
+    const prevReviewer = app.mail_status_updated_by || app.reviewed_by;
+    const prevUpdaterType = app.mail_status_updated_by_type || 'system';
+
+    // Optimistic update: instantly update UI
+    setUpdatingMailStatus(prev => ({ ...prev, [app.id]: true }));
+    setApplicationsData(prev => {
+      if (!prev || !prev.applications) return prev;
+      return {
+        ...prev,
+        applications: prev.applications.map(item =>
+          item.id === app.id
+            ? {
+                ...item,
+                mail_status: newStatus,
+                mail_status_updated_by: loggedInReviewerName,
+                mail_status_updated_by_type: 'admin',
+                mail_status_updated_at: new Date().toISOString()
+              }
+            : item
+        )
+      };
+    });
+
+    try {
+      const res = await fetch(`${API_BASE}/api/campus-program/admin/mail-status`, {
+        method: 'PATCH',
+        headers: {
+          ...getAdminAuthHeaders(),
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          applicationId: app.id,
+          mailStatus: newStatus
+        })
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Failed to update mail status');
+      }
+
+      // Sync with server verified response
+      if (json.data) {
+        setApplicationsData(prev => {
+          if (!prev || !prev.applications) return prev;
+          return {
+            ...prev,
+            applications: prev.applications.map(item =>
+              item.id === app.id
+                ? {
+                    ...item,
+                    mail_status: json.data.mail_status,
+                    mail_status_updated_by: json.data.mail_status_updated_by,
+                    mail_status_updated_by_type: json.data.mail_status_updated_by_type,
+                    mail_status_updated_at: json.data.mail_status_updated_at
+                  }
+                : item
+            )
+          };
+        });
+      }
+    } catch (err) {
+      console.error('[CampusAdminDashboard] Error updating mail status:', err);
+      // Restore previous values on failure
+      setApplicationsData(prev => {
+        if (!prev || !prev.applications) return prev;
+        return {
+          ...prev,
+          applications: prev.applications.map(item =>
+            item.id === app.id
+              ? {
+                  ...item,
+                  mail_status: prevMailStatus,
+                  mail_status_updated_by: prevReviewer,
+                  mail_status_updated_by_type: prevUpdaterType
+                }
+              : item
+          )
+        };
+      });
+      alert(`Could not update mail status: ${err.message || 'Network error'}`);
+    } finally {
+      setUpdatingMailStatus(prev => ({ ...prev, [app.id]: false }));
     }
+  };
 
-    await updateAppReviewer(customReviewerApp.id, cleanName);
-    setCustomReviewerApp(null);
-    setCustomNameInput('');
+  const getMailStatusValue = (app) => {
+    if (app.mail_status) return app.mail_status;
+    const template = app.latest_email_template;
+    const status = app.latest_email_status;
+    if (status === 'sent') {
+      if (template === 'application_received') return 'received';
+      if (template === 'application_approved') return 'approved';
+      if (template === 'application_rejected') return 'rejected';
+      if (template === 'need_more_information') return 'more_info_required';
+      return 'received';
+    }
+    return 'unsent';
   };
 
   const handleConfirmReject = async (reason) => {
@@ -429,13 +524,22 @@ export default function CampusAdminDashboard() {
     });
   }
 
+  // Filter applications by Mail Status
+  if (filterVisibility.mailStatus && mailStatusFilter !== 'all') {
+    rawApplications = rawApplications.filter(app => {
+      const currentMailStatus = getMailStatusValue(app);
+      return currentMailStatus === mailStatusFilter;
+    });
+  }
+
   // Filter applications by Reviewer
   if (filterVisibility.reviewer && reviewerFilter !== 'all') {
     rawApplications = rawApplications.filter(app => {
+      const effectiveReviewer = app.mail_status_updated_by || app.reviewed_by || 'Unassigned';
       if (reviewerFilter === 'Unassigned') {
-        return !app.reviewed_by || app.reviewed_by === 'Unassigned';
+        return !effectiveReviewer || effectiveReviewer === 'Unassigned';
       }
-      return app.reviewed_by === reviewerFilter;
+      return effectiveReviewer === reviewerFilter;
     });
   }
 
@@ -622,6 +726,38 @@ export default function CampusAdminDashboard() {
               <option value="approved">Approved Members ({statusCounts.approved})</option>
               <option value="rejected">Rejected ({statusCounts.rejected})</option>
               <option value="more_info_required">Info Requested ({statusCounts.more_info_required})</option>
+            </select>
+            <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+          </div>
+        )}
+
+        {/* 3. Mail Status Filter */}
+        {filterVisibility.mailStatus && (
+          <div style={{ position: 'relative' }}>
+            <select
+              value={mailStatusFilter}
+              onChange={(e) => setMailStatusFilter(e.target.value)}
+              style={{
+                padding: '4px 22px 4px 8px',
+                borderRadius: '8px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                color: '#1e293b',
+                outline: 'none',
+                cursor: 'pointer',
+                appearance: 'none',
+                height: '28px'
+              }}
+            >
+              <option value="all">All Mail Statuses</option>
+              <option value="received">Received</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="more_info_required">Info</option>
+              <option value="replied_on_mail">Replied on mail</option>
+              <option value="unsent">Unsent</option>
             </select>
             <ChevronDown size={12} color="#64748b" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           </div>
@@ -818,6 +954,14 @@ export default function CampusAdminDashboard() {
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
                   <input
                     type="checkbox"
+                    checked={filterVisibility.mailStatus}
+                    onChange={(e) => setFilterVisibility(prev => ({ ...prev, mailStatus: e.target.checked }))}
+                  />
+                  <span>Mail Status Filter</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
                     checked={filterVisibility.reviewer}
                     onChange={(e) => setFilterVisibility(prev => ({ ...prev, reviewer: e.target.checked }))}
                   />
@@ -919,35 +1063,116 @@ export default function CampusAdminDashboard() {
                     {getStatusBadge(app.application_status)}
                   </td>
 
-                  {/* Mail Status */}
+                  {/* Mail Status Dropdown */}
                   <td style={{ padding: '6px 10px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {getMailStatusBadge(app)}
+                    {(() => {
+                      const currentMailVal = getMailStatusValue(app);
+                      const isSaving = !!updatingMailStatus[app.id];
+
+                      // Dynamic styling based on selected status
+                      let selectBg = '#eff6ff';
+                      let selectColor = '#1d4ed8';
+                      let selectBorder = '#bfdbfe';
+
+                      if (currentMailVal === 'approved') {
+                        selectBg = '#ecfdf5';
+                        selectColor = '#047857';
+                        selectBorder = '#a7f3d0';
+                      } else if (currentMailVal === 'rejected') {
+                        selectBg = '#fef2f2';
+                        selectColor = '#b91c1c';
+                        selectBorder = '#fecaca';
+                      } else if (currentMailVal === 'more_info_required') {
+                        selectBg = '#fff7ed';
+                        selectColor = '#c2410c';
+                        selectBorder = '#ffedd5';
+                      } else if (currentMailVal === 'replied_on_mail') {
+                        selectBg = '#f0fdf4';
+                        selectColor = '#15803d';
+                        selectBorder = '#86efac';
+                      } else if (currentMailVal === 'unsent') {
+                        selectBg = '#f8fafc';
+                        selectColor = '#64748b';
+                        selectBorder = '#e2e8f0';
+                      }
+
+                      return (
+                        <select
+                          value={currentMailVal}
+                          disabled={isSaving}
+                          onChange={(e) => handleMailStatusChange(app, e.target.value)}
+                          title={`Mail status: ${currentMailVal}${isSaving ? ' (Saving...)' : ''}`}
+                          style={{
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            border: `1px solid ${selectBorder}`,
+                            background: selectBg,
+                            color: selectColor,
+                            fontSize: '0.71rem',
+                            fontWeight: 800,
+                            outline: 'none',
+                            cursor: isSaving ? 'not-allowed' : 'pointer',
+                            opacity: isSaving ? 0.65 : 1,
+                            maxWidth: '100%',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          {currentMailVal === 'unsent' && (
+                            <option value="unsent" disabled style={{ background: '#ffffff', color: '#64748b' }}>Unsent</option>
+                          )}
+                          <option value="received" style={{ background: '#ffffff', color: '#1d4ed8' }}>Received</option>
+                          <option value="approved" style={{ background: '#ffffff', color: '#047857' }}>Approved</option>
+                          <option value="rejected" style={{ background: '#ffffff', color: '#b91c1c' }}>Rejected</option>
+                          <option value="more_info_required" style={{ background: '#ffffff', color: '#c2410c' }}>Info</option>
+                          <option value="replied_on_mail" style={{ background: '#ffffff', color: '#15803d' }}>Replied on mail</option>
+                        </select>
+                      );
+                    })()}
                   </td>
 
-                  {/* Reviewer Dropdown with Custom Name Option */}
+                  {/* Reviewer Column - Tracks who or what last changed the mail status */}
                   <td style={{ padding: '6px 10px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    <select
-                      value={app.reviewed_by || 'Unassigned'}
-                      onChange={(e) => handleReviewerChange(app, e.target.value)}
-                      style={{
-                        padding: '2px 6px',
-                        borderRadius: '6px',
-                        border: '1px solid #cbd5e1',
-                        background: '#ffffff',
-                        fontSize: '0.72rem',
-                        fontWeight: 700,
-                        color: app.reviewed_by ? '#0f172a' : '#64748b',
-                        outline: 'none',
-                        cursor: 'pointer',
-                        maxWidth: '100%',
-                        textOverflow: 'ellipsis'
-                      }}
-                    >
-                      {reviewerOptions.map(rev => (
-                        <option key={rev} value={rev}>{rev}</option>
-                      ))}
-                      <option value="__MANAGE__">⚙️ Manage Reviewers...</option>
-                    </select>
+                    {(() => {
+                      const effectiveReviewer = app.mail_status_updated_by || app.reviewed_by || 'Unassigned';
+                      const isSystem = effectiveReviewer === 'System' || app.mail_status_updated_by_type === 'system';
+                      const isUnassigned = !effectiveReviewer || effectiveReviewer === 'Unassigned';
+
+                      let badgeBg = '#f8fafc';
+                      let badgeColor = '#475569';
+                      let badgeBorder = '#e2e8f0';
+
+                      if (isSystem) {
+                        badgeBg = '#f1f5f9';
+                        badgeColor = '#334155';
+                        badgeBorder = '#cbd5e1';
+                      } else if (!isUnassigned) {
+                        badgeBg = '#eff6ff';
+                        badgeColor = '#1d4ed8';
+                        badgeBorder = '#bfdbfe';
+                      }
+
+                      return (
+                        <span
+                          style={{
+                            background: badgeBg,
+                            color: badgeColor,
+                            border: `1px solid ${badgeBorder}`,
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            fontSize: '0.72rem',
+                            fontWeight: 700,
+                            display: 'inline-block',
+                            maxWidth: '100%',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                          title={`Last mail status changed by: ${effectiveReviewer}${app.mail_status_updated_at ? ` on ${new Date(app.mail_status_updated_at).toLocaleString()}` : ''}`}
+                        >
+                          {effectiveReviewer}
+                        </span>
+                      );
+                    })()}
                   </td>
 
                   {/* Actions */}

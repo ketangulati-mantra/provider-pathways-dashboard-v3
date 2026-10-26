@@ -18,6 +18,7 @@ import {
   getAdminApplications,
   getAdminApplicationDetails,
   postAdminReview,
+  patchAdminMailStatus,
   getAdminAnalytics,
   resubmitApplicationVersion
 } from '../controllers/campusController.js';
@@ -48,6 +49,7 @@ router.post('/application/resubmit', resubmitApplication);
 router.get('/admin/applications', authenticateAdmin, getAdminApplications);
 router.get('/admin/applications/:id', authenticateAdmin, getAdminApplicationDetails);
 router.post('/admin/review', authenticateAdmin, postAdminReview);
+router.patch('/admin/mail-status', authenticateAdmin, patchAdminMailStatus);
 router.get('/admin/analytics', authenticateAdmin, getAdminAnalytics);
 
 // Journey State Endpoints

@@ -101,14 +101,16 @@ export class CampusRepository {
         INSERT INTO campus_program_applications (
           user_id, program_id, full_name, email, country_code, phone, college, course, year, city,
           motivation, availability, linkedin_url, instagram_url, previous_experience,
-          terms_accepted, community_guidelines_accepted, application_status, version
+          terms_accepted, community_guidelines_accepted, application_status, version,
+          mail_status, mail_status_updated_by, mail_status_updated_at, mail_status_updated_by_type
         ) VALUES (
           ${appData.user_id}, ${programId}, ${appData.full_name || null}, ${cleanEmail || null}, 
           ${appData.country_code || '+1'}, ${appData.phone || ''}, ${appData.college || ''}, 
           ${appData.course || ''}, ${appData.year || '1st Year'}, ${appData.city || ''},
           ${appData.motivation || ''}, ${appData.availability || '3-5 hours/week'}, 
           ${appData.linkedin_url || null}, ${appData.instagram_url || null}, ${appData.previous_experience || null},
-          ${appData.terms_accepted ?? true}, ${appData.community_guidelines_accepted ?? true}, 'submitted', 1
+          ${appData.terms_accepted ?? true}, ${appData.community_guidelines_accepted ?? true}, 'submitted', 1,
+          'received', 'System', CURRENT_TIMESTAMP, 'system'
         )
         ON CONFLICT (user_id, program_id, version) DO UPDATE SET
           full_name = EXCLUDED.full_name,
@@ -159,7 +161,8 @@ export class CampusRepository {
       INSERT INTO campus_program_applications (
         user_id, program_id, full_name, email, country_code, phone, college, course, year, city,
         motivation, availability, linkedin_url, instagram_url, previous_experience,
-        terms_accepted, community_guidelines_accepted, application_status, version, parent_application_id, resubmission_count
+        terms_accepted, community_guidelines_accepted, application_status, version, parent_application_id, resubmission_count,
+        mail_status, mail_status_updated_by, mail_status_updated_at, mail_status_updated_by_type
       ) VALUES (
         ${userId}, ${programId}, 
         ${appData.full_name || latest?.full_name || null}, 
@@ -175,7 +178,8 @@ export class CampusRepository {
         ${appData.linkedin_url || latest?.linkedin_url || null}, 
         ${appData.instagram_url || latest?.instagram_url || null}, 
         ${appData.previous_experience || latest?.previous_experience || null},
-        true, true, 'submitted', ${newVersion}, ${parentId}, ${(latest?.resubmission_count || 0) + 1}
+        true, true, 'submitted', ${newVersion}, ${parentId}, ${(latest?.resubmission_count || 0) + 1},
+        'received', 'System', CURRENT_TIMESTAMP, 'system'
       )
       RETURNING *;
     `;
@@ -405,6 +409,30 @@ export class CampusRepository {
     );
 
     return updated;
+  }
+
+  /**
+   * Update mail status and track reviewer/system updater atomically
+   */
+  async updateMailStatus(
+    applicationId: string,
+    mailStatus: string,
+    updatedBy: string,
+    updatedByType: 'admin' | 'system' = 'admin'
+  ): Promise<CampusApplication> {
+    const rows = await sql`
+      UPDATE campus_program_applications
+      SET 
+        mail_status = ${mailStatus},
+        mail_status_updated_by = ${updatedBy},
+        mail_status_updated_at = CURRENT_TIMESTAMP,
+        mail_status_updated_by_type = ${updatedByType},
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${parseInt(applicationId, 10)}
+      RETURNING *;
+    `;
+
+    return rows[0] as CampusApplication;
   }
 
   /**
