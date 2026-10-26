@@ -7,18 +7,24 @@ if (!config.databaseUrl) {
   throw new Error('❌ DATABASE_URL is not configured. Target PostgreSQL connection required.');
 }
 
+const dbHostMatch = config.databaseUrl.match(/@([^:/]+)(?::(\d+))?/);
+const dbHost = dbHostMatch ? dbHostMatch[1] : 'unknown-host';
+const dbPort = dbHostMatch && dbHostMatch[2] ? dbHostMatch[2] : '5432';
+
+console.log(`[db/client] Initializing PostgreSQL pool targeting ${dbHost}:${dbPort}...`);
+
 export const pool = new Pool({
   connectionString: config.databaseUrl,
   options: '-c search_path=provider_pathways,public',
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
   keepAlive: true,
   statement_timeout: 30000,
 });
 
 pool.on('error', (err) => {
-  console.error('⚠️ Unexpected error on idle PostgreSQL client:', err);
+  console.error(`⚠️ Unexpected error on idle PostgreSQL client (${dbHost}:${dbPort}):`, err?.message || err);
 });
 
 export const sql: any = async function sql(
