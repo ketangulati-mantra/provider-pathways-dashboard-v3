@@ -22,6 +22,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Trust reverse proxy (nginx, load balancer, Cloudflare) for accurate client IP and express-rate-limit
+app.set('trust proxy', 1);
+
 app.use(cors({
   origin: true,
   credentials: true

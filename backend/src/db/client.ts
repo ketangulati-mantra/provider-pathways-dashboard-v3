@@ -12,7 +12,9 @@ export const pool = new Pool({
   options: '-c search_path=provider_pathways,public',
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
+  connectionTimeoutMillis: 30000,
+  keepAlive: true,
+  statement_timeout: 30000,
 });
 
 pool.on('error', (err) => {

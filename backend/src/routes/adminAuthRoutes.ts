@@ -5,16 +5,17 @@ import { authenticateAdmin } from '../middleware/authenticateAdmin.js';
 
 const router = Router();
 
-// Rate limiter for admin login endpoint: max 10 requests per 15 minutes
+// Rate limiter for admin login endpoint: max 20 requests per 15 minutes
 const loginRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 20,
   message: {
     success: false,
     error: 'Too many login attempts. Please try again after 15 minutes.'
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  validate: { xForwardedForHeader: false }
 });
 
 // Public authentication routes
