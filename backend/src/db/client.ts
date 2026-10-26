@@ -1,95 +1,86 @@
-import pg from 'pg';
+import postgres from 'postgres';
 import { config } from '../config/index.js';
 
-const { Pool } = pg;
+const isProduction = config.nodeEnv === 'production';
 
-if (!config.databaseUrl) {
-  throw new Error('❌ DATABASE_URL is not configured. Target PostgreSQL connection required.');
+// Candidate hosts ordered by likelihood in Docker / EC2 / Local environments
+const configuredHost = config.pgConfig?.host || process.env.PG_HOST;
+const candidateHosts: string[] = Array.from(new Set([
+  configuredHost,
+  'postgres',
+  '172.17.0.1',
+  'host.docker.internal',
+  '127.0.0.1',
+  'localhost',
+  '3.109.26.34'
+].filter((h): h is string => Boolean(h && h.trim()))));
+
+const dbUser = config.pgConfig?.username || process.env.PG_USER || '';
+const dbPassword = config.pgConfig?.password || process.env.PG_PASSWORD || '';
+const dbName = config.pgConfig?.database || process.env.PG_DATABASE || '';
+const dbPort = config.pgConfig?.port || (process.env.PG_PORT ? parseInt(process.env.PG_PORT, 10) : 5432);
+
+function createClientForHost(host: string) {
+  return postgres({
+    host,
+    port: dbPort,
+    database: dbName,
+    username: dbUser,
+    password: dbPassword,
+    ssl: false,
+    max: 10,
+    idle_timeout: 20,
+    connect_timeout: 3, // 3s fast timeout to eliminate 30s hangs
+    connection: {
+      search_path: 'provider_pathways,public',
+    },
+  });
 }
 
-const dbHostMatch = config.databaseUrl.match(/@([^:/]+)(?::(\d+))?/);
-const dbHost = dbHostMatch ? dbHostMatch[1] : 'unknown-host';
-const dbPort = dbHostMatch && dbHostMatch[2] ? dbHostMatch[2] : '5432';
+let activeHostIndex = 0;
+let activeSql = createClientForHost(candidateHosts[0] || '3.109.26.34');
 
-console.log(`[db/client] Initializing PostgreSQL pool targeting ${dbHost}:${dbPort}...`);
+async function executeWithFailover(templateStrings: any, ...values: any[]) {
+  if (!templateStrings) return [];
 
-export const pool = new Pool({
-  connectionString: config.databaseUrl,
-  options: '-c search_path=provider_pathways,public',
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
-  keepAlive: true,
-  statement_timeout: 30000,
-});
-
-pool.on('error', (err) => {
-  console.error(`⚠️ Unexpected error on idle PostgreSQL client (${dbHost}:${dbPort}):`, err?.message || err);
-});
-
-export const sql: any = async function sql(
-  stringsOrQuery: TemplateStringsArray | string,
-  ...values: any[]
-): Promise<any[]> {
-  // 1. Tagged template call: sql`SELECT * FROM users WHERE id = ${id}`
-  if (Array.isArray(stringsOrQuery) && 'raw' in stringsOrQuery) {
-    const strings = stringsOrQuery as TemplateStringsArray;
-    let text = '';
-    for (let i = 0; i < strings.length; i++) {
-      text += strings[i];
-      if (i < values.length) {
-        text += `$${i + 1}`;
+  for (let attempt = 0; attempt < candidateHosts.length; attempt++) {
+    const targetIdx = (activeHostIndex + attempt) % candidateHosts.length;
+    const currentHost = candidateHosts[targetIdx];
+    try {
+      const client = (attempt === 0) ? activeSql : createClientForHost(currentHost);
+      const result = await (client as any)(templateStrings, ...values);
+      if (attempt > 0) {
+        activeHostIndex = targetIdx;
+        activeSql = client;
+        console.log(`🔌 Connected successfully to database host: ${currentHost}`);
       }
+      return result;
+    } catch (err: any) {
+      const isConnectionError = err?.code === 'CONNECT_TIMEOUT' || 
+                               err?.code === 'ECONNREFUSED' || 
+                               err?.code === 'ENOTFOUND' || 
+                               err?.code === 'ETIMEDOUT' ||
+                               err?.message?.includes('CONNECT_TIMEOUT') ||
+                               err?.message?.includes('Connection refused');
+
+      if (isConnectionError && attempt < candidateHosts.length - 1) {
+        console.warn(`⚠️ Host ${currentHost} unreachable (${err.message || err.code}), failing over to next candidate...`);
+        continue;
+      }
+      throw err;
     }
-    const result = await pool.query(text, values);
-    return result.rows;
   }
+}
 
-  // 2. Direct string query call: sql.query("SELECT * FROM ...", [params])
-  if (typeof stringsOrQuery === 'string') {
-    const params = values.length > 0 && Array.isArray(values[0]) ? values[0] : values;
-    const result = await pool.query(stringsOrQuery, params);
-    return result.rows;
+export const sql: any = new Proxy(executeWithFailover, {
+  get(target, prop) {
+    const val = (activeSql as any)[prop];
+    if (typeof val === 'function') {
+      return (...args: any[]) => (activeSql as any)[prop](...args);
+    }
+    return val;
+  },
+  apply(target, thisArg, args) {
+    return executeWithFailover(args[0], ...args.slice(1));
   }
-
-  throw new Error('Invalid query invocation on sql helper');
-};
-
-sql.query = async (queryText: string, params: any[] = []) => {
-  const result = await pool.query(queryText, params);
-  return result.rows;
-};
-
-sql.transaction = async <T>(callback: (clientSql: any) => Promise<T>): Promise<T> => {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const clientSql: any = async (strings: TemplateStringsArray | string, ...vals: any[]) => {
-      if (Array.isArray(strings) && 'raw' in strings) {
-        let text = '';
-        for (let i = 0; i < strings.length; i++) {
-          text += strings[i];
-          if (i < vals.length) text += `$${i + 1}`;
-        }
-        const res = await client.query(text, vals);
-        return res.rows;
-      }
-      const params = vals.length > 0 && Array.isArray(vals[0]) ? vals[0] : vals;
-      const res = await client.query(strings as string, params);
-      return res.rows;
-    };
-    clientSql.query = async (q: string, p: any[] = []) => {
-      const res = await client.query(q, p);
-      return res.rows;
-    };
-
-    const outcome = await callback(clientSql);
-    await client.query('COMMIT');
-    return outcome;
-  } catch (e) {
-    await client.query('ROLLBACK');
-    throw e;
-  } finally {
-    client.release();
-  }
-};
+});

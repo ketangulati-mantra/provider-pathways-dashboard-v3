@@ -15,14 +15,17 @@ dotenv.config(); // Fallback to current working directory
 const isProd = process.env.NODE_ENV === 'production';
 const targetPort = process.env.PORT ? parseInt(process.env.PORT, 10) : 80;
 
+const pgUser = process.env.PG_USER;
+const pgPassword = process.env.PG_PASSWORD;
+const pgHost = process.env.PG_HOST;
+const pgPort = process.env.PG_PORT || '5432';
+const pgDatabase = process.env.PG_DATABASE;
+
 const buildDatabaseUrl = (): string => {
-  if (process.env.PG_HOST && process.env.PG_USER && process.env.PG_PASSWORD && process.env.PG_DATABASE) {
-    const user = encodeURIComponent(process.env.PG_USER);
-    const pass = encodeURIComponent(process.env.PG_PASSWORD);
-    const host = process.env.PG_HOST;
-    const port = process.env.PG_PORT || '5432';
-    const db = process.env.PG_DATABASE;
-    return `postgresql://${user}:${pass}@${host}:${port}/${db}`;
+  if (pgUser && pgPassword && pgHost && pgDatabase) {
+    const user = encodeURIComponent(pgUser);
+    const pass = encodeURIComponent(pgPassword);
+    return `postgresql://${user}:${pass}@${pgHost}:${pgPort}/${pgDatabase}`;
   }
   return process.env.DATABASE_URL || '';
 };
@@ -30,6 +33,13 @@ const buildDatabaseUrl = (): string => {
 export const config = {
   port: targetPort,
   databaseUrl: buildDatabaseUrl(),
+  pgConfig: (pgUser && pgPassword && pgHost && pgDatabase) ? {
+    host: pgHost,
+    port: parseInt(pgPort, 10),
+    database: pgDatabase,
+    username: pgUser,
+    password: pgPassword,
+  } : undefined,
   nodeEnv: process.env.NODE_ENV || 'development',
   jwtSecret: process.env.JWT_SECRET || 'mantracare_admin_jwt_super_secret_key_2026',
   cookieSecret: process.env.COOKIE_SECRET || 'mantracare_cookie_secret_key_2026',
