@@ -12,9 +12,9 @@ process.on('unhandledRejection', (reason, promise) => {
 
 const PORT = config.port;
 
-// Automatically verify and initialize Neon DB tables on boot
+// Automatically verify and initialize database connection on boot
 setupDb()
-  .then(() => console.log('✅ Neon DB Schema & Tables verified successfully'))
+  .then(() => console.log('✅ PostgreSQL Database Connection & Tables verified successfully'))
   .catch((err) => console.error('⚠️ DB Setup Warning:', err));
 
 app.listen(PORT, '0.0.0.0', () => {

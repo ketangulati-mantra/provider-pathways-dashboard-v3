@@ -5,12 +5,12 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load backend-specific and root .env files safely
-dotenv.config(); // Loads .env in current working directory
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+// Load backend-specific .env first, followed by root .env for shared frontend variables
 dotenv.config({ path: path.resolve(process.cwd(), 'backend/.env') });
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config(); // Fallback to current working directory
 
 const isProd = process.env.NODE_ENV === 'production';
 const targetPort = process.env.PORT ? parseInt(process.env.PORT, 10) : 80;
