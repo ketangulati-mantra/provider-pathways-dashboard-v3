@@ -73,6 +73,13 @@ export function useActivitySubmission({
     if (response.success) {
       setIsSuccess(true);
       showToast(successTitle, 'success');
+      if (typeof onSuccess === 'function') {
+        try {
+          onSuccess(response.data);
+        } catch (e) {
+          console.error('[useActivitySubmission] onSuccess error:', e);
+        }
+      }
       return { success: true, data: response.data };
     } else {
       showToast(
