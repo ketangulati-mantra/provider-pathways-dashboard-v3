@@ -4,15 +4,16 @@ import { config } from '../config/index.js';
 const isProduction = config.nodeEnv === 'production';
 
 // Candidate hosts ordered by likelihood in Docker / EC2 / Local environments
+// Explicit configured host and direct AWS host are prioritized over docker internal aliases
 const configuredHost = config.pgConfig?.host || process.env.PG_HOST;
 const candidateHosts: string[] = Array.from(new Set([
   configuredHost,
+  '3.109.26.34',
   'postgres',
   '172.17.0.1',
   'host.docker.internal',
   '127.0.0.1',
-  'localhost',
-  '3.109.26.34'
+  'localhost'
 ].filter((h): h is string => Boolean(h && h.trim()))));
 
 const dbUser = config.pgConfig?.username || process.env.PG_USER || '';

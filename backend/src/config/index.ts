@@ -21,6 +21,32 @@ const pgHost = process.env.PG_HOST;
 const pgPort = process.env.PG_PORT || '5432';
 const pgDatabase = process.env.PG_DATABASE;
 
+const parseDatabaseUrl = (urlStr: string) => {
+  if (!urlStr) return undefined;
+  try {
+    const parsed = new URL(urlStr);
+    return {
+      host: parsed.hostname,
+      port: parsed.port ? parseInt(parsed.port, 10) : 5432,
+      database: parsed.pathname ? parsed.pathname.replace(/^\//, '') : 'platforms',
+      username: decodeURIComponent(parsed.username || ''),
+      password: decodeURIComponent(parsed.password || ''),
+    };
+  } catch (e) {
+    return undefined;
+  }
+};
+
+const pgUrlConfig = parseDatabaseUrl(process.env.DATABASE_URL || '');
+
+const effectivePgConfig = (pgUser && pgPassword && pgHost && pgDatabase) ? {
+  host: pgHost,
+  port: parseInt(pgPort, 10),
+  database: pgDatabase,
+  username: pgUser,
+  password: pgPassword,
+} : pgUrlConfig;
+
 const buildDatabaseUrl = (): string => {
   if (pgUser && pgPassword && pgHost && pgDatabase) {
     const user = encodeURIComponent(pgUser);
@@ -33,13 +59,7 @@ const buildDatabaseUrl = (): string => {
 export const config = {
   port: targetPort,
   databaseUrl: buildDatabaseUrl(),
-  pgConfig: (pgUser && pgPassword && pgHost && pgDatabase) ? {
-    host: pgHost,
-    port: parseInt(pgPort, 10),
-    database: pgDatabase,
-    username: pgUser,
-    password: pgPassword,
-  } : undefined,
+  pgConfig: effectivePgConfig,
   nodeEnv: process.env.NODE_ENV || 'development',
   jwtSecret: process.env.JWT_SECRET || 'mantracare_admin_jwt_super_secret_key_2026',
   cookieSecret: process.env.COOKIE_SECRET || 'mantracare_cookie_secret_key_2026',
