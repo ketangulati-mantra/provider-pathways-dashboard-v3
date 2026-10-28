@@ -155,8 +155,24 @@ async function enrichSubmissions(rawSubmissions: any[]) {
 
     const reviewerDisplayName = reviewerObj?.name || s.reviewed_by || 'Unassigned';
 
+    let parsedFormData = s.form_data;
+    if (typeof parsedFormData === 'string') {
+      try {
+        parsedFormData = JSON.parse(parsedFormData);
+      } catch (e) {}
+    }
+
+    let parsedSubmissionData = s.submission_data;
+    if (typeof parsedSubmissionData === 'string') {
+      try {
+        parsedSubmissionData = JSON.parse(parsedSubmissionData);
+      } catch (e) {}
+    }
+
     return {
       ...s,
+      form_data: parsedFormData || {},
+      submission_data: parsedSubmissionData || parsedFormData || {},
       reviewed_by_user_id: reviewerUserId,
       reviewed_at: s.reviewed_at || null,
       reviewed_by: reviewerDisplayName,

@@ -263,6 +263,21 @@ function InteractiveImageModal({ imageUrl, onClose }) {
   );
 }
 
+export const safeParseJson = (val) => {
+  if (!val) return {};
+  if (typeof val === 'object' && val !== null) return val;
+  if (typeof val === 'string') {
+    try {
+      const parsed = JSON.parse(val);
+      if (typeof parsed === 'object' && parsed !== null) return parsed;
+      return {};
+    } catch (e) {
+      return {};
+    }
+  }
+  return {};
+};
+
 const formatActivityTitle = (title, lessonId) => {
   if (!title && !lessonId) return 'Mantra intro video';
   const lower = (title || '').toLowerCase();
@@ -767,7 +782,7 @@ export default function SubmissionsTable() {
   // Country & Video Filter Helper Functions
   const extractSubmissionCountry = (item) => {
     if (!item) return '';
-    const data = item.form_data || item.submission_data || item.formData || item.submissionData || {};
+    const data = safeParseJson(item.form_data || item.submission_data || item.formData || item.submissionData);
     let raw = item.country || item.country_name || item.countryName || data.country || data.countryName || data.country_name || data.userCountry || data.location;
     if (raw && typeof raw === 'string' && raw.trim() && !['undefined', 'null', 'n/a'].includes(raw.trim().toLowerCase())) {
       const val = raw.trim();
@@ -802,7 +817,7 @@ export default function SubmissionsTable() {
 
   const extractUserFullName = (item) => {
     if (!item) return 'Provider User';
-    const data = item.form_data || item.submission_data || item.formData || item.submissionData || {};
+    const data = safeParseJson(item.form_data || item.submission_data || item.formData || item.submissionData);
     
     const rawName = data.fullName || data.full_name || data.name || data.user_name || data.userName || data.providerName || data.provider_name;
     if (rawName && String(rawName).trim() && !isHashOrId(rawName)) {
@@ -834,7 +849,7 @@ export default function SubmissionsTable() {
 
   const isVideoSkipped = (item) => {
     if (!item) return false;
-    const data = item.form_data || item.submission_data || item.formData || item.submissionData || {};
+    const data = safeParseJson(item.form_data || item.submission_data || item.formData || item.submissionData);
     const subType = String(item.submission_type || item.submissionType || '').toLowerCase();
     const lessonId = String(item.lesson_id || item.lessonId || '').toLowerCase();
     const title = String(item.activity_title || item.activityTitle || '').toLowerCase();
@@ -885,7 +900,7 @@ export default function SubmissionsTable() {
 
   const extractProofImage = (sub) => {
     if (!sub) return null;
-    const data = sub.form_data || sub.submission_data || sub.formData || sub.submissionData || {};
+    const data = safeParseJson(sub.form_data || sub.submission_data || sub.formData || sub.submissionData);
     let candidate = (
       sub.proof_url ||
       sub.proofUrl ||
@@ -919,7 +934,7 @@ export default function SubmissionsTable() {
   const hasUploadedVideo = (item) => {
     if (!item) return false;
     if (isVideoSkipped(item)) return false;
-    const data = item.form_data || item.submission_data || item.formData || item.submissionData || {};
+    const data = safeParseJson(item.form_data || item.submission_data || item.formData || item.submissionData);
     const subType = String(item.submission_type || item.submissionType || '').toLowerCase();
     const proofUrl = String(item.proof_url || data.videoUrl || data.video_url || data.fileUrl || data.url || '').toLowerCase();
     return (
@@ -1094,8 +1109,11 @@ export default function SubmissionsTable() {
   const getDynamicFormKeys = () => {
     const keys = new Set();
     submissions.forEach(sub => {
-      const data = sub.form_data || sub.submission_data || {};
+      const data = safeParseJson(sub.form_data || sub.submission_data || sub.formData || sub.submissionData);
+      if (typeof data !== 'object' || Array.isArray(data)) return;
       Object.keys(data).forEach(k => {
+        // Never allow numeric array/string indices as columns
+        if (!isNaN(k) && !isNaN(parseFloat(k))) return;
         const lowerK = k.toLowerCase();
         if (!REDUNDANT_KEYS.includes(k) && !lowerK.includes('rawphone') && !lowerK.includes('raw_phone') && !lowerK.includes('skippedvideo') && !lowerK.includes('skipped_video')) {
           keys.add(k);
@@ -1134,10 +1152,12 @@ export default function SubmissionsTable() {
       if (saved) {
         const savedIds = JSON.parse(saved);
         if (Array.isArray(savedIds) && savedIds.length > 0) {
-          const ordered = savedIds
+          // Filter out any corrupted numeric dyn_ keys that might have been saved in localStorage
+          const cleanSavedIds = savedIds.filter(id => !/^dyn_\d+$/.test(id));
+          const ordered = cleanSavedIds
             .map(id => baseCols.find(col => col.id === id))
             .filter(col => col && !col.id.toLowerCase().includes('rawphone') && !col.id.toLowerCase().includes('raw_phone') && !col.id.toLowerCase().includes('skippedvideo') && !col.id.toLowerCase().includes('skipped_video'));
-          const missing = baseCols.filter(col => !savedIds.includes(col.id));
+          const missing = baseCols.filter(col => !cleanSavedIds.includes(col.id));
           setColumns([...ordered, ...missing]);
           return;
         }
@@ -2417,7 +2437,7 @@ export default function SubmissionsTable() {
                 </tr>
               ) : (
                 filteredSubmissions.map((item) => {
-                  const data = item.form_data || item.submission_data || {};
+                  const data = safeParseJson(item.form_data || item.submission_data || item.formData || item.submissionData);
                   const fullName = extractUserFullName(item);
                   const email = data.email;
                   const country = extractSubmissionCountry(item) || data.country || data.countryName || 'United States';
@@ -2863,7 +2883,7 @@ export default function SubmissionsTable() {
 
               {/* Card 1: User Profile Header Card */}
               {(() => {
-                const data = selectedSubmission.form_data || selectedSubmission.submission_data || {};
+                const data = safeParseJson(selectedSubmission.form_data || selectedSubmission.submission_data || selectedSubmission.formData || selectedSubmission.submissionData);
                 const fullName = extractUserFullName(selectedSubmission);
                 const email = data.email || '';
                 const phone = data.phone || data.phoneNumber || data.phone_number || data.mobile || data.contact || '';
@@ -3077,8 +3097,9 @@ export default function SubmissionsTable() {
 
               {/* Card 3: Form Response Data */}
               {(() => {
-                const formDataEntries = Object.entries(selectedSubmission.form_data || selectedSubmission.submission_data || {})
-                  .filter(([k]) => !REDUNDANT_KEYS.includes(k) && !PROOF_KEYS.includes(k));
+                const rawData = safeParseJson(selectedSubmission.form_data || selectedSubmission.submission_data || selectedSubmission.formData || selectedSubmission.submissionData);
+                const formDataEntries = Object.entries(rawData)
+                  .filter(([k]) => isNaN(k) && !REDUNDANT_KEYS.includes(k) && !PROOF_KEYS.includes(k));
 
                 if (formDataEntries.length === 0) return null;
 
