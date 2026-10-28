@@ -38,6 +38,10 @@ async function ensureSubmissionsSchema() {
   try {
     await sql`
       ALTER TABLE activity_submissions 
+      ALTER COLUMN id SET DEFAULT gen_random_uuid();
+    `;
+    await sql`
+      ALTER TABLE activity_submissions 
       ADD COLUMN IF NOT EXISTS reviewed_by_user_id VARCHAR(255);
     `;
     await sql`
@@ -47,13 +51,6 @@ async function ensureSubmissionsSchema() {
     await sql`
       ALTER TABLE activity_submissions 
       ADD COLUMN IF NOT EXISTS status_history JSONB DEFAULT '[]'::jsonb;
-    `;
-    // Create partial unique index on (user_id, lesson_id) where status IN ('pending', 'submitted')
-    // This enforces database-level concurrency protection against race conditions and double-submits
-    await sql`
-      CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_pending_activity_sub 
-      ON activity_submissions (user_id, lesson_id) 
-      WHERE status IN ('pending', 'submitted');
     `;
     isSchemaEnsured = true;
   } catch (err) {
