@@ -10,8 +10,8 @@ export const BRAND_CONFIGS = {
     gradient: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
     demoProfileUrl: 'https://therapists.therapymantra.co/list/therapist/demo',
     sampleListingId: '229102/erica-khanna',
-    submissionService: 'corporate',
-    activityId: 'grow-your-practice',
+    submissionService: 'therapy',
+    activityId: 'therapymantra',
     lessonId: 'market-yourself',
     videos: {
       gettingClients: 'https://www.youtube.com/embed/VMWKdPGYoN4',
@@ -35,7 +35,7 @@ export const BRAND_CONFIGS = {
     gradient: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
     demoProfileUrl: 'https://ocdmantra.com/therapist/demo',
     sampleListingId: 'ocd-specialist',
-    submissionService: 'corporate',
+    submissionService: 'therapy',
     activityId: 'ocd-growth',
     lessonId: 'ocd-market-yourself',
     videos: {
@@ -60,7 +60,7 @@ export const BRAND_CONFIGS = {
     gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
     demoProfileUrl: 'https://physiomantra.com/therapist/demo',
     sampleListingId: 'physio-specialist',
-    submissionService: 'corporate',
+    submissionService: 'physiotherapy',
     activityId: 'physio-growth',
     lessonId: 'physio-market-yourself',
     videos: {
@@ -85,7 +85,7 @@ export const BRAND_CONFIGS = {
     gradient: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
     demoProfileUrl: 'https://mantracare.org/provider/demo',
     sampleListingId: 'mantra-provider',
-    submissionService: 'corporate',
+    submissionService: 'general',
     activityId: 'mantra-growth',
     lessonId: 'mantra-market-yourself',
     videos: {

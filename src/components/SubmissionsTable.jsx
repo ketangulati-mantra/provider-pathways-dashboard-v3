@@ -779,6 +779,80 @@ export default function SubmissionsTable() {
     }
   };
 
+  // Helper to extract and deduce accurate service for a submission item
+  const extractSubmissionService = (item) => {
+    if (!item) return 'therapy';
+    const lId = String(item.lesson_id || '').toLowerCase();
+    const title = String(item.activity_title || '').toLowerCase();
+    const data = safeParseJson(item.form_data || item.submission_data || item.formData || item.submissionData);
+    const fdService = data.service ? String(data.service).trim().toLowerCase() : '';
+
+    if (lId.includes('physio') || title.includes('physio')) {
+      return 'physiotherapy';
+    }
+    if (lId.includes('yoga') || title.includes('yoga')) {
+      return 'yoga';
+    }
+    if (lId.includes('diet') || title.includes('diet')) {
+      return 'diet';
+    }
+    if (lId.includes('women-wellness') || title.includes('women wellness')) {
+      return 'women_wellness';
+    }
+    if (fdService && !['corporate', 'general'].includes(fdService)) {
+      return fdService;
+    }
+    if (item.service && !['corporate', 'general'].includes(String(item.service).toLowerCase())) {
+      return String(item.service).trim().toLowerCase();
+    }
+    return item.service || 'therapy';
+  };
+
+  const getServiceBadgeStyle = (serviceName) => {
+    const s = String(serviceName || '').toLowerCase().trim();
+    if (s.includes('physio')) {
+      return {
+        bg: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+        color: '#047857',
+        border: '#a7f3d0'
+      };
+    }
+    if (s.includes('yoga')) {
+      return {
+        bg: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
+        color: '#c2410c',
+        border: '#fed7aa'
+      };
+    }
+    if (s.includes('diet')) {
+      return {
+        bg: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+        color: '#15803d',
+        border: '#bbf7d0'
+      };
+    }
+    if (s.includes('women')) {
+      return {
+        bg: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
+        color: '#be185d',
+        border: '#fbcfe8'
+      };
+    }
+    if (s.includes('general')) {
+      return {
+        bg: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+        color: '#0369a1',
+        border: '#bae6fd'
+      };
+    }
+    // Default: Therapy
+    return {
+      bg: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)',
+      color: '#7e22ce',
+      border: '#e9d5ff'
+    };
+  };
+
   // Country & Video Filter Helper Functions
   const extractSubmissionCountry = (item) => {
     if (!item) return '';
@@ -999,7 +1073,7 @@ export default function SubmissionsTable() {
 
     // 5. Service Filter
     if (filterVisibility.service && selectedService !== 'all') {
-      const itemService = normalizeService(item.service || item.formData?.service || '');
+      const itemService = extractSubmissionService(item);
       const normSelected = normalizeService(selectedService);
       if (itemService !== normSelected) {
         return false;
@@ -1041,12 +1115,12 @@ export default function SubmissionsTable() {
     c.toLowerCase().includes(countrySearchTerm.toLowerCase())
   );
 
-  // Extract unique services
+  // Extract unique services using extractSubmissionService
   const uniqueServices = Array.from(new Set(
     submissions
-      .map(s => s.service || s.formData?.service)
+      .map(extractSubmissionService)
       .filter(s => s && String(s).trim())
-  ));
+  )).sort();
 
   // Extract unique activity options across registered activities, DB records & current page
   const uniqueActivitiesMap = new Map();
@@ -1259,7 +1333,7 @@ export default function SubmissionsTable() {
       const fullName = extractUserFullName(item);
       const email = data.email || '';
       const phone = data.phone || data.phoneNumber || data.phone_number || data.mobile || '';
-      const service = item.service || data.service || '';
+      const service = extractSubmissionService(item);
       const statusLabel = STATUS_CONFIG[item.status || 'pending']?.label || item.status || 'Pending';
       const reviewer = item.reviewed_by || 'Unassigned';
       const activity = item.activity_title || '';
@@ -2463,21 +2537,23 @@ export default function SubmissionsTable() {
                         }
 
                         if (col.id === 'service') {
+                          const displayService = extractSubmissionService(item);
+                          const badgeStyle = getServiceBadgeStyle(displayService);
                           return (
                             <td key={col.id} style={{ padding: '6px 10px', verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {item.service ? (
+                              {displayService ? (
                                 <span style={{
                                   padding: '1px 6px',
                                   borderRadius: '4px',
-                                  background: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)',
-                                  color: '#7e22ce',
-                                  border: '1px solid #e9d5ff',
+                                  background: badgeStyle.bg,
+                                  color: badgeStyle.color,
+                                  border: `1px solid ${badgeStyle.border}`,
                                   fontSize: '0.68rem',
                                   fontWeight: 700,
                                   textTransform: 'capitalize',
                                   display: 'inline-block'
                                 }}>
-                                  {item.service}
+                                  {displayService}
                                 </span>
                               ) : (
                                 <span style={{ color: '#cbd5e1', fontSize: '0.72rem' }}>—</span>
@@ -2917,11 +2993,24 @@ export default function SubmissionsTable() {
                             )}
                           </div>
                         </div>
-                        {selectedSubmission.service && (
-                          <span style={{ padding: '3px 10px', borderRadius: '6px', background: '#faf5ff', color: '#7e22ce', border: '1px solid #e9d5ff', fontSize: '0.72rem', fontWeight: 700, textTransform: 'capitalize' }}>
-                            {selectedSubmission.service}
-                          </span>
-                        )}
+                        {(() => {
+                          const modalService = extractSubmissionService(selectedSubmission);
+                          const modalBadgeStyle = getServiceBadgeStyle(modalService);
+                          return modalService ? (
+                            <span style={{
+                              padding: '3px 10px',
+                              borderRadius: '6px',
+                              background: modalBadgeStyle.bg,
+                              color: modalBadgeStyle.color,
+                              border: `1px solid ${modalBadgeStyle.border}`,
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              textTransform: 'capitalize'
+                            }}>
+                              {modalService}
+                            </span>
+                          ) : null;
+                        })()}
                       </div>
                     </div>
 

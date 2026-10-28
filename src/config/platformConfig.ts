@@ -43,7 +43,7 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     listingBaseUrl: 'https://therapists.therapymantra.co/list/therapist/',
     demoProfileUrl: 'https://therapists.therapymantra.co/list/therapist/demo-provider',
     sampleListingId: 'demo-provider',
-    submissionService: 'corporate',
+    submissionService: 'therapy',
     activityId: 'grow-your-practice',
     lessonId: 'market-yourself',
     youtubeVideos: {
@@ -118,7 +118,7 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     listingBaseUrl: 'https://ocdmantra.com/list/therapist/',
     demoProfileUrl: 'https://ocdmantra.com/list/therapist/demo',
     sampleListingId: 'ocd-specialist',
-    submissionService: 'corporate',
+    submissionService: 'therapy',
     activityId: 'ocd-growth',
     lessonId: 'ocd-market-yourself',
     youtubeVideos: {
@@ -157,7 +157,7 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     listingBaseUrl: 'https://physiomantra.com/list/therapist/',
     demoProfileUrl: 'https://physiomantra.com/list/therapist/demo',
     sampleListingId: 'physio-specialist',
-    submissionService: 'corporate',
+    submissionService: 'physiotherapy',
     activityId: 'physio-growth',
     lessonId: 'physio-market-yourself',
     youtubeVideos: {
@@ -182,7 +182,7 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     listingBaseUrl: 'https://pridemantra.com/list/therapist/',
     demoProfileUrl: 'https://pridemantra.com/list/therapist/demo',
     sampleListingId: 'pride-specialist',
-    submissionService: 'corporate',
+    submissionService: 'therapy',
     activityId: 'pride-growth',
     lessonId: 'pride-market-yourself',
     youtubeVideos: {
@@ -207,7 +207,7 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     listingBaseUrl: 'https://mantra.care/list/provider/',
     demoProfileUrl: 'https://mantra.care/list/provider/demo',
     sampleListingId: 'mantra-specialist',
-    submissionService: 'corporate',
+    submissionService: 'general',
     activityId: 'mantracare-growth',
     lessonId: 'mantra-market-yourself',
     youtubeVideos: {

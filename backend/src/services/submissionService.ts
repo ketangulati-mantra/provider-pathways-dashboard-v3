@@ -14,6 +14,7 @@ export interface GetSubmissionsQuery {
   page?: number;
   limit?: number;
   status?: string;
+  service?: string;
   reviewedBy?: string;
   lessonId?: string;
   submissionType?: string;
@@ -169,8 +170,28 @@ async function enrichSubmissions(rawSubmissions: any[]) {
       } catch (e) {}
     }
 
+    let resolvedService = s.service ? String(s.service).trim().toLowerCase() : '';
+    const lId = String(s.lesson_id || '').toLowerCase();
+    const actTitle = String(s.activity_title || '').toLowerCase();
+    const fdService = parsedFormData?.service ? String(parsedFormData.service).trim().toLowerCase() : '';
+
+    if (lId.includes('physio') || actTitle.includes('physio')) {
+      resolvedService = 'physiotherapy';
+    } else if (lId.includes('yoga') || actTitle.includes('yoga')) {
+      resolvedService = 'yoga';
+    } else if (lId.includes('diet') || actTitle.includes('diet')) {
+      resolvedService = 'diet';
+    } else if (lId.includes('women-wellness') || actTitle.includes('women wellness')) {
+      resolvedService = 'women_wellness';
+    } else if (fdService && !['corporate', 'general'].includes(fdService)) {
+      resolvedService = fdService;
+    } else if (!resolvedService || resolvedService === 'corporate') {
+      resolvedService = 'therapy';
+    }
+
     return {
       ...s,
+      service: resolvedService,
       form_data: parsedFormData || {},
       submission_data: parsedSubmissionData || parsedFormData || {},
       reviewed_by_user_id: reviewerUserId,
@@ -216,7 +237,28 @@ export const submissionService = {
     }
 
     const executionPromise = (async () => {
-      const cleanService = service ? String(service).trim() : null;
+      // Determine service: check explicit service, lesson_id, activity_title, or form_data
+      let cleanService = service ? String(service).trim() : null;
+      const lIdLower = cleanLessonId.toLowerCase();
+      const titleLower = String(activityTitle || '').toLowerCase();
+
+      if (lIdLower.includes('physio') || titleLower.includes('physio')) {
+        cleanService = 'physiotherapy';
+      } else if (lIdLower.includes('yoga') || titleLower.includes('yoga')) {
+        cleanService = 'yoga';
+      } else if (lIdLower.includes('diet') || titleLower.includes('diet')) {
+        cleanService = 'diet';
+      } else if (lIdLower.includes('women-wellness') || titleLower.includes('women wellness')) {
+        cleanService = 'women_wellness';
+      } else if (lIdLower.includes('ocd')) {
+        cleanService = 'therapy';
+      } else if (!cleanService || cleanService === 'corporate' || cleanService === 'general') {
+        const parsedFd = typeof formData === 'object' && formData !== null ? formData : {};
+        if (parsedFd.service && !['corporate', 'general'].includes(String(parsedFd.service).toLowerCase())) {
+          cleanService = String(parsedFd.service).trim().toLowerCase();
+        }
+      }
+
       const jsonFormData = typeof formData === 'string' ? formData : JSON.stringify(formData);
       const jsonSubmissionData = typeof submissionData === 'string' ? submissionData : JSON.stringify(submissionData);
 
@@ -600,6 +642,7 @@ export const submissionService = {
     const offset = (page - 1) * limit;
 
     const status = options.status?.trim();
+    const serviceFilter = options.service?.trim();
     const reviewedBy = options.reviewedBy?.trim();
     const lessonId = options.lessonId?.trim();
     const submissionType = options.submissionType?.trim();
@@ -617,6 +660,10 @@ export const submissionService = {
 
     if (status) {
       submissions = submissions.filter((s: any) => (s.status || 'pending').toLowerCase() === status.toLowerCase());
+    }
+
+    if (serviceFilter && serviceFilter.toLowerCase() !== 'all') {
+      submissions = submissions.filter((s: any) => (s.service || '').toLowerCase() === serviceFilter.toLowerCase());
     }
 
     if (reviewedBy) {
